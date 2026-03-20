@@ -8,17 +8,33 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
 
   const handleRegister = async () => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
     if (error) {
       alert("Kayıt hatası: " + error.message);
-    } else {
-      alert("Kayıt başarılı! Giriş yapabilirsin.");
-      window.location.href = "/login";
+      return;
     }
+
+    if (data.user) {
+      const { error: insertError } = await supabase.from("users").insert([
+        {
+          id: data.user.id,
+          email: data.user.email,
+          role: "user",
+        },
+      ]);
+
+      if (insertError) {
+        alert("Users tablosuna yazma hatası: " + insertError.message);
+        return;
+      }
+    }
+
+    alert("Kayıt başarılı! Mail onayla.");
+    window.location.href = "/login";
   };
 
   return (
