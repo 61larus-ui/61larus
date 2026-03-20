@@ -108,3 +108,24 @@ Repo:
 * ChatGPT (geliştirme ve yönlendirme desteği)
 
 ---
+---
+
+## 📘 v2 Güncellemesi – Auth Sistemi
+
+### Tamamlananlar
+- Kullanıcı kayıt sayfası oluşturuldu
+- Kullanıcı giriş sayfası oluşturuldu
+- Supabase Auth ile kayıt ve giriş bağlantısı kuruldu
+- Email doğrulama akışı test edildi
+- Dashboard sayfası oluşturuldu
+- Giriş yapan kullanıcının email bilgisi dashboard’da gösterildi
+- Çıkış yap butonu eklendi
+- Giriş yapılmadan dashboard’a erişim engellendi
+
+### Sonuç
+61larus projesinde temel üyelik sistemi başarıyla çalışır hale geldi.
+
+### Bir sonraki hedef
+- Kullanıcı bilgilerini veritabanı tablosuna yazmak
+- Rol sistemi başlangıcı
+- İlk içerik / başlık yapısı

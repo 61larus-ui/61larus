@@ -16,29 +16,55 @@ export default function LoginPage() {
     if (error) {
       alert("Giriş hatası: " + error.message);
     } else {
-      alert("Giriş başarılı!");
+      window.location.href = "/dashboard";
     }
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: 20, maxWidth: 400 }}>
       <h1>Giriş Yap</h1>
 
       <input
         placeholder="Email"
         type="email"
+        value={email}
         onChange={(e) => setEmail(e.target.value)}
-        style={{ display: "block", marginBottom: 10, width: "100%" }}
+        style={{
+          display: "block",
+          marginBottom: 10,
+          width: "100%",
+          padding: 10,
+          border: "1px solid #ccc",
+          borderRadius: 6,
+        }}
       />
 
       <input
         placeholder="Şifre"
         type="password"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
-        style={{ display: "block", marginBottom: 10, width: "100%" }}
+        style={{
+          display: "block",
+          marginBottom: 10,
+          width: "100%",
+          padding: 10,
+          border: "1px solid #ccc",
+          borderRadius: 6,
+        }}
       />
 
-      <button onClick={handleLogin} style={{ width: "100%" }}>
+      <button
+        onClick={handleLogin}
+        style={{
+          width: "100%",
+          padding: 10,
+          backgroundColor: "black",
+          color: "white",
+          borderRadius: 6,
+          border: "none",
+        }}
+      >
         Giriş Yap
       </button>
     </div>
