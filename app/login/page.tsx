@@ -1,72 +1,76 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import Link from 'next/link'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+
+const supabase = createBrowserSupabaseClient()
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const router = useRouter()
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      alert('Email ve şifre girmen lazım')
+      return
+    }
+
+    setLoading(true)
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
-    });
+    })
 
     if (error) {
-      alert("Giriş hatası: " + error.message);
-    } else {
-      window.location.href = "/dashboard";
+      console.error(error)
+      alert('Giriş yapılamadı')
+      setLoading(false)
+      return
     }
-  };
+
+    router.push('/dashboard')
+    router.refresh()
+  }
 
   return (
-    <div style={{ padding: 20, maxWidth: 400 }}>
-      <h1>Giriş Yap</h1>
+    <div style={{ maxWidth: 500, margin: '40px auto', padding: '0 16px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <Link href="/">Ana sayfa</Link>
+      </div>
 
-      <input
-        placeholder="Email"
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{
-          display: "block",
-          marginBottom: 10,
-          width: "100%",
-          padding: 10,
-          border: "1px solid #ccc",
-          borderRadius: 6,
-        }}
-      />
+      <h1>Giriş yap</h1>
 
-      <input
-        placeholder="Şifre"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{
-          display: "block",
-          marginBottom: 10,
-          width: "100%",
-          padding: 10,
-          border: "1px solid #ccc",
-          borderRadius: 6,
-        }}
-      />
+      <div style={{ display: 'grid', gap: 12, marginTop: 20 }}>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={{ padding: 12 }}
+        />
 
-      <button
-        onClick={handleLogin}
-        style={{
-          width: "100%",
-          padding: 10,
-          backgroundColor: "black",
-          color: "white",
-          borderRadius: 6,
-          border: "none",
-        }}
-      >
-        Giriş Yap
-      </button>
+        <input
+          type="password"
+          placeholder="Şifre"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={{ padding: 12 }}
+        />
+
+        <button onClick={handleLogin} disabled={loading}>
+          {loading ? 'Giriş yapılıyor...' : 'Giriş yap'}
+        </button>
+      </div>
+
+      <p style={{ marginTop: 16 }}>
+        Hesabın yok mu? <Link href="/register">Kayıt ol</Link>
+      </p>
     </div>
-  );
+  )
 }
