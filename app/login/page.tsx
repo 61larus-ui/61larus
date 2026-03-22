@@ -15,7 +15,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
+    const cleanEmail = email.trim().toLowerCase()
+    const cleanPassword = password.trim()
+
+    if (!cleanEmail || !cleanPassword) {
       alert('Email ve şifre girmen lazım')
       return
     }
@@ -23,17 +26,18 @@ export default function LoginPage() {
     setLoading(true)
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: cleanEmail,
+      password: cleanPassword,
     })
 
     if (error) {
       console.error(error)
-      alert('Giriş yapılamadı')
+      alert('Giriş başarısız')
       setLoading(false)
       return
     }
 
+    // 🔥 kritik fix
     router.push('/dashboard')
     router.refresh()
   }

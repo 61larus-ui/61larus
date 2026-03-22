@@ -16,16 +16,22 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
 
   const handleRegister = async () => {
-    if (!email.trim() || !password.trim() || !username.trim()) {
+    const cleanEmail = email.trim().toLowerCase()
+    const cleanPassword = password.trim()
+    const cleanUsername = username.trim()
+
+    if (!cleanEmail || !cleanPassword || !cleanUsername) {
       alert('Tüm alanları doldurman lazım')
       return
     }
 
+    const normalizedUsername = cleanUsername.toLowerCase()
+
     setLoading(true)
 
     const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: cleanEmail,
+      password: cleanPassword,
     })
 
     if (error || !data.user) {
@@ -35,9 +41,10 @@ export default function RegisterPage() {
       return
     }
 
-    const { error: insertError } = await supabase.from('users').insert({
+    const { error: insertError } = await supabase.from('users').upsert({
       id: data.user.id,
-      username,
+      email: cleanEmail,
+      username: normalizedUsername,
     })
 
     if (insertError) {
@@ -49,6 +56,7 @@ export default function RegisterPage() {
 
     alert('Kayıt başarılı 🚀')
 
+    setLoading(false)
     router.push('/dashboard')
     router.refresh()
   }

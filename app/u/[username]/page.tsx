@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { ProfileHeader } from './components/profile-header'
+import { ProfileEntryList } from './components/profile-entry-list'
 
 type Entry = {
   id: string
@@ -8,18 +10,29 @@ type Entry = {
   like_count: number
 }
 
+type UserRow = {
+  id: string
+  username: string
+  email: string | null
+  bio: string | null
+}
+
 export default async function UserProfilePage({
   params,
 }: {
-  params: { username: string }
+  params: Promise<{ username: string }>
 }) {
+  const { username } = await params
   const supabase = await createServerSupabaseClient()
 
-  const { data: user } = await supabase
+  const { data: users } = await supabase
     .from('users')
-    .select('id, username, bio')
-    .eq('username', params.username)
-    .single()
+    .select('id, username, email, bio')
+    .order('username', { ascending: true })
+
+  const user = users?.find(
+    (item: UserRow) => item.username?.toLowerCase() === username.toLowerCase()
+  )
 
   if (!user) {
     return (
@@ -42,50 +55,8 @@ export default async function UserProfilePage({
         <Link href="/">Ana sayfa</Link>
       </div>
 
-      <h1>/u/{user.username}</h1>
-
-      {user.bio ? <p>{user.bio}</p> : null}
-
-      <div style={{ marginTop: 24 }}>
-        <h2>Entryler</h2>
-
-        {entries?.length === 0 ? (
-          <p>Henüz entry yok.</p>
-        ) : (
-          <div style={{ display: 'grid', gap: 12 }}>
-            {entries?.map((entry: Entry) => (
-              <div
-                key={entry.id}
-                style={{
-                  border: '1px solid #ddd',
-                  padding: 16,
-                  borderRadius: 8,
-                }}
-              >
-                <Link
-                  href={`/entry/${entry.id}`}
-                  style={{
-                    display: 'block',
-                    marginBottom: 8,
-                    color: 'inherit',
-                    textDecoration: 'none',
-                  }}
-                >
-                  {entry.content}
-                </Link>
-
-                <small>
-                  {new Date(entry.created_at).toLocaleString('tr-TR')}
-                </small>
-
-                <div style={{ marginTop: 4 }}>
-                  <small>{entry.like_count} kişi kafa salladı</small>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <ProfileHeader username={user.username} bio={user.bio} />
+      <ProfileEntryList entries={entries as Entry[] | null} />
     </div>
   )
 }

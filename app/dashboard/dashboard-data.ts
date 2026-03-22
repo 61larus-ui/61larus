@@ -3,7 +3,8 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 const supabase = createBrowserSupabaseClient()
 
 export type DashboardProfile = {
-  username: string
+  id: string
+  username: string | null
 }
 
 export type DashboardEntry = {
@@ -26,17 +27,25 @@ export async function getDashboardData() {
     }
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users')
-    .select('username')
+    .select('id, username')
     .eq('id', user.id)
-    .single<DashboardProfile>()
+    .maybeSingle<DashboardProfile>()
 
-  const { data: userEntries } = await supabase
+  if (profileError) {
+    console.error('Dashboard profile error:', profileError)
+  }
+
+  const { data: userEntries, error: entriesError } = await supabase
     .from('entries')
     .select('id, content, created_at, like_count')
     .eq('author_id', user.id)
     .order('created_at', { ascending: false })
+
+  if (entriesError) {
+    console.error('Dashboard entries error:', entriesError)
+  }
 
   return {
     user,
