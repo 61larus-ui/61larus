@@ -1,26 +1,403 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Deep navy — tonal bands, not flat */
+  --bg-primary: #0b1020;
+  --bg-deep: #070b14;
+  --bg-mid: #0a0f1c;
+  --bg-secondary: #0f1628;
+  --bg-tertiary: #141d30;
+  --surface-page: rgba(255, 255, 255, 0.022);
+  --surface-panel: rgba(255, 255, 255, 0.01);
+  --surface-hover: rgba(255, 255, 255, 0.035);
+  --list-row-active: rgba(94, 234, 212, 0.055);
+
+  --border-subtle: rgba(255, 255, 255, 0.022);
+  --border-strong: rgba(255, 255, 255, 0.045);
+
+  /* ~50% lighter than prior rails */
+  --divide: rgba(255, 255, 255, 0.028);
+  --divide-muted: rgba(255, 255, 255, 0.019);
+  --divide-hair: rgba(255, 255, 255, 0.014);
+
+  --text-primary: #e9ebf0;
+  --text-secondary: #9aa3b2;
+  --text-tertiary: #7d8796;
+  --text-muted: #5a6370;
+
+  --accent-green: #5eead4;
+  --accent-green-soft: rgba(94, 234, 212, 0.07);
+  --accent-green-line: rgba(94, 234, 212, 0.36);
+  --accent-green-glow: rgba(94, 234, 212, 0.09);
+
+  --accent-orange: #e8a07a;
+  --accent-orange-soft: rgba(232, 160, 122, 0.09);
+
+  --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.18);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.35);
+
+  --surface-rail: linear-gradient(
+    185deg,
+    rgba(255, 255, 255, 0.042) 0%,
+    rgba(255, 255, 255, 0.014) 42%,
+    rgba(255, 255, 255, 0.032) 100%
+  );
+  --center-well: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.034) 0%,
+    rgba(255, 255, 255, 0.018) 45%,
+    rgba(255, 255, 255, 0.028) 100%
+  );
+  /* ~30% less glow than prior */
+  --category-pill-glow: 0 0 0 1px rgba(94, 234, 212, 0.078),
+    0 5px 22px -8px rgba(94, 234, 212, 0.098);
+
+  --font-editorial-display: "Iowan Old Style", "Palatino Linotype", Palatino,
+    "Book Antiqua", Georgia, "Times New Roman", serif;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+
+  --transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+
+  --space-1: 0.25rem;
+  --space-2: 0.375rem;
+  --space-3: 0.5rem;
+  --space-4: 0.75rem;
+  --space-5: 1rem;
+  --space-6: 1.25rem;
+  --space-7: 1.5rem;
+  --space-8: 2rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--bg-deep);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Inter", "Helvetica Neue", sans-serif;
+  min-height: 100vh;
+  background-color: var(--bg-mid);
+  background-image: radial-gradient(
+      ellipse 130% 85% at 50% -28%,
+      rgba(94, 234, 212, 0.029),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 65% 55% at 100% 8%,
+      rgba(125, 211, 252, 0.023),
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 0% 85%,
+      rgba(99, 102, 241, 0.018),
+      transparent 52%
+    ),
+    linear-gradient(
+      100deg,
+      #080d18 0%,
+      var(--bg-primary) 22%,
+      var(--bg-mid) 50%,
+      #0c1222 78%,
+      #070c16 100%
+    );
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+      ellipse 55% 70% at 50% 100%,
+      rgba(15, 25, 48, 0.4),
+      transparent 58%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(7, 11, 22, 0.16) 100%
+    );
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+}
+
+p {
+  margin: 0;
+}
+
+strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+small {
+  color: var(--text-secondary);
+}
+
+::selection {
+  background: rgba(94, 234, 212, 0.22);
+  color: #ffffff;
+}
+
+body {
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[class*="title"],
+[class*="Title"] {
+  letter-spacing: -0.025em;
+}
+
+[class*="subtitle"],
+[class*="Subtitle"],
+[class*="meta"],
+[class*="Meta"] {
+  color: var(--text-secondary);
+}
+
+/* Feed list: hair separators + vertical reading rhythm */
+.feed-entry-card {
+  border-bottom: 1px solid var(--divide-hair);
+  scroll-margin-top: 0.5rem;
+  padding-top: 2.2rem;
+  padding-bottom: 2.55rem;
+}
+
+.feed-entry-card:nth-child(odd) {
+  padding-left: 0.125rem;
+}
+
+.feed-entry-card:nth-child(even) {
+  padding-left: 0.375rem;
+  padding-top: 2.45rem;
+  padding-bottom: 2.25rem;
+}
+
+@media (min-width: 768px) {
+  .feed-entry-card {
+    padding-top: 2.75rem;
+    padding-bottom: 3.15rem;
+  }
+
+  .feed-entry-card:nth-child(odd) {
+    padding-left: 0.25rem;
+  }
+
+  .feed-entry-card:nth-child(even) {
+    padding-left: 0.625rem;
+    padding-top: 2.95rem;
+    padding-bottom: 2.85rem;
+  }
+}
+
+.feed-entry-card:last-child {
+  border-bottom: none;
+}
+
+/* ~35% less backdrop blur on 1px overlays (home modals) */
+.backdrop-blur-\[1px\] {
+  backdrop-filter: blur(0.65px) !important;
+  -webkit-backdrop-filter: blur(0.65px) !important;
+}
+
+.trending-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.trending-sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.trending-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.trending-sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.trending-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.left-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.left-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.left-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.left-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.left-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+/* --- Home shell: fewer lines, surface rails, premium brand (structure-only) --- */
+
+main > header {
+  border-bottom-color: var(--divide-hair) !important;
+}
+
+main > header button[aria-label*="Ana sayfa"] {
+  font-family: var(--font-editorial-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-size: clamp(1.75rem, 2.35vw, 2.125rem);
+  line-height: 1.06;
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
+}
+
+main > header div.text-center > p {
+  margin-top: 1.125rem !important;
+  letter-spacing: 0.16em !important;
+  font-size: 0.625rem !important;
+  line-height: 1.7 !important;
+  color: var(--text-muted) !important;
+  max-width: 20rem;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: 0.88;
+  font-weight: 400;
+}
+
+@media (min-width: 768px) {
+  main > header div.text-center > p {
+    margin-top: 1.25rem !important;
+    font-size: 0.6875rem !important;
+    max-width: 24rem;
+    letter-spacing: 0.14em !important;
+  }
+}
+
+main > section.border-y {
+  border-top-color: var(--divide-hair) !important;
+  border-bottom-color: var(--divide-hair) !important;
+  background: var(--center-well) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.022);
+}
+
+main > section > div > aside {
+  background: var(--surface-rail) !important;
+  border-color: transparent !important;
+}
+
+@media (min-width: 768px) {
+  main > section > div > aside:first-of-type {
+    box-shadow: inset -1px 0 0 var(--divide-hair) !important;
+  }
+
+  main > section > div > aside:last-of-type {
+    box-shadow: inset 1px 0 0 var(--divide-hair) !important;
+  }
+}
+
+main > section > div > aside > div.border-b {
+  border-bottom-color: var(--divide-hair) !important;
+}
+
+main > section > div > aside:first-of-type nav button {
+  border-bottom-color: var(--divide-hair) !important;
+}
+
+main > section > div > main {
+  background: transparent !important;
+  box-shadow: inset 0 0 100px -70px rgba(255, 255, 255, 0.022) !important;
+}
+
+main > section > div > main[class*="border"] {
+  border-left-color: var(--divide-hair) !important;
+  border-right-color: var(--divide-hair) !important;
+}
+
+main > section > div > main nav[aria-label="Entry akışı"] {
+  border-top-color: var(--divide-hair) !important;
+}
+
+.layout-feed-inner {
+  padding-top: 2.25rem !important;
+  padding-bottom: 2.5rem !important;
+}
+
+@media (min-width: 768px) {
+  .layout-feed-inner {
+    padding-top: 3rem !important;
+    padding-bottom: 3.25rem !important;
+  }
+}
+
+nav[aria-label="Entry kategorileri"] button.group.font-medium {
+  border-color: transparent !important;
+  background: rgba(94, 234, 212, 0.042) !important;
+  box-shadow: var(--category-pill-glow) !important;
+  border-radius: 999px !important;
+}
+
+nav[aria-label="Entry kategorileri"] button.group.font-medium span {
+  box-shadow: none !important;
+}
+
+nav[aria-label="Entry kategorileri"] button.group.font-normal {
+  border-color: transparent !important;
+}
+
+nav[aria-label="Entry kategorileri"] button.group.font-normal:hover {
+  background: rgba(255, 255, 255, 0.028) !important;
+  border-radius: 999px !important;
 }
