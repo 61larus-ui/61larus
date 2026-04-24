@@ -27,6 +27,10 @@ export async function anonymizeCurrentUserAccount(): Promise<{
       gender: null,
       phone: null,
       bio_61: null,
+      /** Aynı auth id ile tekrar girişte sözleşme hukuken yeni kabul gibi ele alınsın. */
+      agreement_accepted: false,
+      agreement_accepted_at: null,
+      onboarding_completed_at: null,
       updated_at: now,
     })
     .eq("id", user.id);

@@ -3,36 +3,52 @@
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
-export const AGREEMENT_COPY = `Üyelik Sözleşmesi ve Kullanım Koşulları
+export const AGREEMENT_COPY = `61Larus Topluluk Sözleşmesi
 
-1. Genel
-61larus platformuna erişerek ve kullanarak, aşağıdaki koşulları okuduğunuzu ve kabul ettiğinizi beyan edersiniz. Bu metin, platform ile ilişkinizi düzenler.
+61Larus; Trabzon eksenli, metin öncelikli bir okuma ve yazım alanıdır. Bu metin, platformu kullanırken uyman beklenen asgari çerçeveyi özetler.
 
-2. İçerik sorumluluğu
-Kullanıcılar, paylaştıkları tüm içeriklerden bizzat sorumludur. Paylaşımlarınızın yürürlükteki mevzuata, üçüncü kişilerin haklarına ve bu kurallara uygun olması gerekir.
+Paylaştığın yazı ve yorumların yürürlükteki mevzuata, başkalarının haklarına ve yayın ilkelerine uygun olması gerekir. Hukuka aykırı veya topluluk düzenini bozan içerikler uyarılmaksızın kaldırılabilir veya erişime kapatılabilir.
 
-3. Yasadışı veya zararlı içerik
-Hukuka aykırı olduğu tespit edilen veya platform kurallarını ihlal eden içerikler uyarılmaksızın kaldırılabilir, erişime kapatılabilir veya sınırlandırılabilir.
+Hakaret, tehdit, nefret söylemi ve kimlik üzerinden hedefleme tolere edilmez. Platform, yasal düzenlemeler ve bağlayıcı kararlar çerçevesinde gerekli ölçüde yetkili mercilerle iş birliği yapabilir.
 
-4. Örnek ihlal alanları (sınırlı örnekler)
-Aşağıdaki başlıklar, ihlal türlerini özetler; örnekler tam liste değildir.
+Kullanıcı içeriğinin doğruluğunu garanti etmeyiz; içeriklerin sorumluluğu sahiplerine aittir.
 
-• Hakaret: Kişilerin onurunu rencide edebilecek ağır söylem veya sürekli saldırgan üslup.
-• Tehdit: Başkasına yönelik fiili veya ciddi korku uyandıran tehdit içeren paylaşımlar.
-• Aşağılama / nefret içerikli söylem: Grupları veya kişileri kimlikleri nedeniyle hedef alan, aşağılayıcı veya nefret söylemi içeren içerik.
-
-5. Hukuki işbirliği
-Platform, yasal düzenlemeler ve geçerli yargı kararları çerçevesinde yetkili mercilerle sınırlı ve gerekli ölçüde iş birliği yapabilir.
-
-6. Sorumluluk reddi (kullanıcı içeriği)
-Platform, kullanıcılar tarafından üretilen içeriklerin doğruluğunu, yasallığını veya üçüncü kişiler için sonuçlarını garanti etmez. Kullanıcı içeriğinden doğan zararlarda, yürürlükteki hukukun izin verdiği ölçüde platform sorumlu tutulamaz.
-
-7. Kabul
-Aşağıdaki kutuyu işaretleyerek bu metni okuduğunuzu ve koşulları kabul ettiğinizi onaylarsınız.`;
+Aşağıdaki kutuyu işaretleyerek bu koşulları okuduğunu ve kabul ettiğini beyan edersin.`;
 
 type Props = {
   onSuccess: () => void | Promise<void>;
 };
+
+const MSG_SESSION =
+  "Oturumun süresi dolmuş olabilir. Sayfayı yenileyip tekrar giriş yapmayı dene.";
+
+const MSG_SAVE_FAILED =
+  "Onayın şu an kaydedilemedi. Bir süre sonra tekrar dene.";
+
+function sleep(ms: number) {
+  return new Promise<void>((r) => {
+    window.setTimeout(r, ms);
+  });
+}
+
+function isLikelySchemaCacheOrMissingColumnError(err: {
+  message?: string;
+  code?: string;
+} | null): boolean {
+  if (!err) return false;
+  const code = String(err.code ?? "");
+  if (code === "PGRST204" || code === "42703") return true;
+  const m = (err.message ?? "").toLowerCase();
+  return (
+    m.includes("schema cache") ||
+    m.includes("pgrst") ||
+    (m.includes("column") &&
+      (m.includes("could not find") ||
+        m.includes("does not exist") ||
+        m.includes("unknown"))) ||
+    m.includes("agreement_accepted")
+  );
+}
 
 export default function AgreementPanel({ onSuccess }: Props) {
   const supabase = createSupabaseBrowserClient();
@@ -49,7 +65,7 @@ export default function AgreementPanel({ onSuccess }: Props) {
         error: userError,
       } = await supabase.auth.getUser();
       if (userError || !user) {
-        setError("Oturum bulunamadı. Lütfen tekrar giriş yapın.");
+        setError(MSG_SESSION);
         return;
       }
       const now = new Date().toISOString();
@@ -66,27 +82,78 @@ export default function AgreementPanel({ onSuccess }: Props) {
           ? meta.avatar_url.trim()
           : null;
 
-      const { error: updateError } = await supabase
+      const profileExtras = {
+        ...(nicknameFromGoogle
+          ? {
+              first_name: nicknameFromGoogle,
+              last_name: null as string | null,
+              nickname: nicknameFromGoogle,
+              display_name_mode: "real_name" as const,
+            }
+          : {}),
+        ...(avatarFromGoogle ? { avatar_url: avatarFromGoogle } : {}),
+      };
+
+      const userEmail = user.email ?? null;
+      const { error: ensureError } = await supabase
         .from("users")
-        .update({
-          agreement_accepted_at: now,
-          onboarding_completed_at: now,
-          updated_at: now,
-          ...(nicknameFromGoogle
-            ? {
-                first_name: nicknameFromGoogle,
-                last_name: null,
-                nickname: nicknameFromGoogle,
-                display_name_mode: "real_name",
-              }
-            : {}),
-          ...(avatarFromGoogle ? { avatar_url: avatarFromGoogle } : {}),
-        })
-        .eq("id", user.id);
-      if (updateError) {
-        setError(updateError.message);
+        .upsert({ id: user.id, email: userEmail }, { onConflict: "id" });
+      if (ensureError) {
+        setError(MSG_SAVE_FAILED);
         return;
       }
+
+      const patchFull = {
+        agreement_accepted: true,
+        agreement_accepted_at: now,
+        onboarding_completed_at: now,
+        updated_at: now,
+        ...profileExtras,
+      };
+
+      const patchLegacy = {
+        agreement_accepted_at: now,
+        onboarding_completed_at: now,
+        updated_at: now,
+        ...profileExtras,
+      };
+
+      async function runUpdate(payload: Record<string, unknown>) {
+        return supabase
+          .from("users")
+          .update(payload)
+          .eq("id", user.id)
+          .select("id")
+          .maybeSingle();
+      }
+
+      let { data: row, error: updateError } = await runUpdate(patchFull);
+
+      if (
+        updateError &&
+        isLikelySchemaCacheOrMissingColumnError(updateError)
+      ) {
+        await supabase.auth.refreshSession();
+        await sleep(450);
+        ({ data: row, error: updateError } = await runUpdate(patchFull));
+      }
+
+      if (
+        updateError &&
+        isLikelySchemaCacheOrMissingColumnError(updateError)
+      ) {
+        ({ data: row, error: updateError } = await runUpdate(patchLegacy));
+      }
+
+      if (updateError) {
+        setError(MSG_SAVE_FAILED);
+        return;
+      }
+      if (!row) {
+        setError(MSG_SAVE_FAILED);
+        return;
+      }
+
       await Promise.resolve(onSuccess());
     } finally {
       setLoading(false);
@@ -94,37 +161,39 @@ export default function AgreementPanel({ onSuccess }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-[#E7E5E4] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:p-8">
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight text-[#1F2937] md:text-3xl">
-            Üyelik koşulları
-          </h2>
-        </div>
-        <div className="max-h-[42vh] overflow-y-auto rounded-2xl border border-[#E7E5E4] bg-[#F6F5F2] p-4 text-[15px] leading-7 text-[#667085] md:text-base md:p-5 whitespace-pre-wrap">
-          {AGREEMENT_COPY}
-        </div>
-        <label className="flex items-start gap-3 text-sm leading-6 text-[#1F2937]">
-          <input
-            type="checkbox"
-            checked={accepted}
-            onChange={(e) => setAccepted(e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-[#D0D5DD] text-[#1F2937] focus:ring-0 focus:ring-offset-0"
-          />
-          <span>Okudum ve kabul ediyorum</span>
-        </label>
-        {error ? (
-          <p className="text-sm leading-6 text-red-700">{error}</p>
-        ) : null}
-        <button
-          type="button"
-          disabled={!accepted || loading}
-          onClick={onContinue}
-          className="inline-flex h-11 items-center justify-center rounded-xl bg-[#1A1A1A] px-5 text-sm font-medium text-white transition-colors hover:bg-[#2A2A2A] disabled:pointer-events-none disabled:opacity-40"
-        >
-          {loading ? "Kaydediliyor…" : "Devam et"}
-        </button>
+    <div className="agreement-gate-panel">
+      <h2 className="agreement-gate-title">Topluluk Sözleşmesi</h2>
+      <p className="agreement-gate-lede m-0">
+        Devam edebilmek için metni okuyup onaylaman yeterli; bir kez kabul
+        ettiğinde tekrar gösterilmez.
+      </p>
+      <div className="agreement-gate-scroll" tabIndex={0}>
+        <div className="agreement-gate-copy">{AGREEMENT_COPY}</div>
       </div>
+      <label className="agreement-gate-check">
+        <input
+          type="checkbox"
+          checked={accepted}
+          onChange={(e) => setAccepted(e.target.checked)}
+          className="agreement-gate-checkbox"
+        />
+        <span className="agreement-gate-check-label">
+          Okudum ve kabul ediyorum
+        </span>
+      </label>
+      {error ? (
+        <p className="agreement-gate-error m-0" role="status">
+          {error}
+        </p>
+      ) : null}
+      <button
+        type="button"
+        disabled={!accepted || loading}
+        onClick={() => void onContinue()}
+        className="auth-oauth-btn agreement-gate-submit"
+      >
+        {loading ? "Kaydediliyor…" : "Kabul edip devam et"}
+      </button>
     </div>
   );
 }

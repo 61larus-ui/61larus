@@ -4,6 +4,7 @@ export const runtime = "nodejs";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { requireAdminSession } from "@/lib/admin-api-auth";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
+import { normalizeEntryCategory } from "@/lib/entry-category";
 import {
   combinedFullNameFromParts,
   resolveVisibleName,
@@ -195,10 +196,13 @@ export async function POST(req: Request) {
   const title = typeof body.title === "string" ? body.title.trim() : "";
   const content = typeof body.content === "string" ? body.content.trim() : "";
   const categoryRaw = body.category;
-  const category =
+  const categoryTrim =
     typeof categoryRaw === "string" && categoryRaw.trim().length > 0
       ? categoryRaw.trim()
       : null;
+  const category = categoryTrim
+    ? normalizeEntryCategory(categoryTrim) ?? null
+    : null;
 
   if (!title || !content) {
     return NextResponse.json(
@@ -221,9 +225,15 @@ export async function POST(req: Request) {
   const insertPayload: Record<string, string> = { title, content };
   if (category) insertPayload.category = category;
 
-  let ins = await service.from("entries").insert([insertPayload]).select("id");
+  let ins = await service
+    .from("entries")
+    .insert([insertPayload])
+    .select("id, title, content, category, created_at");
   if (ins.error && /category/i.test(ins.error.message)) {
-    ins = await service.from("entries").insert([{ title, content }]).select("id");
+    ins = await service
+      .from("entries")
+      .insert([{ title, content }])
+      .select("id, title, content, category, created_at");
   }
 
   if (ins.error) {
@@ -233,5 +243,19 @@ export async function POST(req: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, id: ins.data?.[0]?.id ?? null });
+  const created = ins.data?.[0];
+  if (created) {
+    console.log("[admin/entries POST] created", {
+      id: created.id,
+      title: created.title,
+      content:
+        typeof created.content === "string"
+          ? `${created.content.slice(0, 120)}${created.content.length > 120 ? "…" : ""}`
+          : created.content,
+      category: created.category ?? null,
+      created_at: created.created_at,
+    });
+  }
+
+  return NextResponse.json({ ok: true, id: created?.id ?? null });
 }

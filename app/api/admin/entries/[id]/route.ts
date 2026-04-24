@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 import { requireAdminSession, requireSuperAdminSession } from "@/lib/admin-api-auth";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
+import { normalizeEntryCategory } from "@/lib/entry-category";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -27,10 +28,13 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const title = typeof body.title === "string" ? body.title.trim() : "";
   const content = typeof body.content === "string" ? body.content.trim() : "";
   const categoryRaw = body.category;
-  const category =
+  const categoryTrim =
     typeof categoryRaw === "string" && categoryRaw.trim().length > 0
       ? categoryRaw.trim()
       : null;
+  const category = categoryTrim
+    ? normalizeEntryCategory(categoryTrim) ?? null
+    : null;
 
   if (!title || !content) {
     return NextResponse.json(

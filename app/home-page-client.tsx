@@ -6,29 +6,191 @@ import {
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
+  type ReactNode,
 } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthPanel from "@/components/auth-panel";
 import AgreementPanel from "@/components/agreement-panel";
 import { anonymizeCurrentUserAccount } from "@/lib/anonymize-account";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-import {
-  combinedFullNameFromParts,
-  resolveVisibleName,
-  type DisplayNameModePref,
-} from "@/lib/visible-name";
+import { resolveVisibleName } from "@/lib/visible-name";
 import {
   FEED_CATEGORY_OPTIONS,
+  normalizeEntryCategory,
   type FeedCategoryFilter,
 } from "@/lib/entry-category";
 import { FeedEntryCard } from "./feed-entry-card";
+
+/** DB’de kategori ya label (\"Yerel lezzetler\") ya da slug (yerel-lezzetler) olabilir. */
+function dbCategoryValuesForFilter(selectedCategory: FeedCategoryFilter): string[] {
+  if (selectedCategory === "all" || (selectedCategory as string) === "tumu")
+    return [];
+  const opt = FEED_CATEGORY_OPTIONS.find((o) => o.id === selectedCategory);
+  if (!opt || opt.id === "all") return [];
+  const out = [opt.id, opt.label];
+  if (opt.id === "tarih") {
+    return [...new Set([...out, "Tarih"])];
+  }
+  return out;
+}
+
+/** Sağ kolon kategori rayı — ince çizgi, tek görsel dil (referans). */
+function categoryRailIcon(id: FeedCategoryFilter): ReactNode {
+  const t = {
+    stroke: "currentColor" as const,
+    strokeWidth: 1.05,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+  const box = "category-rail-svg block h-[1.05rem] w-[1.05rem] shrink-0";
+  switch (id) {
+    case "all":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <path {...t} d="M5 8.5h14M5 12h14M5 15.5h9.5" />
+        </svg>
+      );
+    case "gundem":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <path
+            {...t}
+            d="M8.5 4.5h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z"
+          />
+          <path {...t} d="M8 9.5h8M8 12.5h6.5M8 15.5h7.5" />
+        </svg>
+      );
+    case "sahsiyetler":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <circle {...t} cx="12" cy="8.25" r="3.15" />
+          <path {...t} d="M6.25 19.25v-.75a5.75 5.75 0 0 1 11.5 0v.75" />
+        </svg>
+      );
+    case "mahalleler":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <path
+            {...t}
+            d="M4.5 10.25 12 4.75l7.5 5.5V19a1 1 0 0 1-1 1h-4.75v-6.5h-3.5V20H5.5a1 1 0 0 1-1-1v-8.75Z"
+          />
+        </svg>
+      );
+    case "sehir-hafizasi":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <path {...t} d="M5.5 5.5h6v13h-6V5.5Z" />
+          <path {...t} d="M13.5 8.5h5v10h-5V8.5Z" />
+          <path {...t} d="M8 9.5h2M8 12h2M16 11.5h1.5M16 14h1.5" />
+        </svg>
+      );
+    case "gundelik-hayat":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <path
+            {...t}
+            d="M8.5 4.5h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z"
+          />
+          <path {...t} d="M8 9.5h8M8 12.5h6.5M8 15.5h7.5" />
+        </svg>
+      );
+    case "tarih":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <path {...t} d="M5 20V11l7-4.25L19 11v9" />
+          <path {...t} d="M5 20h14" />
+          <path {...t} d="M10 20v-4.5h4V20" />
+          <path {...t} d="M9 11.5h6" />
+        </svg>
+      );
+    case "yerel-lezzetler":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <ellipse {...t} cx="12" cy="16" rx="7" ry="2.25" />
+          <path
+            {...t}
+            d="M6.2 10.2c1.1 1.8 2.1 1.8 2.8 0M10.4 8.2c.9 1.6 1.7 1.6 2.2 0M13.4 6.2c.8 1.2 1.4 1.2 1.8 0"
+          />
+          <path {...t} d="M8.5 14.5h7" />
+        </svg>
+      );
+    case "cografya":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <path {...t} d="M4 18.5h16" />
+          <path {...t} d="m5.5 18.5 4.25-9 3.5 6 3.75-11L18.5 18.5" />
+        </svg>
+      );
+    case "yurttaslik-bilgisi":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <path {...t} d="M4 8h16" />
+          <path {...t} d="M12 5.5V19" />
+          <path {...t} d="M8 19h8" />
+          <path {...t} d="M8.5 8 6 14.5h5L8.5 8Z" />
+          <path {...t} d="M15.5 8 13 14.5h5l-2.5-6.5Z" />
+        </svg>
+      );
+    case "spor":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
+          <circle {...t} cx="12" cy="12" r="6.35" />
+          <path {...t} d="M12 5.65v12.7M5.65 12h12.7" />
+          <path
+            {...t}
+            d="M7.35 7.35c1.85 1.85 7.45 1.85 9.3 0M7.35 16.65c1.85-1.85 7.45-1.85 9.3 0"
+          />
+        </svg>
+      );
+  }
+}
+
+function entryCategoryEyebrow(category: string | null | undefined): string {
+  const slug = normalizeEntryCategory(category ?? null);
+  if (!slug) return "YAZI";
+  const opt = FEED_CATEGORY_OPTIONS.find((o) => o.id === slug);
+  return (opt?.label ?? "Yazı").toLocaleUpperCase("tr-TR");
+}
+
+function entryMatchesSearch(entry: EntryItem, rawQuery: string): boolean {
+  const q = rawQuery.trim();
+  if (!q) return true;
+  const ql = q.toLocaleLowerCase("tr-TR");
+  const parts: string[] = [
+    entry.title ?? "",
+    entry.content ?? "",
+    entry.authorName ?? "",
+  ];
+  const rawCat = entry.category?.trim();
+  if (rawCat) parts.push(rawCat);
+  const slug = normalizeEntryCategory(entry.category ?? null);
+  if (slug) {
+    const opt = FEED_CATEGORY_OPTIONS.find((o) => o.id === slug);
+    if (opt) parts.push(opt.label);
+  }
+  return parts.some((s) => s.toLocaleLowerCase("tr-TR").includes(ql));
+}
+
+function estimateReadMinutesFromText(text: string): number {
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
 
 const LS_PENDING_ENTRY = "pendingEntryId";
 const LS_PENDING_ACTION = "pendingAction";
 
 /** Center feed pagination (initial + each “Daha fazla yükle” batch). */
 const FEED_PAGE_SIZE = 12;
+
+/** Header orta alan — tek satır, yavaş dönen Atatürk sözleri. */
+const HEADER_ATATURK_QUOTES = [
+  "Ne mutlu Türküm diyene!",
+  "Yurtta sulh, cihanda sulh.",
+  "Hayatta en hakiki mürşit ilimdir.",
+  "Ümitsiz durumlar yoktur.",
+  "İstikbal göklerdedir.",
+] as const;
 
 /** 8-4-4-4-12 hex id shape (matches Postgres uuid text form, including v4/v7 and non-RFC variants). */
 const UUID_RE =
@@ -38,62 +200,9 @@ function isRealUuid(value: string) {
   return UUID_RE.test(value);
 }
 
-/** Demo/seed or non-UUID ids: never call Supabase for reactions/comments tied to these rows. */
+/** Demo/seed or non-UUID ids: never call Supabase for comments tied to these rows. */
 function isSeedId(value: string) {
   return value.startsWith("seed-") || !isRealUuid(value);
-}
-
-/** Extract @handles for mention notifications (detection only; text unchanged). */
-function extractMentionUsernames(text: string): string[] {
-  const re = /@([\p{L}\p{N}_]+)/gu;
-  const seen = new Set<string>();
-  const out: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) {
-    let raw = m[1].trim().replace(/^[.,;:!?]+|[.,;:!?]+$/g, "");
-    if (!raw) continue;
-    const key = raw.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(raw);
-  }
-  return out;
-}
-
-/** ILIKE pattern for exact, case-insensitive nickname match (escape %, _, \\). */
-function escapeForIlikeExact(token: string): string {
-  return token
-    .replace(/\\/g, "\\\\")
-    .replace(/%/g, "\\%")
-    .replace(/_/g, "\\_");
-}
-
-type SupabaseBrowser = ReturnType<typeof createSupabaseBrowserClient>;
-
-/** Resolve mention tokens to user ids via public.users.nickname (public @handle). */
-async function resolveMentionedUserIds(
-  supabase: SupabaseBrowser,
-  tokens: string[]
-): Promise<string[]> {
-  if (tokens.length === 0) return [];
-  const ids = new Set<string>();
-  await Promise.all(
-    tokens.map(async (token) => {
-      const pattern = escapeForIlikeExact(token);
-      const { data, error } = await supabase
-        .from("users")
-        .select("id")
-        .ilike("nickname", pattern)
-        .limit(1)
-        .maybeSingle();
-      if (error) {
-        console.error("MENTION USER LOOKUP ERROR", error);
-        return;
-      }
-      if (data && typeof data.id === "string") ids.add(data.id);
-    })
-  );
-  return [...ids];
 }
 
 function readPendingFromStorage(): { entryId: string | null; action: string | null } {
@@ -123,7 +232,8 @@ type EntryItem = {
   title: string;
   content: string;
   created_at: string;
-  authorLabel?: string | null;
+  category?: string | null;
+  authorName?: string | null;
   bio61?: string | null;
 };
 
@@ -140,58 +250,9 @@ type CommentItem = {
   bio61?: string | null;
 };
 
-type NotificationInsert = {
-  user_id: string;
-  actor_user_id: string | null;
-  type: "comment_reply" | "mention";
-  entry_id: string | null;
-  comment_id: string | null;
-};
+export type CenterMode = "feed" | "entry" | "auth" | "agreement";
 
-type NotificationQueryRow = {
-  id: string;
-  type: string;
-  is_read: boolean;
-  created_at: string;
-  entry_id: string | null;
-  comment_id: string | null;
-  actor_user_id: string | null;
-};
-
-type ReactionType = "like" | "dislike";
-
-type ReactionSummary = {
-  likes: number;
-  dislikes: number;
-  mine: ReactionType | null;
-};
-
-type ReactionsModalState = {
-  open: boolean;
-  type: "entry" | "comment";
-  id: string | null;
-  tab: ReactionType;
-};
-
-const REACTIONS_MODAL_INITIAL: ReactionsModalState = {
-  open: false,
-  type: "entry",
-  id: null,
-  tab: "like",
-};
-
-type ReactionModalUserRow = {
-  userId: string;
-  label: string;
-  avatarUrl: string | null;
-};
-
-export type CenterMode =
-  | "feed"
-  | "entry"
-  | "auth"
-  | "agreement"
-  | "notifications";
+type FooterInfoId = "about" | "rules" | "privacy" | "contact";
 
 type Props = {
   leftEntries: EntryItem[];
@@ -199,8 +260,12 @@ type Props = {
   rightEntries: EntryItem[];
   commentsByEntryId: Record<string, CommentItem[]>;
   isAuthenticated: boolean;
+  /** Oturum kimliği değişince sözleşme state’i sunucu ile yeniden hizalanır (çıkış→giriş). */
+  authUserId: string | null;
   initialAgreementDone: boolean;
   initialOnboardingDone: boolean;
+  /** Yönetici askıdayken yorum/etkileşim kapatılır; salt okuma kalır. */
+  initialPlatformAccessSuspended: boolean;
   userEmail: string | null;
   /** Saved upload from `users.avatar_url` — highest priority for header avatar */
   profileAvatarUrl: string | null;
@@ -219,43 +284,15 @@ function formatDate(value: string) {
   return date.toLocaleString("tr-TR");
 }
 
-const TR_MONTH_SHORT = [
-  "Oca",
-  "Şub",
-  "Mar",
-  "Nis",
-  "May",
-  "Haz",
-  "Tem",
-  "Ağu",
-  "Eyl",
-  "Eki",
-  "Kas",
-  "Ara",
-] as const;
-
-function formatNotificationCompactClock(d: Date): string {
-  const day = d.getDate();
-  const mon = TR_MONTH_SHORT[d.getMonth()] ?? "";
-  const hh = d.getHours().toString().padStart(2, "0");
-  const mm = d.getMinutes().toString().padStart(2, "0");
-  return `${day} ${mon} ${hh}:${mm}`;
-}
-
-/** Turkish relative / compact time for notification rows (no extra deps). */
-function formatNotificationTime(createdAt: string): string {
-  const d = new Date(createdAt);
-  const t = d.getTime();
-  if (Number.isNaN(t)) return "";
-  const diff = Date.now() - t;
-  if (diff < 0) return formatNotificationCompactClock(d);
-  const sec = Math.floor(diff / 1000);
-  if (sec < 60) return "az önce";
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min} dk önce`;
-  const hours = Math.floor(sec / 3600);
-  if (hours < 24) return `${hours} sa önce`;
-  return formatNotificationCompactClock(d);
+/** Entry detail header only: calendar date, Turkish long month, no time. */
+function formatEntryDetailDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 function entryPublicUrl(entryId: string): string {
@@ -263,27 +300,12 @@ function entryPublicUrl(entryId: string): string {
   return `${window.location.origin}/?entry=${encodeURIComponent(entryId)}`;
 }
 
-function labelFromUserRow(row: {
-  email: string | null;
-  avatar_url: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  nickname: string | null;
-  display_name_mode: string | null;
-}): { label: string; avatarUrl: string | null } {
-  const full = combinedFullNameFromParts(row.first_name, row.last_name);
-  const dm = row.display_name_mode;
-  const displayMode: DisplayNameModePref =
-    dm === "nickname" || dm === "real_name" ? dm : null;
-  const label = resolveVisibleName({
-    fullName: full,
-    nickname: row.nickname,
-    displayMode,
-    emailFallback: row.email,
-  });
-  const av = row.avatar_url;
-  const avatarUrl = typeof av === "string" && av.length > 0 ? av : null;
-  return { label, avatarUrl };
+/** Yalnızca public.users satırı; RSC / stale prop fallback yok. */
+function platformSuspendedFromUsersRow(
+  row: { is_platform_access_suspended?: unknown } | null
+): boolean {
+  if (!row) return false;
+  return row.is_platform_access_suspended === true;
 }
 
 export default function HomePageClient({
@@ -292,8 +314,10 @@ export default function HomePageClient({
   rightEntries,
   commentsByEntryId,
   isAuthenticated,
+  authUserId,
   initialAgreementDone,
   initialOnboardingDone,
+  initialPlatformAccessSuspended,
   userEmail,
   profileAvatarUrl,
   oauthAvatarUrl,
@@ -318,6 +342,8 @@ export default function HomePageClient({
   }, [headerDisplayName]);
 
   const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
   const searchParams = useSearchParams();
 
   const stripEntryQueryFromUrl = useCallback(() => {
@@ -330,22 +356,8 @@ export default function HomePageClient({
     void router.replace(next ? `${path}?${next}` : path, { scroll: false });
   }, [router]);
   const [commentText, setCommentText] = useState("");
-  const [commentComposeFocused, setCommentComposeFocused] = useState(false);
   const commentComposeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [entryReactionSummaries, setEntryReactionSummaries] = useState<
-    Record<string, ReactionSummary>
-  >({});
-  const [commentReactionSummaries, setCommentReactionSummaries] = useState<
-    Record<string, ReactionSummary>
-  >({});
-  const [reactionsModal, setReactionsModal] = useState<ReactionsModalState>(
-    REACTIONS_MODAL_INITIAL
-  );
-  const [reactionsModalUsers, setReactionsModalUsers] = useState<ReactionModalUserRow[]>(
-    []
-  );
-  const [reactionsModalLoading, setReactionsModalLoading] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return readPendingFromStorage().entryId;
@@ -353,7 +365,12 @@ export default function HomePageClient({
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedCategoryFilter, setFeedCategoryFilter] =
     useState<FeedCategoryFilter>("all");
+  const [categoryFilteredEntries, setCategoryFilteredEntries] = useState<
+    EntryItem[] | null
+  >(null);
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [accountDeleteStep, setAccountDeleteStep] = useState<"idle" | "confirm">(
     "idle"
@@ -363,26 +380,9 @@ export default function HomePageClient({
     null
   );
   const accountMenuRef = useRef<HTMLDivElement>(null);
-  const notificationsMenuRef = useRef<HTMLDivElement>(null);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [headerNotifications, setHeaderNotifications] = useState<
-    {
-      id: string;
-      type: string;
-      is_read: boolean;
-      created_at: string;
-      entry_id: string | null;
-      comment_id: string | null;
-      actor_user_id: string | null;
-      /** @handle line: nickname when set, else visible name */
-      actorMentionHandle: string | null;
-      /** `resolveVisibleName` — görünen ad (başlık satırı) */
-      actorDisplayName: string | null;
-      entryTitle: string | null;
-    }[]
-  >([]);
-  const [notificationsLoading, setNotificationsLoading] = useState(false);
-  const [notificationsFetchError, setNotificationsFetchError] = useState(false);
+  const [footerInfoOpen, setFooterInfoOpen] = useState<FooterInfoId | null>(
+    null
+  );
 
   const commentsPropsFingerprint = useMemo(
     () =>
@@ -405,215 +405,32 @@ export default function HomePageClient({
     setCommentsByEntryIdLive(commentsByEntryId);
   }, [commentsByEntryId, commentsPropsFingerprint]);
 
-  const unreadNotificationCount = useMemo(
-    () => headerNotifications.filter((n) => !n.is_read).length,
-    [headerNotifications]
-  );
-
-  const fetchHeaderNotifications = useCallback(async () => {
-    if (!isAuthenticated) return;
-    setNotificationsLoading(true);
-    setNotificationsFetchError(false);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: rows, error } = await supabase
-        .from("notifications")
-        .select(
-          "id, type, is_read, created_at, entry_id, comment_id, actor_user_id"
-        )
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-
-      const list = (rows ?? []) as NotificationQueryRow[];
-      const actorIds = [
-        ...new Set(
-          list
-            .map((r: NotificationQueryRow) => r.actor_user_id)
-            .filter(
-              (id: string | null): id is string =>
-                typeof id === "string" && id.length > 0
-            )
-        ),
-      ];
-      const actorMentionHandleById: Record<string, string> = {};
-      const actorDisplayNameById: Record<string, string> = {};
-      if (actorIds.length > 0) {
-        const { data: actors, error: actErr } = await supabase
-          .from("users")
-          .select(
-            "id, first_name, last_name, nickname, display_name_mode, email"
-          )
-          .in("id", actorIds);
-        if (!actErr && actors) {
-          for (const u of actors) {
-            if (typeof u.id !== "string") continue;
-            const dm = u.display_name_mode;
-            const displayMode: DisplayNameModePref =
-              dm === "nickname" || dm === "real_name" ? dm : null;
-            const nick =
-              typeof u.nickname === "string" && u.nickname.trim().length > 0
-                ? u.nickname.trim()
-                : "";
-            const visible = resolveVisibleName({
-              fullName: combinedFullNameFromParts(u.first_name, u.last_name),
-              nickname: u.nickname,
-              displayMode,
-              emailFallback: u.email,
-            }).trim();
-            const handle = nick || visible;
-            if (handle.length > 0) {
-              actorMentionHandleById[u.id] = handle;
-            }
-            if (visible.length > 0) {
-              actorDisplayNameById[u.id] = visible;
-            } else if (handle.length > 0) {
-              actorDisplayNameById[u.id] = handle;
-            }
-          }
-        }
-      }
-
-      const entryIds = [
-        ...new Set(
-          list
-            .map((r: NotificationQueryRow) => r.entry_id)
-            .filter(
-              (id: string | null): id is string =>
-                typeof id === "string" && id.length > 0
-            )
-        ),
-      ];
-      const entryTitleById: Record<string, string> = {};
-      if (entryIds.length > 0) {
-        const { data: entryRows, error: entErr } = await supabase
-          .from("entries")
-          .select("id, title")
-          .in("id", entryIds);
-        if (!entErr && entryRows) {
-          for (const e of entryRows) {
-            if (typeof e.id !== "string") continue;
-            const title =
-              typeof e.title === "string" && e.title.trim().length > 0
-                ? e.title.trim()
-                : "";
-            if (title) entryTitleById[e.id] = title;
-          }
-        }
-      }
-
-      setHeaderNotifications(
-        list.map((r: NotificationQueryRow) => ({
-          id: r.id,
-          type: r.type,
-          is_read: Boolean(r.is_read),
-          created_at: r.created_at,
-          entry_id: r.entry_id ?? null,
-          comment_id: r.comment_id ?? null,
-          actor_user_id: r.actor_user_id ?? null,
-          actorMentionHandle: r.actor_user_id
-            ? actorMentionHandleById[r.actor_user_id] ?? null
-            : null,
-          actorDisplayName: r.actor_user_id
-            ? actorDisplayNameById[r.actor_user_id] ?? null
-            : null,
-          entryTitle: r.entry_id ? entryTitleById[r.entry_id] ?? null : null,
-        }))
-      );
-    } catch {
-      setHeaderNotifications([]);
-      setNotificationsFetchError(true);
-    } finally {
-      setNotificationsLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  const markNotificationsAsRead = useCallback(
-    async (ids: string[]): Promise<void> => {
-      if (ids.length === 0) return;
-      try {
-        const supabase = createSupabaseBrowserClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-        const { error } = await supabase
-          .from("notifications")
-          .update({ is_read: true })
-          .in("id", ids)
-          .eq("user_id", user.id);
-        if (error) {
-          return;
-        }
-      } catch {
-        return;
-      }
-    },
-    []
-  );
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setHeaderNotifications([]);
-      setNotificationsOpen(false);
-      setNotificationsFetchError(false);
-      return;
-    }
-    void fetchHeaderNotifications();
-  }, [isAuthenticated, fetchHeaderNotifications]);
-
-  useEffect(() => {
-    if (!notificationsOpen || notificationsLoading || !isAuthenticated) {
-      return;
-    }
-    const unreadIds = headerNotifications
-      .filter((n) => !n.is_read)
-      .map((n) => n.id);
-    if (unreadIds.length === 0) return;
-    setHeaderNotifications((prev) =>
-      prev.map((n) =>
-        unreadIds.includes(n.id) ? { ...n, is_read: true } : n
-      )
-    );
-    void markNotificationsAsRead(unreadIds);
-  }, [
-    notificationsOpen,
-    notificationsLoading,
-    headerNotifications,
-    isAuthenticated,
-    markNotificationsAsRead,
-  ]);
-
-  useEffect(() => {
-    if (!notificationsOpen) return;
-    function onPointerDown(e: MouseEvent) {
-      const el = notificationsMenuRef.current;
-      if (el && !el.contains(e.target as Node)) {
-        setNotificationsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, [notificationsOpen]);
-
   const [agreementDone, setAgreementDone] = useState(initialAgreementDone);
   const [onboardingDone, setOnboardingDone] = useState(initialOnboardingDone);
+  /**
+   * public.users’tan doğrulanmış askı: yalnızca `true` iken UI kilitli.
+   * `null` = henüz bu oturum için sonuç yok (stale RSC prop’a asla düşme).
+   */
+  const [suspendFromUsers, setSuspendFromUsers] = useState<boolean | null>(null);
+  const initialSuspendRef = useRef(initialPlatformAccessSuspended);
+  initialSuspendRef.current = initialPlatformAccessSuspended;
+  const platformAccessSuspended = suspendFromUsers === true;
 
   const agreementDoneRef = useRef(agreementDone);
   const onboardingDoneRef = useRef(onboardingDone);
   const isAuthenticatedRef = useRef(isAuthenticated);
+  const platformAccessSuspendedRef = useRef(platformAccessSuspended);
+  /**
+   * Oturum kimliği (çıkış / tekrar giriş) değişiminde, eski "agreement true" client
+   * değerinin sunucu false ile asla birleşmemesini sağlamak için.
+   */
+  const lastAuthUserIdForGateRef = useRef<string | null | "unset">("unset");
   /** Until RSC shows a signed-out user, skip agreement routing + prop merge that can fight logout/delete. */
   const postSignOutHardResetRef = useRef(false);
   agreementDoneRef.current = agreementDone;
   onboardingDoneRef.current = onboardingDone;
   isAuthenticatedRef.current = isAuthenticated;
+  platformAccessSuspendedRef.current = platformAccessSuspended;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -622,20 +439,103 @@ export default function HomePageClient({
   }, [isAuthenticated]);
 
   useEffect(() => {
+    const currentId: string | null =
+      isAuthenticated && authUserId ? authUserId : null;
+
+    if (lastAuthUserIdForGateRef.current === "unset") {
+      lastAuthUserIdForGateRef.current = currentId;
+    } else if (lastAuthUserIdForGateRef.current !== currentId) {
+      lastAuthUserIdForGateRef.current = currentId;
+      if (currentId) {
+        setAgreementDone(initialAgreementDone);
+        setOnboardingDone(initialOnboardingDone);
+        agreementDoneRef.current = initialAgreementDone;
+        onboardingDoneRef.current = initialOnboardingDone;
+      } else {
+        setAgreementDone(false);
+        setOnboardingDone(false);
+        agreementDoneRef.current = false;
+        onboardingDoneRef.current = false;
+      }
+      return;
+    }
+
     if (postSignOutHardResetRef.current) {
       setAgreementDone(false);
       setOnboardingDone(false);
       return;
     }
-    // Same pattern as onboarding: never let a stale RSC tick clear optimistic agreement
-    // (e.g. right after accept + refresh), or routing forces agreement again and drops entry restore.
+    // Aynı oturumda: RSC henüz yenilenmeden sözleşme onayını koru (|| prev). Kimlik
+    // değişiminde yukarıda zaten server değerine sert hizalama yapıldı.
     setAgreementDone((prev) =>
       isAuthenticated ? initialAgreementDone || prev : initialAgreementDone
     );
     setOnboardingDone((prev) =>
       isAuthenticated ? initialOnboardingDone || prev : initialOnboardingDone
     );
-  }, [initialAgreementDone, initialOnboardingDone, isAuthenticated]);
+  }, [
+    authUserId,
+    isAuthenticated,
+    initialAgreementDone,
+    initialOnboardingDone,
+  ]);
+
+  /** public.users `is_platform_access_suspended` — tek kaynak; `router` deps’te yok (refresh sonsuz tetiklemez). */
+  useEffect(() => {
+    if (!isAuthenticated || !authUserId) {
+      setSuspendFromUsers(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const verifySuspendFromUsers = async (clearPendingUntilResult: boolean) => {
+      if (clearPendingUntilResult) {
+        setSuspendFromUsers(null);
+      }
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, is_platform_access_suspended")
+        .eq("id", authUserId)
+        .maybeSingle();
+
+      if (cancelled) return;
+      if (error) {
+        console.warn("[home] platform suspend refresh failed", error);
+        return;
+      }
+
+      const fetchedSuspendedValue = data?.is_platform_access_suspended;
+      const effectiveSuspendedValue = platformSuspendedFromUsersRow(
+        data as { is_platform_access_suspended?: unknown } | null
+      );
+      const pendingValue = initialSuspendRef.current;
+
+      console.log("home suspend debug", {
+        authUserId,
+        fetchedSuspendedValue,
+        pendingValue,
+        effectiveSuspendedValue,
+      });
+
+      setSuspendFromUsers(effectiveSuspendedValue);
+      void routerRef.current.refresh();
+    };
+
+    void verifySuspendFromUsers(true);
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void verifySuspendFromUsers(false);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [isAuthenticated, authUserId]);
 
   // Stable callback + refs for gate flags so post-onboarding code can call this in the
   // same tick as setOnboardingDone without a stale closure (same mutations as a click).
@@ -648,11 +548,20 @@ export default function HomePageClient({
       setCenterMode("auth");
       return;
     }
-    if (agreementDoneRef.current) {
+    if (platformAccessSuspendedRef.current) {
       setCenterMode("feed");
       if (readPendingFromStorage().entryId === id) {
         clearPendingReturn();
       }
+      return;
+    }
+    if (!agreementDoneRef.current) {
+      setCenterMode("agreement");
+      return;
+    }
+    setCenterMode("feed");
+    if (readPendingFromStorage().entryId === id) {
+      clearPendingReturn();
     }
   }, []);
 
@@ -663,10 +572,41 @@ export default function HomePageClient({
     stripEntryQueryFromUrl();
   }, [stripEntryQueryFromUrl]);
 
-  const goToBrandHome = useCallback(() => {
+  /** Tam yazı akışı: kategori tümü, arama kapalı, detay kapalı, feed modu. */
+  const resetToWritingsFeed = useCallback(() => {
     setFeedCategoryFilter("all");
+    setSearchQuery("");
     closeEntryModal();
   }, [closeEntryModal]);
+
+  /** Wordmark: kimlik dönüşü + sayfa başına kaydır. */
+  const goToBrandHome = useCallback(() => {
+    resetToWritingsFeed();
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [resetToWritingsFeed]);
+
+  const closeFooterInfo = useCallback(() => {
+    setFooterInfoOpen(null);
+  }, []);
+
+  useEffect(() => {
+    if (!footerInfoOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFooterInfoOpen(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [footerInfoOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const id = window.setInterval(() => {
+      setHeaderEditorialIdx((i) => (i + 1) % HEADER_ATATURK_QUOTES.length);
+    }, 14000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const raw = searchParams.get("entry");
@@ -680,7 +620,7 @@ export default function HomePageClient({
   }, [searchParams]);
 
   useEffect(() => {
-    if (!isAuthenticated || !agreementDone) return;
+    if (!isAuthenticated || !agreementDone || platformAccessSuspended) return;
 
     const raw = searchParams.get("entry");
     const urlEntryId =
@@ -708,6 +648,7 @@ export default function HomePageClient({
   }, [
     isAuthenticated,
     agreementDone,
+    platformAccessSuspended,
     centerMode,
     centerEntries,
     leftEntries,
@@ -746,7 +687,7 @@ export default function HomePageClient({
 
   useEffect(() => {
     setFeedVisibleCount(FEED_PAGE_SIZE);
-  }, [feedCategoryFilter]);
+  }, [feedCategoryFilter, searchQuery]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -756,6 +697,12 @@ export default function HomePageClient({
       return;
     }
     if (postSignOutHardResetRef.current) {
+      return;
+    }
+    if (platformAccessSuspended) {
+      if (centerMode === "agreement") {
+        setCenterMode("feed");
+      }
       return;
     }
     if (!agreementDone) {
@@ -770,7 +717,14 @@ export default function HomePageClient({
         setCenterMode("feed");
       }
     }
-  }, [isAuthenticated, agreementDone, centerMode, selectedEntryId, selectEntry]);
+  }, [
+    isAuthenticated,
+    agreementDone,
+    platformAccessSuspended,
+    centerMode,
+    selectedEntryId,
+    selectEntry,
+  ]);
 
   const persistStateBeforeOAuth = useCallback(() => {
     const id = selectedEntryId ?? centerEntries[0]?.id ?? null;
@@ -787,6 +741,13 @@ export default function HomePageClient({
       const id = selectedEntryId ?? centerEntries[0]?.id ?? null;
       if (id) writePendingReturn(id, "comment");
       setCenterMode("auth");
+      return;
+    }
+    if (platformAccessSuspendedRef.current) {
+      return;
+    }
+    if (!agreementDoneRef.current) {
+      setCenterMode("agreement");
     }
   }
 
@@ -816,6 +777,14 @@ export default function HomePageClient({
 
     if (!user) {
       await requireAuthForComment();
+      return;
+    }
+
+    if (platformAccessSuspendedRef.current) {
+      return;
+    }
+    if (!agreementDoneRef.current) {
+      setCenterMode("agreement");
       return;
     }
 
@@ -849,7 +818,7 @@ export default function HomePageClient({
         }
       }
 
-      const { data: insertedComment, error } = await supabase
+      const { error } = await supabase
         .from("comments")
         .insert({
           entry_id: selectedEntry.id,
@@ -858,52 +827,11 @@ export default function HomePageClient({
           parent_comment_id: null,
           reply_to_user_id: null,
           reply_to_username: null,
-        })
-        .select("id")
-        .single();
+        });
 
       if (error) {
         console.error("COMMENT SUBMIT ERROR", error);
         return;
-      }
-
-      const newCommentId = insertedComment?.id;
-
-      try {
-        const mentionTokens = extractMentionUsernames(trimmed);
-        if (mentionTokens.length > 0 && newCommentId) {
-          const mentionedUserIds = await resolveMentionedUserIds(
-            supabase,
-            mentionTokens
-          );
-          const mentionPayloads: NotificationInsert[] = [];
-          const seenRecipient = new Set<string>();
-          for (const mentionedId of mentionedUserIds) {
-            if (mentionedId === user.id) continue;
-            if (seenRecipient.has(mentionedId)) continue;
-            seenRecipient.add(mentionedId);
-            mentionPayloads.push({
-              user_id: mentionedId,
-              actor_user_id: user.id,
-              type: "mention",
-              entry_id: selectedEntry.id,
-              comment_id: newCommentId,
-            });
-          }
-          if (mentionPayloads.length > 0) {
-            const { error: mentionInsErr } = await supabase
-              .from("notifications")
-              .insert(mentionPayloads);
-            if (mentionInsErr) {
-              console.error(
-                "MENTION NOTIFICATION INSERT ERROR",
-                mentionInsErr
-              );
-            }
-          }
-        }
-      } catch (mentionErr) {
-        console.error("MENTION NOTIFICATION ERROR", mentionErr);
       }
 
       setCommentText("");
@@ -915,14 +843,6 @@ export default function HomePageClient({
     }
   }
 
-  const allEntryIds = useMemo(() => {
-    const s = new Set<string>();
-    for (const e of leftEntries) s.add(e.id);
-    for (const e of centerEntries) s.add(e.id);
-    for (const e of rightEntries) s.add(e.id);
-    return [...s].sort();
-  }, [leftEntries, centerEntries, rightEntries]);
-
   const mostCommentedEntries = useMemo(() => {
     const ranked = centerEntries.map((entry) => ({
       entry,
@@ -932,274 +852,100 @@ export default function HomePageClient({
     return ranked.slice(0, 10).map((row) => row.entry);
   }, [centerEntries, commentsByEntryIdLive]);
 
-  const feedEntriesFiltered = useMemo(() => {
-    return centerEntries;
-  }, [centerEntries]);
-
-  const centerFeedEntries = useMemo(
-    () => feedEntriesFiltered.slice(0, feedVisibleCount),
-    [feedEntriesFiltered, feedVisibleCount]
-  );
-
-  const feedHasMore = feedVisibleCount < feedEntriesFiltered.length;
-
-  const refreshEntryReactions = useCallback(async () => {
-    const ids = allEntryIds;
-    if (ids.length === 0) {
-      setEntryReactionSummaries({});
-      return;
-    }
-    const supabase = createSupabaseBrowserClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const myId = user?.id ?? null;
-    const next: Record<string, ReactionSummary> = {};
-    for (const id of ids) {
-      next[id] = { likes: 0, dislikes: 0, mine: null };
-    }
-    const dbIds = ids.filter((id) => !isSeedId(id));
-    if (dbIds.length === 0) {
-      setEntryReactionSummaries(next);
-      return;
-    }
-    const { data, error } = await supabase
-      .from("entry_reactions")
-      .select("entry_id, reaction_type, user_id")
-      .in("entry_id", dbIds);
-    if (error) {
-      console.warn("entry_reactions", error.message);
-      return;
-    }
-    for (const row of data ?? []) {
-      const eid = row.entry_id as string;
-      if (!next[eid]) next[eid] = { likes: 0, dislikes: 0, mine: null };
-      if (row.reaction_type === "like") next[eid].likes += 1;
-      else if (row.reaction_type === "dislike") next[eid].dislikes += 1;
-      if (myId && row.user_id === myId) {
-        next[eid].mine = row.reaction_type as ReactionType;
-      }
-    }
-    setEntryReactionSummaries(next);
-  }, [allEntryIds]);
-
-  const refreshCommentReactions = useCallback(async (commentIds: string[]) => {
-    if (commentIds.length === 0) {
-      setCommentReactionSummaries({});
-      return;
-    }
-    const supabase = createSupabaseBrowserClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const myId = user?.id ?? null;
-    const next: Record<string, ReactionSummary> = {};
-    for (const cid of commentIds) {
-      next[cid] = { likes: 0, dislikes: 0, mine: null };
-    }
-    const dbIds = commentIds.filter((id) => !isSeedId(id));
-    if (dbIds.length === 0) {
-      setCommentReactionSummaries(next);
-      return;
-    }
-    const { data, error } = await supabase
-      .from("comment_reactions")
-      .select("comment_id, reaction_type, user_id")
-      .in("comment_id", dbIds);
-    if (error) {
-      console.warn("comment_reactions", error.message);
-      return;
-    }
-    for (const row of data ?? []) {
-      const cid = row.comment_id as string;
-      if (!next[cid]) next[cid] = { likes: 0, dislikes: 0, mine: null };
-      if (row.reaction_type === "like") next[cid].likes += 1;
-      else if (row.reaction_type === "dislike") next[cid].dislikes += 1;
-      if (myId && row.user_id === myId) {
-        next[cid].mine = row.reaction_type as ReactionType;
-      }
-    }
-    setCommentReactionSummaries(next);
-  }, []);
-
   useEffect(() => {
-    void refreshEntryReactions();
-  }, [refreshEntryReactions, isAuthenticated]);
-
-  const selectedCommentIdsKey = useMemo(
-    () => selectedComments.map((c) => c.id).sort().join(","),
-    [selectedComments]
-  );
-
-  useEffect(() => {
-    if (!selectedCommentIdsKey) {
-      setCommentReactionSummaries({});
-      return;
-    }
-    void refreshCommentReactions(selectedCommentIdsKey.split(","));
-  }, [selectedCommentIdsKey, refreshCommentReactions, isAuthenticated]);
-
-  function requireAuthForReaction(entryId: string | null): void {
-    if (!isAuthenticated) {
-      if (entryId) writePendingReturn(entryId, "comment");
-      setCenterMode("auth");
-    }
-  }
-
-  function requireAuthForCommentReaction(): void {
-    if (!isAuthenticated) {
-      const id = selectedEntryId ?? centerEntries[0]?.id ?? null;
-      if (id) writePendingReturn(id, "comment");
-      setCenterMode("auth");
-    }
-  }
-
-  useEffect(() => {
-    if (!reactionsModal.open || !reactionsModal.id) {
-      setReactionsModalUsers([]);
-      setReactionsModalLoading(false);
-      return;
-    }
-    if (isSeedId(reactionsModal.id)) {
-      setReactionsModalUsers([]);
-      setReactionsModalLoading(false);
+    const isAll =
+      feedCategoryFilter === "all" ||
+      (feedCategoryFilter as string) === "tumu";
+    if (isAll) {
+      setCategoryFilteredEntries(null);
       return;
     }
 
     let cancelled = false;
-    const supabase = createSupabaseBrowserClient();
-
-    const load = async () => {
-      setReactionsModalLoading(true);
-      setReactionsModalUsers([]);
-      const table =
-        reactionsModal.type === "entry"
-          ? "entry_reactions"
-          : "comment_reactions";
-      const idField =
-        reactionsModal.type === "entry" ? "entry_id" : "comment_id";
-
-      const { data, error } = await supabase
-        .from(table)
-        .select(
-          "user_id, users(id, email, avatar_url, first_name, last_name, nickname, display_name_mode)"
-        )
-        .eq(idField, reactionsModal.id)
-        .eq("reaction_type", reactionsModal.tab);
-
+    (async () => {
+      const supabase = createSupabaseBrowserClient();
+      let query = supabase
+        .from("entries")
+        .select("id, title, content, created_at, category, user_id")
+        .order("created_at", { ascending: false });
+      const vals = dbCategoryValuesForFilter(feedCategoryFilter);
+      if (vals.length > 0) {
+        query = query.in("category", vals);
+      }
+      const { data, error } = await query;
       if (cancelled) return;
       if (error) {
-        console.warn("reactions modal", error.message);
-        setReactionsModalUsers([]);
-        setReactionsModalLoading(false);
+        console.error("[entries] category query", error);
+        setCategoryFilteredEntries(null);
         return;
       }
-
-      type UserEmbed = {
+      const rows = (data ?? []) as {
         id: string;
-        email: string | null;
-        avatar_url: string | null;
-        first_name: string | null;
-        last_name: string | null;
-        nickname: string | null;
-        display_name_mode: string | null;
-      };
-      const list: ReactionModalUserRow[] = [];
-      for (const raw of data ?? []) {
-        const row = raw as {
-          user_id: string;
-          users: UserEmbed | UserEmbed[] | null;
-        };
-        if (!row.user_id) continue;
-        const u = row.users;
-        const profile = Array.isArray(u) ? u[0] : u;
-        if (!profile) {
-          list.push({ userId: row.user_id, label: "kullanıcı", avatarUrl: null });
-          continue;
-        }
-        const { label, avatarUrl } = labelFromUserRow(profile);
-        list.push({ userId: row.user_id, label, avatarUrl });
-      }
-      setReactionsModalUsers(list);
-      setReactionsModalLoading(false);
-    };
-
-    void load();
+        title: string;
+        content: string;
+        created_at: string;
+        category: string | null;
+        user_id?: string | null;
+      }[];
+      const distinctCats = [
+        ...new Set(
+          rows.map((r) => (typeof r.category === "string" ? r.category : ""))
+        ),
+      ];
+      console.log(
+        "[entries fetch] selectedCategory:",
+        feedCategoryFilter,
+        "distinct category values in response:",
+        distinctCats
+      );
+      setCategoryFilteredEntries(
+        rows.map((r) => {
+          const existing = centerEntries.find((e) => e.id === r.id);
+          const rawCat = typeof r.category === "string" ? r.category : null;
+          return {
+            id: String(r.id),
+            title: r.title,
+            content: r.content,
+            created_at: r.created_at,
+            category: normalizeEntryCategory(rawCat) ?? rawCat,
+            authorName: existing?.authorName ?? null,
+            bio61: existing?.bio61 ?? null,
+          };
+        })
+      );
+    })();
     return () => {
       cancelled = true;
     };
-  }, [reactionsModal]);
+  }, [feedCategoryFilter, centerEntries]);
 
-  const toggleEntryReaction = async (entryId: string, type: ReactionType) => {
-    requireAuthForReaction(entryId);
-    if (!isAuthenticated) return;
-    if (isSeedId(entryId)) return;
-    const supabase = createSupabaseBrowserClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: row } = await supabase
-      .from("entry_reactions")
-      .select("id, reaction_type")
-      .eq("entry_id", entryId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!row) {
-      const { error } = await supabase.from("entry_reactions").insert({
-        entry_id: entryId,
-        user_id: user.id,
-        reaction_type: type,
-      });
-      if (error) console.error(error);
-    } else if (row.reaction_type === type) {
-      await supabase.from("entry_reactions").delete().eq("id", row.id);
-    } else {
-      await supabase
-        .from("entry_reactions")
-        .update({ reaction_type: type })
-        .eq("id", row.id);
+  const feedEntriesFiltered = useMemo(() => {
+    if (
+      feedCategoryFilter === "all" ||
+      (feedCategoryFilter as string) === "tumu"
+    ) {
+      return centerEntries;
     }
-    await refreshEntryReactions();
-  };
+    if (categoryFilteredEntries !== null) {
+      return categoryFilteredEntries;
+    }
+    return centerEntries.filter((e) => {
+      const n = normalizeEntryCategory(e.category ?? null);
+      return n === feedCategoryFilter;
+    });
+  }, [centerEntries, feedCategoryFilter, categoryFilteredEntries]);
 
-  const toggleCommentReaction = async (commentId: string, type: ReactionType) => {
-    requireAuthForCommentReaction();
-    if (!isAuthenticated) return;
-    if (isSeedId(commentId)) return;
-    const supabase = createSupabaseBrowserClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: row } = await supabase
-      .from("comment_reactions")
-      .select("id, reaction_type")
-      .eq("comment_id", commentId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!row) {
-      const { error } = await supabase.from("comment_reactions").insert({
-        comment_id: commentId,
-        user_id: user.id,
-        reaction_type: type,
-      });
-      if (error) console.error("comment_reactions insert", error);
-    } else if (row.reaction_type === type) {
-      const { error: delError } = await supabase
-        .from("comment_reactions")
-        .delete()
-        .eq("id", row.id);
-      if (delError) console.error("comment_reactions delete", delError);
-    } else {
-      const { error: updError } = await supabase
-        .from("comment_reactions")
-        .update({ reaction_type: type })
-        .eq("id", row.id);
-      if (updError) console.error("comment_reactions update", updError);
-    }
-    await refreshCommentReactions(selectedComments.map((c) => c.id));
-  };
+  const feedEntriesSearchFiltered = useMemo(() => {
+    if (!searchQuery.trim()) return feedEntriesFiltered;
+    return feedEntriesFiltered.filter((e) => entryMatchesSearch(e, searchQuery));
+  }, [feedEntriesFiltered, searchQuery]);
+
+  const centerFeedEntries = useMemo(
+    () => feedEntriesSearchFiltered.slice(0, feedVisibleCount),
+    [feedEntriesSearchFiltered, feedVisibleCount]
+  );
+
+  const feedHasMore = feedVisibleCount < feedEntriesSearchFiltered.length;
 
   const copyEntryLink = (entryId: string, title: string) => {
     const url = entryPublicUrl(entryId);
@@ -1292,35 +1038,46 @@ export default function HomePageClient({
   function renderMainFeed() {
     if (centerEntries.length === 0) {
       return (
-        <div className="flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-muted)] px-4 py-14 text-center text-sm text-[color:var(--text-muted)]">
+        <div className="flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-hair)] px-4 py-14 text-center text-sm text-[color:var(--text-muted)]">
           Henüz içerik yok
         </div>
       );
     }
     if (feedEntriesFiltered.length === 0) {
       return (
-        <div className="flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-muted)] px-4 py-14 text-center text-sm text-[color:var(--text-muted)]">
+        <div className="flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-hair)] px-4 py-14 text-center text-sm text-[color:var(--text-muted)]">
           Bu kategoride entry yok.
         </div>
       );
     }
+    if (feedEntriesSearchFiltered.length === 0 && searchQuery.trim()) {
+      return (
+        <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-4 py-16 text-center md:px-6 md:py-20">
+          <p className="feed-search-empty-title m-0 text-[0.9375rem] font-normal leading-relaxed text-[color:var(--text-secondary)] md:text-[0.96875rem]">
+            Aramana uygun bir yazı bulunamadı.
+          </p>
+          <p className="feed-search-empty-hint m-0 mt-3 max-w-[22rem] mx-auto text-[0.8125rem] font-normal leading-[1.65] text-[color:var(--text-muted)] md:text-[0.84375rem]">
+            Farklı bir kelime deneyebilir veya kategori filtresini
+            değiştirebilirsin.
+          </p>
+        </div>
+      );
+    }
     return (
-      <div className="relative z-0 pb-6 md:pb-9">
-        <nav
-          className="flex flex-col border-t border-[color:var(--divide-muted)]"
-          aria-label="Entry akışı"
-        >
+      <div className="relative z-0 pb-5 md:pb-8">
+        <nav className="flex flex-col" aria-label="Entry akışı">
           {centerFeedEntries.map((entry) => {
             const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
-            const author = entry.authorLabel?.trim() ?? "—";
             const isActive = entry.id === effectiveEntryId;
             return (
               <FeedEntryCard
                 key={entry.id}
                 title={entry.title}
                 contentPreview={entry.content}
-                author={author}
                 commentCount={cc}
+                readMinutes={estimateReadMinutesFromText(entry.content)}
+                categoryEyebrow={entryCategoryEyebrow(entry.category)}
+                authorLabel={entry.authorName?.trim() || "61Larus"}
                 isActive={isActive}
                 onSelect={() => selectEntry(entry.id)}
               />
@@ -1333,99 +1090,11 @@ export default function HomePageClient({
             onClick={() =>
               setFeedVisibleCount((c) => c + FEED_PAGE_SIZE)
             }
-            className="mt-8 w-full rounded-[var(--radius-md)] border border-dashed border-[color:var(--divide-muted)] bg-transparent px-5 py-3 text-center text-[11px] font-medium uppercase tracking-[0.12em] text-[color:var(--text-muted)] transition-[color,border-color,background-color] duration-200 hover:border-[color:var(--border-subtle)] hover:bg-[var(--surface-hover)] hover:text-[color:var(--text-secondary)]"
+            className="mt-8 w-full border-0 bg-transparent py-4 text-center text-[12px] font-normal tracking-[0.03em] text-[color:var(--text-muted)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[6px] transition-colors hover:text-[color:var(--text-secondary)] hover:decoration-[color:var(--border-subtle)]"
           >
-            Daha fazla yükle
+            Daha fazla yazı yükle ↓
           </button>
         ) : null}
-      </div>
-    );
-  }
-
-  function notificationActorLabel(
-    n: (typeof headerNotifications)[number]
-  ): string {
-    return (
-      n.actorDisplayName?.trim() ||
-      n.actorMentionHandle?.trim() ||
-      "Kullanıcı"
-    );
-  }
-
-  function renderNotificationsCenter() {
-    return (
-      <div className="relative z-0 pb-6 md:pb-9">
-        <h1 className="m-0 border-0 pb-5 text-[13px] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-muted)] md:pb-6">
-          Bildirimler
-        </h1>
-        {notificationsLoading ? (
-          <p
-            className="py-10 text-center text-sm"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Yükleniyor…
-          </p>
-        ) : notificationsFetchError ? (
-          <p
-            className="py-10 text-center text-sm"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Bildirimler yüklenemedi
-          </p>
-        ) : headerNotifications.length === 0 ? (
-          <p
-            className="py-10 text-center text-sm"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Henüz bildirimin yok
-          </p>
-        ) : (
-          <ul className="m-0 list-none border-t border-[color:var(--divide)] p-0">
-            {headerNotifications.map((n) => {
-              const actor = notificationActorLabel(n);
-              const titleLine = n.entryTitle?.trim() ?? "—";
-              const canNavigate =
-                typeof n.entry_id === "string" && n.entry_id.length > 0;
-              const unread = !n.is_read;
-              return (
-                <li key={n.id}>
-                  <button
-                    type="button"
-                    disabled={!canNavigate}
-                    onClick={() => {
-                      if (!canNavigate || !n.entry_id) return;
-                      selectEntry(n.entry_id);
-                    }}
-                    className="flex w-full flex-col gap-0.5 border-b border-[color:var(--divide)] py-3.5 text-left transition-colors hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50 last:border-b-0 md:py-4"
-                  >
-                    <div className="flex w-full min-w-0 items-baseline justify-between gap-3">
-                      <span
-                        className="min-w-0 truncate text-[14px] leading-snug text-[color:var(--text-primary)]"
-                        style={{
-                          fontWeight: unread ? 600 : 500,
-                        }}
-                      >
-                        {actor}
-                      </span>
-                      <time
-                        className="shrink-0 tabular-nums text-[12px] leading-none text-[color:var(--text-muted)]"
-                        dateTime={n.created_at}
-                      >
-                        {formatNotificationTime(n.created_at)}
-                      </time>
-                    </div>
-                    <span
-                      className="line-clamp-2 text-[14px] leading-snug text-[color:var(--text-secondary)]"
-                      title={titleLine !== "—" ? titleLine : undefined}
-                    >
-                      {titleLine}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
       </div>
     );
   }
@@ -1442,28 +1111,8 @@ export default function HomePageClient({
       );
     }
 
-    const commentLikeCount = (c: CommentItem) =>
-      commentReactionSummaries[c.id]?.likes ?? 0;
-    const hasLikes =
-      selectedComments.length > 0 &&
-      selectedComments.some((c) => commentLikeCount(c) > 0);
-    const topLikedComment =
-      selectedComments.length === 0
-        ? null
-        : hasLikes
-          ? selectedComments.reduce<CommentItem | null>(
-              (max, c) =>
-                commentLikeCount(c) >
-                (max != null ? commentLikeCount(max) : 0)
-                  ? c
-                  : max,
-              null
-            )
-          : selectedComments[0];
-
-    const entryAuthor =
-      selectedEntry.authorLabel?.trim() || "—";
-    const entryMetaLine = `${entryAuthor} · ${formatDate(selectedEntry.created_at)}`;
+    const authorName = selectedEntry.authorName?.trim() || "61Larus";
+    const formattedDate = formatEntryDetailDate(selectedEntry.created_at);
 
     return (
       <div className="relative z-0 max-w-none">
@@ -1471,421 +1120,154 @@ export default function HomePageClient({
           <button
             type="button"
             onClick={() => closeEntryModal()}
-            className="inline-flex w-fit border-0 bg-transparent p-0 text-[12px] font-normal tracking-[0.02em] text-[color:var(--text-muted)] underline decoration-[color:var(--divide-muted)] underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)] hover:decoration-[color:var(--divide)]"
+            className="entry-detail-back"
           >
             ← akışa dön
           </button>
         </div>
 
-        <article className="mt-8 md:mt-10">
+        <article className="entry-detail-article m-0 border-0 p-0">
           <header className="m-0 border-0 p-0">
-            <h1
-              id="entry-detail-title"
-              className="m-0 text-[clamp(1.625rem,3.2vw,2rem)] font-semibold leading-[1.2] tracking-[-0.026em] text-[color:var(--text-primary)] md:leading-[1.18] md:tracking-[-0.024em]"
-              style={{
-                fontFamily: "var(--font-editorial-display)",
-                fontWeight: 600,
-                textRendering: "optimizeLegibility",
-              }}
-            >
+            <h1 id="entry-detail-title" className="entry-detail-title">
               {selectedEntry.title}
             </h1>
-            <p className="mt-4 text-[12px] font-normal leading-relaxed tracking-[0.04em] text-[color:var(--text-muted)] md:mt-5">
-              {entryMetaLine}
-            </p>
+            <div className="entry-meta">
+              <span className="entry-author">{authorName}</span>
+              <span className="entry-dot" aria-hidden>
+                •
+              </span>
+              <span className="entry-date">{formattedDate}</span>
+            </div>
           </header>
           <section
             aria-labelledby="entry-detail-title"
-            className="m-0 mt-7 border-0 p-0 md:mt-8"
+            className="m-0 border-0 p-0"
           >
-            <p className="m-0 text-[17px] font-normal leading-[1.75] text-[color:var(--text-secondary)] md:text-[18px] md:leading-[1.72]">
-              {selectedEntry.content}
-            </p>
+            <p className="entry-detail-body">{selectedEntry.content}</p>
           </section>
-          <div
-            className="mt-8 h-px w-full bg-[color:var(--divide-hair)] md:mt-10"
-            aria-hidden
-          />
         </article>
 
-        {(() => {
-          const s = entryReactionSummaries[selectedEntry.id] ?? {
-            likes: 0,
-            dislikes: 0,
-            mine: null,
-          };
-          const metaBtn: CSSProperties = {
-            border: "none",
-            background: "transparent",
-            padding: 0,
-            margin: 0,
-            cursor: "pointer",
-            font: "inherit",
-            fontSize: "12px",
-            fontWeight: 500,
-            letterSpacing: "0.01em",
-            transition: "var(--transition)",
-          };
-          const metaMuted: CSSProperties = {
-            ...metaBtn,
-            fontWeight: 400,
-            color: "var(--text-muted)",
-            textDecoration: "underline",
-            textUnderlineOffset: "3px",
-            textDecorationColor: "var(--divide-muted)",
-          };
-          const dot = (
-            <span
-              className="mx-2 inline-block translate-y-[-0.04em] text-[0.55rem] text-[color:var(--divide-muted)]"
+        <div className="entry-share-row">
+          <button
+            type="button"
+            onClick={() =>
+              copyEntryLink(selectedEntry.id, selectedEntry.title)
+            }
+            className="entry-share-btn"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.15}
+              strokeLinecap="round"
+              strokeLinejoin="round"
               aria-hidden
             >
-              ·
-            </span>
-          );
-          return (
-            <div className="mt-5 flex flex-wrap items-baseline gap-y-2 pb-1 md:mt-6 md:pb-0">
-              <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
-                <button
-                  type="button"
-                  style={{
-                    ...metaBtn,
-                    color:
-                      s.mine === "like"
-                        ? "var(--accent-green)"
-                        : "var(--text-secondary)",
-                  }}
-                  className="hover:text-[color:var(--accent-green)]"
-                  onClick={() =>
-                    void toggleEntryReaction(selectedEntry.id, "like")
-                  }
-                >
-                  Beğendim
-                </button>
-                <button
-                  type="button"
-                  className="tabular-nums text-[12px] font-medium text-[color:var(--text-tertiary)] transition-colors hover:text-[color:var(--text-secondary)]"
-                  style={{
-                    border: "none",
-                    background: "transparent",
-                    padding: 0,
-                    cursor: "pointer",
-                    font: "inherit",
-                  }}
-                  onClick={() =>
-                    setReactionsModal({
-                      open: true,
-                      type: "entry",
-                      id: selectedEntry.id,
-                      tab: "like",
-                    })
-                  }
-                >
-                  {s.likes}
-                </button>
-              </span>
-              {dot}
-              <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
-                <button
-                  type="button"
-                  style={{
-                    ...metaBtn,
-                    color:
-                      s.mine === "dislike"
-                        ? "var(--text-primary)"
-                        : "var(--text-secondary)",
-                  }}
-                  className="hover:text-[color:var(--text-primary)]"
-                  onClick={() =>
-                    void toggleEntryReaction(selectedEntry.id, "dislike")
-                  }
-                >
-                  Beğenmedim
-                </button>
-                <button
-                  type="button"
-                  className="tabular-nums text-[12px] font-medium text-[color:var(--text-tertiary)] transition-colors hover:text-[color:var(--text-secondary)]"
-                  style={{
-                    border: "none",
-                    background: "transparent",
-                    padding: 0,
-                    cursor: "pointer",
-                    font: "inherit",
-                  }}
-                  onClick={() =>
-                    setReactionsModal({
-                      open: true,
-                      type: "entry",
-                      id: selectedEntry.id,
-                      tab: "dislike",
-                    })
-                  }
-                >
-                  {s.dislikes}
-                </button>
-              </span>
-              {dot}
-              <button
-                type="button"
-                style={metaMuted}
-                className="hover:text-[color:var(--text-secondary)]"
-                onClick={() =>
-                  copyEntryLink(selectedEntry.id, selectedEntry.title)
-                }
-              >
-                kopyala
-              </button>
-              {dot}
-              <button
-                type="button"
-                style={metaMuted}
-                className="hover:text-[color:var(--text-secondary)]"
-                onClick={() =>
-                  shareWhatsApp(selectedEntry.id, selectedEntry.title)
-                }
-              >
-                whatsapp
-              </button>
-              {dot}
-              <button
-                type="button"
-                style={metaMuted}
-                className="hover:text-[color:var(--text-secondary)]"
-                onClick={() => shareX(selectedEntry.id, selectedEntry.title)}
-              >
-                x
-              </button>
-            </div>
-          );
-        })()}
-
-        <section
-          className="mt-6 border-t border-[color:var(--divide-hair)] pt-6 md:mt-7 md:pt-7"
-          aria-label="Katkılar"
-        >
-          <h3
-            className="m-0 text-[13px] font-medium leading-snug tracking-[-0.018em] text-[color:var(--text-primary)] md:text-[14px] md:tracking-[-0.02em]"
-            style={{
-              fontFamily: "var(--font-editorial-display)",
-              fontWeight: 500,
-              textRendering: "optimizeLegibility",
-            }}
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+            <span>kopyala</span>
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              shareWhatsApp(selectedEntry.id, selectedEntry.title)
+            }
+            className="entry-share-btn"
           >
-            Katkılar
-          </h3>
-          <div
-            className="pointer-events-none mt-4 h-px w-full max-w-[4rem] bg-gradient-to-r from-[color:var(--divide-muted)] to-transparent opacity-80 md:mt-5"
-            aria-hidden
-          />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.15}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <span>whatsapp</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => shareX(selectedEntry.id, selectedEntry.title)}
+            className="entry-share-btn"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.15}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            <span>x</span>
+          </button>
+        </div>
 
+        <section className="entry-comments-section" aria-label="Yorumlar">
           {selectedComments.length === 0 ? (
-            <div className="mt-6 py-8 text-center text-[13px] leading-relaxed text-[color:var(--text-muted)] md:mt-7 md:py-9">
-              ilk yorumu sen yaz
-            </div>
+            <div className="entry-comments-empty">ilk yorumu sen yaz</div>
           ) : (
-            <div className="mt-5 flex flex-col md:mt-6">
-              {selectedComments.map((comment, index) => {
-                const cs = commentReactionSummaries[comment.id] ?? {
-                  likes: 0,
-                  dislikes: 0,
-                  mine: null,
-                };
-                const isTop = comment.id === topLikedComment?.id;
-                const flowPadTop =
-                  index === 0
-                    ? "pt-0"
-                    : index === 1
-                      ? "pt-10 md:pt-12"
-                      : "pt-7 md:pt-8";
-                const textAction: CSSProperties = {
-                  border: "none",
-                  background: "transparent",
-                  padding: 0,
-                  margin: 0,
-                  cursor: "pointer",
-                  font: "inherit",
-                  fontSize: "11px",
-                  fontWeight: 400,
-                  letterSpacing: "0.03em",
-                  transition: "var(--transition)",
-                };
-                const cDot = (
-                  <span
-                    className="mx-2 inline-block translate-y-[-0.04em] text-[0.45rem] font-light text-[color:var(--divide-muted)]"
-                    aria-hidden
-                  >
-                    ·
-                  </span>
-                );
-                return (
-                  <div
-                    key={comment.id}
-                    className={`min-w-0 w-full border-b border-[color:var(--divide-hair)] pb-7 last:border-b-0 md:pb-8 ${flowPadTop}`}
-                  >
-                    <p className="m-0 text-[15px] font-semibold leading-snug text-[color:var(--text-primary)]">
-                      {comment.authorLabel}
-                    </p>
-                    {comment.bio61?.trim() ? (
-                      <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-[color:var(--text-muted)]">
-                        {comment.bio61.trim()}
-                      </p>
-                    ) : null}
-                    <p className="m-0 mt-3 text-[15px] font-normal leading-[1.68] text-[color:var(--text-secondary)] md:mt-3.5">
-                      {comment.content}
-                    </p>
-                    <div className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] leading-none text-[color:var(--text-muted)]">
-                      {isTop ? (
-                        <span className="text-[7px] font-normal uppercase tracking-[0.22em] text-[color:var(--accent-green)] opacity-[0.78]">
-                          Öne çıkan
-                        </span>
-                      ) : null}
-                      {isTop ? (
-                        <span
-                          className="text-[color:var(--divide-muted)]"
-                          aria-hidden
-                        >
-                          ·
-                        </span>
-                      ) : null}
-                      <time
-                        className="tabular-nums font-normal opacity-90"
-                        dateTime={comment.created_at}
-                      >
-                        {formatDate(comment.created_at)}
-                      </time>
-                    </div>
-                    <div className="mt-2.5 flex flex-wrap items-baseline text-[11px] font-normal md:mt-3">
-                      <button
-                        type="button"
-                        style={{
-                          ...textAction,
-                          color:
-                            cs.mine === "like"
-                              ? "var(--accent-green)"
-                              : "var(--text-muted)",
-                          textDecoration: "none",
-                        }}
-                        className="decoration-[color:var(--divide-muted)] underline-offset-[3px] hover:text-[color:var(--text-secondary)] hover:underline"
-                        onClick={() =>
-                          void toggleCommentReaction(comment.id, "like")
-                        }
-                      >
-                        Beğendim
-                      </button>
-                      <button
-                        type="button"
-                        className="tabular-nums text-[color:var(--text-tertiary)] decoration-[color:var(--divide-muted)] underline-offset-[3px] hover:text-[color:var(--text-secondary)] hover:underline"
-                        style={{
-                          ...textAction,
-                          marginLeft: "3px",
-                          textDecoration: "none",
-                        }}
-                        onClick={() =>
-                          setReactionsModal({
-                            open: true,
-                            type: "comment",
-                            id: comment.id,
-                            tab: "like",
-                          })
-                        }
-                      >
-                        {cs.likes}
-                      </button>
-                      {cDot}
-                      <button
-                        type="button"
-                        style={{
-                          ...textAction,
-                          color:
-                            cs.mine === "dislike"
-                              ? "var(--text-primary)"
-                              : "var(--text-muted)",
-                          textDecoration: "none",
-                        }}
-                        className="decoration-[color:var(--divide-muted)] underline-offset-[3px] hover:text-[color:var(--text-secondary)] hover:underline"
-                        onClick={() =>
-                          void toggleCommentReaction(comment.id, "dislike")
-                        }
-                      >
-                        Beğenmedim
-                      </button>
-                      <button
-                        type="button"
-                        className="tabular-nums text-[color:var(--text-tertiary)] decoration-[color:var(--divide-muted)] underline-offset-[3px] hover:text-[color:var(--text-secondary)] hover:underline"
-                        style={{
-                          ...textAction,
-                          marginLeft: "3px",
-                          textDecoration: "none",
-                        }}
-                        onClick={() =>
-                          setReactionsModal({
-                            open: true,
-                            type: "comment",
-                            id: comment.id,
-                            tab: "dislike",
-                          })
-                        }
-                      >
-                        {cs.dislikes}
-                      </button>
-                    </div>
+            <div className="flex flex-col">
+              {selectedComments.map((comment, index) => (
+                <div
+                  key={comment.id}
+                  className={`entry-comment-item${index > 0 ? " entry-comment-item--follows" : ""}`}
+                >
+                  <p className="entry-comment-author">{comment.authorLabel}</p>
+                  {comment.bio61?.trim() ? (
+                    <p className="entry-comment-bio">{comment.bio61.trim()}</p>
+                  ) : null}
+                  <p className="entry-comment-text">{comment.content}</p>
+                  <div className="entry-comment-meta">
+                    <time dateTime={comment.created_at}>
+                      {formatDate(comment.created_at)}
+                    </time>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </section>
 
-        <div className="mt-8 border-t border-[color:var(--divide-hair)] pt-6 md:mt-10 md:pt-7">
-          <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">
-            Katkı ekle
-          </p>
-          <div
-            className="rounded-[var(--radius-md)] border border-[color:var(--border-subtle)] bg-[var(--surface-hover)] px-3 py-3 md:px-4 md:py-3.5"
-            style={{ boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)" }}
-          >
+        <div className="entry-comment-compose-wrap">
+          <div className="entry-comment-compose">
             <textarea
               ref={commentComposeTextareaRef}
-              placeholder="sen ne düşünüyorsun? (@ile etiket)"
+              placeholder="sen ne düşünüyorsun?"
               maxLength={161}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value.slice(0, 161))}
               onFocus={() => {
-                setCommentComposeFocused(true);
                 void requireAuthForComment();
               }}
-              onBlur={() => setCommentComposeFocused(false)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   void submitComment();
                 }
               }}
-              className="w-full resize-none border-0 bg-transparent placeholder:text-[color:var(--text-muted)] placeholder:opacity-90 focus:outline-none focus:ring-0"
-              style={{
-                width: "100%",
-                resize: "none",
-                minHeight: "56px",
-                padding: "4px 2px 8px",
-                margin: 0,
-                border: "none",
-                borderBottom: "1px solid",
-                borderColor: commentComposeFocused
-                  ? "var(--accent-green-line)"
-                  : "var(--divide-muted)",
-                borderRadius: 0,
-                outline: "none",
-                color: "var(--text-primary)",
-                fontSize: "15px",
-                lineHeight: "1.65",
-                transition: "var(--transition)",
-              }}
+              disabled={platformAccessSuspended}
+              className="entry-comment-textarea"
             />
-            <div className="mt-3 flex items-center justify-end gap-2">
+            <div className="entry-comment-actions">
               <button
                 type="button"
-                disabled={isSubmittingComment}
+                disabled={isSubmittingComment || platformAccessSuspended}
                 onClick={() => void submitComment()}
-                className="border-0 bg-transparent p-0 text-[11px] font-medium uppercase tracking-[0.12em] text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] underline-offset-[5px] transition-colors duration-150 hover:text-[color:var(--accent-green)] hover:decoration-[color:var(--accent-green-line)] disabled:cursor-not-allowed disabled:opacity-40"
+                className="entry-comment-submit"
               >
                 gönder
               </button>
@@ -1896,185 +1278,234 @@ export default function HomePageClient({
     );
   }
 
+  function renderFooterInfoPanel() {
+    if (!footerInfoOpen) return null;
+
+    const titleId = `footer-info-title-${footerInfoOpen}`;
+    let body: ReactNode = null;
+
+    switch (footerInfoOpen) {
+      case "about":
+        body = (
+          <div className="site-info-stack">
+            <p className="site-info-p">
+              <strong className="site-info-strong">61Larus</strong>, kayıtlar,
+              yorumlar ve başlıkların bir arada durduğu, Trabzon eksenli bir
+              okuma ve yazım yüzeyidir. Akış gazete disiplinine yakındır;
+              gürültüyü değil düşünce sırasını öne alır.
+            </p>
+            <p className="site-info-p">
+              Şehrin gündemi, mahalle hafızası ve ortak meseleler, tek bir
+              yaşayan metin deposunda buluşur. Amaç hızlı tüketim değil; geri
+              dönülebilecek, sakin ve güvenilir bir bilgi bankası oluşturmaktır.
+            </p>
+            <p className="site-info-p site-info-p--manifesto">
+              Burada metin önceliklidir. Yerel kök korunur; dil evrensel ve
+              saygılı tutulur. Okumak, yazmak ve hatırlamak aynı çizgidedir.
+            </p>
+          </div>
+        );
+        break;
+      case "rules":
+        body = (
+          <ul className="site-info-list">
+            <li>
+              Kişi veya topluluklara yönelik hakaret, tehdit ve nefret dili
+              kullanma.
+            </li>
+            <li>
+              Yanıltıcı başlık veya kasıtlı bağlam koparmasından kaçın; okuru
+              yanıltma.
+            </li>
+            <li>
+              Yorumları kısa ve tartışmaya açık tut; spam ve anlamsız tekrar
+              gönderimde bulunma.
+            </li>
+            <li>
+              Başkasının özel alanına saygı duy; gereksiz kişisel veri paylaşma.
+            </li>
+            <li>
+              Platform düzenini bozacak organize taciz veya manipülasyonda
+              bulunma.
+            </li>
+            <li>
+              Paylaşımlarının yürürlükteki düzenlemeler ve kamu düzeniyle uyumlu
+              olmasına dikkat et.
+            </li>
+          </ul>
+        );
+        break;
+      case "privacy":
+        body = (
+          <div className="site-info-stack">
+            <p className="site-info-p">
+              Oturum açarken kimliğini doğrulamak için üçüncü taraf sağlayıcılar
+              (örneğin Google) kullanılabilir. Bu süreçte paylaşılan temel profil
+              ve e-posta bilgisi hesabını korumak ve oturumu yönetmek için
+              işlenir.
+            </p>
+            <p className="site-info-p">
+              Yazı ve yorum içerikleri sana aittir. Hesap kapatma veya
+              anonimleştirme seçenekleri uygulama içinde açıklandığı biçimde
+              uygulanır.
+            </p>
+            <p className="site-info-p">
+              Reklam profili oluşturan çerezlerle izleme yapmıyoruz. Güvenlik ve
+              işleyiş için gerekli teknik kayıtlar tutulabilir.
+            </p>
+          </div>
+        );
+        break;
+      case "contact":
+        body = (
+          <div className="site-info-stack">
+            <p className="site-info-p">
+              Soru, öneri veya teknik bildirimlerin için aşağıdaki kanalı
+              kullanabilirsin. Yanıt süresi iş yüküne bağlı olarak değişebilir.
+            </p>
+            <div className="site-info-contact-card" aria-label="İletişim">
+              <p className="site-info-contact-label">Genel yazışma</p>
+              <a
+                className="site-info-contact-link"
+                href="mailto:iletisim@61larus.com"
+              >
+                iletisim@61larus.com
+              </a>
+            </div>
+          </div>
+        );
+        break;
+    }
+
+    const heading =
+      footerInfoOpen === "about"
+        ? "Hakkında"
+        : footerInfoOpen === "rules"
+          ? "Kurallar"
+          : footerInfoOpen === "privacy"
+            ? "Gizlilik"
+            : "İletişim";
+
+    return (
+      <div
+        className="fixed inset-0 z-[92] flex items-start justify-center overflow-y-auto bg-[color:var(--overlay-scrim)] px-3 py-5 backdrop-blur-[1px] md:items-center md:py-8"
+        role="presentation"
+        onClick={() => closeFooterInfo()}
+      >
+        <div
+          className="site-info-dialog my-auto w-full max-w-[32rem] border border-[color:var(--divide)] bg-[var(--bg-secondary)] shadow-[var(--shadow-modal)]"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="left-scroll max-h-[min(88dvh,720px)] overflow-y-auto overscroll-contain">
+            <div className="site-info-panel-inner px-5 py-6 md:px-8 md:py-7">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                <button
+                  type="button"
+                  onClick={() => closeFooterInfo()}
+                  className="entry-detail-back"
+                >
+                  kapat
+                </button>
+              </div>
+              <h2 id={titleId} className="site-info-title">
+                {heading}
+              </h2>
+              <div className="site-info-body">{body}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-[100rem] flex-col bg-transparent px-4 text-[color:var(--text-primary)] antialiased md:px-12 lg:px-14">
-      <header className="relative mb-6 shrink-0 border-b border-[color:var(--divide-muted)] pt-6 pb-5 md:mb-8 md:pt-8 md:pb-6">
-        <div className="flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-end md:gap-10">
-          <div className="hidden md:block" aria-hidden />
-          <div className="text-center md:col-start-2 md:pb-0">
+    <main className="relative flex min-h-screen w-full max-w-full flex-col bg-transparent text-[color:var(--text-primary)] antialiased">
+      <header className="site-header relative mb-7 shrink-0 border-b border-[color:var(--divide-hair)] pb-5 md:mb-8 md:pb-7">
+        <div className="flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
+          <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(21rem,100%)]">
             <button
               type="button"
               onClick={goToBrandHome}
-              className="border-0 bg-transparent p-0 text-[26px] font-semibold leading-[1.05] tracking-[-0.055em] text-[color:var(--text-primary)] transition-[color,opacity] duration-200 hover:opacity-90 md:text-[30px]"
+              className="site-wordmark max-w-full border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-88"
               style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
               aria-label="Ana sayfa — Akış"
             >
-              61larus
+              61Larus
             </button>
-            <p className="mx-auto mt-3 max-w-sm text-[11px] font-normal leading-relaxed tracking-[0.12em] text-[color:var(--text-muted)] md:mt-3.5 md:max-w-md md:text-[12px] md:tracking-[0.1em]">
+            <p className="site-header-tagline m-0">
               Trabzon’un gündemi, lafı ve hafızası
             </p>
           </div>
-          <div className="flex w-full flex-wrap items-center justify-center gap-3 md:col-start-3 md:w-auto md:justify-end md:gap-4">
+          <div
+            className="site-header-editorial"
+            aria-live="polite"
+            aria-atomic="true"
+            aria-label="Atatürk sözleri"
+          >
+            <p
+              key={headerEditorialIdx}
+              className="site-header-editorial-text m-0"
+            >
+              {HEADER_ATATURK_QUOTES[headerEditorialIdx]}
+            </p>
+          </div>
+          <div className="site-header-aux flex w-full min-w-0 flex-wrap items-center gap-x-4 gap-y-2 sm:gap-x-5 lg:w-auto lg:max-w-none lg:shrink-0 lg:justify-end">
+            <div className="site-header-search min-w-0 flex-1 sm:flex-initial sm:max-w-[12.25rem] md:max-w-[13.25rem]">
+              <label htmlFor="site-header-search-input" className="sr-only">
+                Yazılarda ara
+              </label>
+              <span className="site-header-search-icon" aria-hidden>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.15}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="10.5" cy="10.5" r="5.75" />
+                  <path d="m16.25 16.25 3.6 3.6" />
+                </svg>
+              </span>
+              <input
+                id="site-header-search-input"
+                type="search"
+                name="q"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Başlık ara"
+                autoComplete="off"
+                spellCheck={false}
+                className="site-header-search-input"
+              />
+              {searchQuery ? (
+                <button
+                  type="button"
+                  className="site-header-search-clear"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Aramayı temizle"
+                >
+                  ×
+                </button>
+              ) : null}
+            </div>
+            {!isAuthenticated ? (
+              <Link
+                href="/auth"
+                className="font-normal tracking-[0.04em] text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
+              >
+                Giriş
+              </Link>
+            ) : null}
             {isAuthenticated ? (
               <>
-                <div className="relative" ref={notificationsMenuRef}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAccountMenuOpen(false);
-                      setNotificationsOpen((open) => {
-                        const next = !open;
-                        if (next) void fetchHeaderNotifications();
-                        return next;
-                      });
-                    }}
-                    className="relative border-0 bg-transparent p-0"
-                    aria-expanded={notificationsOpen}
-                    aria-haspopup="true"
-                    aria-label="Bildirimler"
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "4px 2px",
-                        cursor: "pointer",
-                        transition: "var(--transition)",
-                      }}
-                      className="text-[12px] text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)]"
-                    >
-                      <span
-                        style={{
-                          fontSize: "14px",
-                          lineHeight: 1,
-                          color: "var(--text-secondary)",
-                        }}
-                        aria-hidden
-                      >
-                        {"\uD83D\uDD14"}
-                      </span>
-                      <span className="font-medium">bildirim</span>
-                      {unreadNotificationCount > 0 ? (
-                        <span
-                          className="tabular-nums"
-                          style={{
-                            minWidth: "1.1rem",
-                            padding: "0 5px",
-                            borderRadius: "999px",
-                            fontSize: "10px",
-                            fontWeight: 700,
-                            lineHeight: "18px",
-                            textAlign: "center",
-                            background: "rgba(255,255,255,0.1)",
-                            color: "var(--text-primary)",
-                          }}
-                        >
-                          {unreadNotificationCount > 9
-                            ? "9+"
-                            : unreadNotificationCount}
-                        </span>
-                      ) : null}
-                    </div>
-                  </button>
-                  {notificationsOpen ? (
-                    <div
-                      className="absolute right-0 z-[60] mt-2 max-h-[min(420px,70dvh)] w-[min(calc(100vw-1.5rem),400px)] overflow-y-auto border border-[color:var(--divide)] bg-[var(--bg-secondary)] py-3 pl-4 pr-3"
-                      role="list"
-                    >
-                      {notificationsLoading ? (
-                        <p
-                          className="py-6 text-center text-sm"
-                          style={{ color: "var(--text-secondary)" }}
-                        >
-                          Yükleniyor…
-                        </p>
-                      ) : notificationsFetchError ? (
-                        <p
-                          className="py-6 text-center text-sm"
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          Bildirimler yüklenemedi
-                        </p>
-                      ) : (
-                        <>
-                          {headerNotifications.length === 0 ? (
-                            <p
-                              className="py-5 text-center text-sm"
-                              style={{ color: "var(--text-muted)" }}
-                            >
-                              Henüz bildirimin yok
-                            </p>
-                          ) : (
-                            <ul className="m-0 list-none border-t border-[color:var(--divide)] p-0">
-                              {headerNotifications.slice(0, 3).map((n) => {
-                                const actor = notificationActorLabel(n);
-                                const titleLine = n.entryTitle?.trim() ?? "—";
-                                const canNavigate =
-                                  typeof n.entry_id === "string" &&
-                                  n.entry_id.length > 0;
-                                const unread = !n.is_read;
-                                return (
-                                  <li key={n.id}>
-                                    <button
-                                      type="button"
-                                      disabled={!canNavigate}
-                                      onClick={() => {
-                                        if (!canNavigate || !n.entry_id) return;
-                                        setNotificationsOpen(false);
-                                        selectEntry(n.entry_id);
-                                      }}
-                                      className="flex w-full flex-col gap-0.5 border-b border-[color:var(--divide)] py-3 text-left transition-colors hover:bg-[var(--surface-hover)] disabled:cursor-default disabled:opacity-50 last:border-b-0"
-                                    >
-                                      <div className="flex w-full min-w-0 items-baseline justify-between gap-3">
-                                        <span
-                                          className="min-w-0 truncate text-[14px] leading-snug text-[color:var(--text-primary)]"
-                                          style={{
-                                            fontWeight: unread ? 600 : 500,
-                                          }}
-                                        >
-                                          {actor}
-                                        </span>
-                                        <time
-                                          className="shrink-0 tabular-nums text-[11px] leading-none text-[color:var(--text-muted)]"
-                                          dateTime={n.created_at}
-                                        >
-                                          {formatNotificationTime(n.created_at)}
-                                        </time>
-                                      </div>
-                                      <span
-                                        className="line-clamp-2 text-[13px] leading-snug text-[color:var(--text-secondary)]"
-                                        title={titleLine !== "—" ? titleLine : undefined}
-                                      >
-                                        {titleLine}
-                                      </span>
-                                    </button>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          )}
-                          <button
-                            type="button"
-                            className="mt-2 w-full border-0 border-t border-[color:var(--divide)] bg-transparent pt-3 text-left text-[11px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-secondary)]"
-                            onClick={() => {
-                              setNotificationsOpen(false);
-                              setCenterMode("notifications");
-                            }}
-                          >
-                            Tüm bildirimler
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
                 <div className="relative" ref={accountMenuRef}>
                 <button
                   type="button"
                   onClick={() => {
-                    setNotificationsOpen(false);
                     setAccountMenuOpen((o) => !o);
                   }}
                   className="max-w-full border-0 bg-transparent p-0"
@@ -2082,29 +1513,24 @@ export default function HomePageClient({
                   aria-haspopup="menu"
                 >
                   <div
-                    className="flex cursor-pointer items-center gap-1.5 px-1 py-0.5 text-[12px] text-[color:var(--text-muted)] transition-colors duration-150 hover:text-[color:var(--text-secondary)]"
+                    className="account-menu-trigger-inner flex cursor-pointer items-center px-1 py-0.5 text-[color:var(--text-tertiary)] transition-colors duration-150 hover:text-[color:var(--text-secondary)]"
                     style={{ transition: "var(--transition)" }}
                   >
-                    <span className="font-normal opacity-70">sen</span>
-                    <span className="font-medium text-[color:var(--text-primary)]">
+                    <span className="account-menu-handle">
                       {userEmail?.split("@")[0] || "kullanıcı"}
                     </span>
                   </div>
                 </button>
                 {accountMenuOpen ? (
-                  <div
-                    className="absolute right-0 z-50 mt-1.5 w-[min(calc(100vw-1.5rem),14.5rem)] rounded-lg border border-white/[0.1] bg-[#161920] py-2.5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.65)]"
-                    role="menu"
-                  >
-                    <p className="px-3 pb-2 text-[10px] font-normal leading-snug text-[#6b7280]">
+                  <div className="account-menu-panel" role="menu">
+                    <p className="account-menu-meta m-0">
                       Google ile giriş yapıldı
                     </p>
-                    <div className="mx-2 mb-2 border-b border-white/[0.06]" />
                     <button
                       type="button"
                       role="menuitem"
                       onClick={() => void handleLogout()}
-                      className="flex w-full items-center px-3 py-2 text-left text-xs font-medium text-[#e7e9ee] transition-colors hover:bg-white/[0.06]"
+                      className="account-menu-item account-menu-item--default"
                     >
                       Çıkış yap
                     </button>
@@ -2114,22 +1540,22 @@ export default function HomePageClient({
                         role="menuitem"
                         disabled={accountDeleteLoading}
                         onClick={() => setAccountDeleteStep("confirm")}
-                        className="flex w-full items-center px-3 py-2 text-left text-xs font-medium text-[#c45c5c] transition-colors hover:bg-red-500/10 disabled:opacity-40"
+                        className="account-menu-item account-menu-item--destructive"
                       >
                         Hesabımı sil
                       </button>
                     ) : (
-                      <div className="space-y-2 px-3 pb-0.5 pt-1">
-                        <p className="text-[10px] font-normal leading-snug text-[#8b929e]">
+                      <div className="account-menu-delete-block">
+                        <p className="account-menu-delete-hint m-0">
                           Bu işlem geri alınamaz. Profil bilgilerin kaldırılır; eski
                           içerikler anonim görünür.
                         </p>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="account-menu-delete-actions">
                           <button
                             type="button"
                             disabled={accountDeleteLoading}
                             onClick={() => void handleConfirmAccountDeletion()}
-                            className="inline-flex h-8 flex-1 items-center justify-center rounded-md border border-red-500/35 bg-red-500/10 px-2.5 text-[11px] font-medium text-[#f0a0a0] transition-colors hover:bg-red-500/15 disabled:opacity-40"
+                            className="account-menu-delete-confirm"
                           >
                             {accountDeleteLoading ? "İşleniyor…" : "Silmeyi onayla"}
                           </button>
@@ -2137,7 +1563,7 @@ export default function HomePageClient({
                             type="button"
                             disabled={accountDeleteLoading}
                             onClick={() => setAccountDeleteStep("idle")}
-                            className="inline-flex h-8 items-center justify-center px-2 text-[11px] font-normal text-[#8b929e] underline decoration-white/20 underline-offset-2 transition-colors hover:text-[#a8c4aa] disabled:opacity-40"
+                            className="account-menu-delete-cancel"
                           >
                             Vazgeç
                           </button>
@@ -2145,14 +1571,12 @@ export default function HomePageClient({
                       </div>
                     )}
                     {accountDeleteError ? (
-                      <p className="px-3 pt-2 text-[10px] leading-snug text-red-400/95">
-                        {accountDeleteError}
-                      </p>
+                      <p className="account-menu-error m-0">{accountDeleteError}</p>
                     ) : null}
                   </div>
                 ) : null}
-              </div>
-              </>
+                  </div>
+                </>
             ) : null}
           </div>
         </div>
@@ -2162,7 +1586,7 @@ export default function HomePageClient({
         className={
           centerMode === "auth" || centerMode === "agreement"
             ? "relative z-0 flex w-full flex-col"
-            : "relative z-0 flex w-full flex-col border-y border-[color:var(--divide-muted)] bg-[var(--surface-page)]"
+            : "relative z-0 flex w-full flex-col border-y border-[color:var(--divide-hair)] bg-[var(--bg-primary)]"
         }
       >
         {centerMode === "auth" || centerMode === "agreement" ? (
@@ -2176,16 +1600,32 @@ export default function HomePageClient({
             {renderCenterPanels()}
           </div>
         ) : (
-          <div className="flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,3fr)_minmax(0,1fr)] md:items-start md:gap-0">
+          <>
+            {isAuthenticated && platformAccessSuspended ? (
+              <div
+                className="platform-access-suspended-notice"
+                role="status"
+              >
+                Hesabın platform kullanımı (yorum ve benzeri etkileşim) yönetici
+                tarafından geçici olarak durduruldu. İçerikleri okuyabilirsin; erişim
+                hakkında destek almak için{" "}
+                <button
+                  type="button"
+                  className="platform-access-suspended-notice__link"
+                  onClick={() => setFooterInfoOpen("contact")}
+                >
+                  İletişim
+                </button>{" "}
+                üzerinden bize ulaşabilirsin.
+              </div>
+            ) : null}
+            <div className="flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(10rem,0.88fr)_minmax(0,2.62fr)_minmax(11.25rem,0.86fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(10.5rem,0.9fr)_minmax(0,2.68fr)_minmax(12rem,0.88fr)]">
             <aside
-              className="flex max-h-[32vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--divide-muted)] bg-[var(--surface-panel)] md:sticky md:top-4 md:z-[5] md:max-h-[calc(100dvh-6rem)] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--divide-muted)]"
-              aria-label="Gündem — en çok konuşulanlar"
+              className="flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--divide-hair)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-[calc(100dvh-6rem)] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--divide-hair)]"
+              aria-label="Şu an en çok konuşulanlar"
             >
-              <div className="shrink-0 border-b border-[color:var(--divide-muted)] px-4 pb-4 pt-5 md:px-5 md:pb-5 md:pt-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--text-secondary)]">
-                  Gündem
-                </p>
-                <p className="mt-2 text-[12px] font-normal leading-relaxed text-[color:var(--text-muted)]">
+              <div className="shrink-0 border-b border-[color:var(--divide-hair)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-4 md:pt-5">
+                <p className="trending-rail-eyebrow mb-0">
                   Şu an en çok konuşulanlar
                 </p>
               </div>
@@ -2193,11 +1633,11 @@ export default function HomePageClient({
                 className="left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
                 style={{
                   scrollbarWidth: "thin",
-                  scrollbarColor: "rgba(255,255,255,0.16) transparent",
+                  scrollbarColor: "var(--scrollbar-thumb) transparent",
                 }}
               >
                 <nav
-                  className="flex flex-col px-3 pb-6 pt-2 md:px-4"
+                  className="flex flex-col px-2.5 pb-4 pt-2.5 md:px-3.5 md:pb-5 md:pt-3"
                   aria-label="En çok yorumlananlar"
                 >
                   {mostCommentedEntries.map((entry, index) => {
@@ -2216,35 +1656,33 @@ export default function HomePageClient({
                             ? "inset 2px 0 0 0 var(--accent-green-line)"
                             : undefined,
                         }}
-                        className={`group relative flex w-full items-start gap-3 border-0 border-b border-[color:var(--divide-muted)] py-3.5 pl-1.5 pr-1.5 text-left last:border-b-0 md:py-4 ${
+                        className={`group relative flex w-full items-start gap-3 border-0 border-b border-[color:var(--divide-hair)] py-3 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3.5 md:py-3.5 md:pl-1 md:pr-1.5 ${
                           isActive
                             ? "bg-[var(--list-row-active)]"
                             : "bg-transparent hover:bg-[var(--surface-hover)]"
                         }`}
                       >
                         <span
-                          className={`w-5 shrink-0 pt-0.5 text-right text-[10px] font-medium tabular-nums leading-none tracking-wide ${
+                          className={`index-rank w-[1.35rem] shrink-0 pt-0.5 text-right md:w-6 ${
                             isActive
                               ? "text-[color:var(--accent-green)]"
-                              : "text-[color:var(--text-muted)] group-hover:text-[color:var(--text-tertiary)]"
+                              : "text-[color:var(--text-tertiary)] group-hover:text-[color:var(--text-meta)]"
                           }`}
                           aria-hidden
                         >
                           {rank}.
                         </span>
-                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                        <div className="flex min-w-0 flex-1 flex-col gap-1 md:gap-1.5">
                           <span
-                            className={`line-clamp-2 text-[13px] leading-[1.45] text-[color:var(--text-primary)] ${
+                            className={`index-entry-title line-clamp-2 ${
                               isFirst || isActive
-                                ? "font-semibold"
-                                : "font-normal"
+                                ? "index-entry-title--emph"
+                                : "index-entry-title--quiet"
                             }`}
                           >
                             {entry.title}
                           </span>
-                          <span className="text-[10px] font-normal tabular-nums uppercase tracking-[0.06em] text-[color:var(--text-muted)]">
-                            {cc} yorum
-                          </span>
+                          <span className="index-entry-meta">{cc} yorum</span>
                         </div>
                       </button>
                     );
@@ -2252,67 +1690,258 @@ export default function HomePageClient({
                 </nav>
               </div>
             </aside>
-            <main className="relative min-w-0 w-full bg-[var(--surface-page)] md:border-x md:border-[color:var(--divide-muted)] md:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
-              <div className="layout-feed-inner mx-auto w-full max-w-[48rem] px-5 py-7 md:px-14 md:py-9">
-                {centerMode === "notifications"
-                  ? renderNotificationsCenter()
-                  : renderMainFeed()}
+            <main className="main-column relative min-w-0 w-full bg-transparent md:border-x md:border-[color:var(--divide-hair)]">
+              <div className="layout-feed-inner mx-auto w-full max-w-none px-4 py-5 sm:px-5 sm:py-6 md:px-7 md:py-7 lg:px-9">
+                {renderMainFeed()}
               </div>
             </main>
             <aside
-              className="flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-t border-[color:var(--divide-muted)] bg-[var(--surface-panel)] md:sticky md:top-4 md:z-[5] md:max-h-[calc(100dvh-6rem)] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-l md:border-t-0 md:border-[color:var(--divide-muted)]"
-              aria-label="Kategoriler"
+              className="right-column flex w-full min-w-0 shrink-0 flex-col border-t border-[color:var(--divide-hair)] bg-transparent md:sticky md:top-4 md:z-[5] md:w-full md:max-w-none md:self-start md:border-l md:border-t-0 md:border-[color:var(--divide-hair)]"
+              aria-label="Yayın paneli"
             >
-              <div className="shrink-0 border-b border-[color:var(--divide-muted)] px-4 pb-4 pt-5 md:px-5 md:pb-5 md:pt-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--text-secondary)]">
-                  Kategoriler
-                </p>
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-5 pt-3 md:px-4 md:pb-6">
-                <nav
-                  className="flex flex-col gap-0.5"
-                  aria-label="Entry kategorileri"
-                >
-                  {FEED_CATEGORY_OPTIONS.map((opt) => {
-                    const isActive = feedCategoryFilter === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => setFeedCategoryFilter(opt.id)}
-                        style={{ transition: "var(--transition)" }}
-                        className={`group flex w-full cursor-pointer rounded-[var(--radius-sm)] border border-transparent py-2.5 pl-2.5 pr-2 text-left text-[13px] leading-snug ${
-                          isActive
-                            ? "border-[color:var(--border-subtle)] bg-[var(--list-row-active)] font-medium text-[color:var(--text-primary)] shadow-[inset_2px_0_0_0_var(--accent-green-line)]"
-                            : "font-normal text-[color:var(--text-muted)] hover:border-[color:var(--border-subtle)] hover:bg-[var(--surface-hover)] hover:text-[color:var(--text-secondary)]"
-                        }`}
-                      >
-                        <span
-                          className="mr-2 flex h-4 w-3 shrink-0 items-center justify-center"
-                          aria-hidden
+              <div className="right-block flex flex-col px-3 pb-5 pt-3.5 md:px-4 md:pb-6 md:pt-4">
+                <div className="pb-5 md:pb-5">
+                  <p className="sidebar-block-title">Akış prensibi</p>
+                  <ul className="sidebar-rail-copy m-0 list-none space-y-2.5 p-0 text-[color:var(--text-secondary)] md:space-y-3">
+                    <li className="flex gap-2">
+                      <span
+                        className="mt-1.5 h-0.75 w-0.75 shrink-0 rounded-full bg-[color:var(--text-primary)] opacity-45"
+                        aria-hidden
+                      />
+                      <span>Her yazı bir duruş.</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span
+                        className="mt-1.5 h-0.75 w-0.75 shrink-0 rounded-full bg-[color:var(--text-primary)] opacity-45"
+                        aria-hidden
+                      />
+                      <span>Akış, gürültü değil düşünce sırasıdır.</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span
+                        className="mt-1.5 h-0.75 w-0.75 shrink-0 rounded-full bg-[color:var(--text-primary)] opacity-45"
+                        aria-hidden
+                      />
+                      <span>Trabzon merkezli, ama dar değil.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="pt-1 pb-5 md:pt-1.5 md:pb-5">
+                  <p className="sidebar-block-title">Etkileşim</p>
+                  <ul className="sidebar-rail-copy m-0 list-none space-y-3.5 p-0 text-[color:var(--text-secondary)] md:space-y-4">
+                    <li className="flex gap-2">
+                      <span className="mt-0.5 shrink-0 text-[color:var(--text-muted)] opacity-65" aria-hidden>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                      </span>
+                      <span>Yorumlar kısa ve saygılı tutulur.</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="mt-0.5 shrink-0 text-[color:var(--text-muted)] opacity-65" aria-hidden>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 6v6l4 2" />
+                        </svg>
+                      </span>
+                      <span>Tarihli kayıtlar; metin önceliklidir.</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="mt-0.5 shrink-0 text-[color:var(--text-muted)] opacity-65" aria-hidden>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke">
+                          <path d="M5 12h14" />
+                          <path d="m12 5 7 7-7 7" />
+                        </svg>
+                      </span>
+                      <span>Başlıktan içeriğe tek nefeste okuma.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="category-rail-section pt-4 pb-0 md:pt-5 md:pb-0">
+                  <p className="sidebar-block-title">Kategoriler</p>
+                  <nav
+                    className="category-rail-nav"
+                    aria-label="Entry kategorileri"
+                  >
+                    {FEED_CATEGORY_OPTIONS.map((opt) => {
+                      const isActive = feedCategoryFilter === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          data-category-filter={opt.id}
+                          onClick={() => setFeedCategoryFilter(opt.id)}
+                          aria-current={isActive ? "true" : undefined}
+                          style={{ transition: "var(--transition)" }}
+                          className={`category-rail-item group flex w-full cursor-pointer items-center gap-3 text-left ${
+                            isActive ? "font-medium" : "font-normal"
+                          }`}
                         >
-                          <span
-                            className={`block h-1.5 w-1.5 rounded-full transition-[background-color,opacity,transform] duration-200 ${
-                              isActive
-                                ? "bg-[color:var(--accent-green)] opacity-90"
-                                : "scale-75 bg-[color:var(--divide)] opacity-0 group-hover:opacity-35"
-                            }`}
-                          />
-                        </span>
-                        <span className="min-w-0">{opt.label}</span>
-                      </button>
-                    );
-                  })}
-                </nav>
+                          <span className="category-rail-icon-wrap shrink-0" aria-hidden>
+                            {categoryRailIcon(opt.id)}
+                          </span>
+                          <span className="category-rail-label min-w-0 flex-1">
+                            <span className="category-rail-hash"># </span>
+                            <span className="category-rail-name">{opt.label}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </nav>
+                </div>
               </div>
             </aside>
-          </div>
+            </div>
+
+            <section
+              id="site-about"
+              className="mt-1 border-t border-[color:var(--divide-hair)] bg-[var(--bg-primary)] px-4 py-9 md:mt-0 md:px-6 md:py-10 lg:px-3"
+              aria-label="Özellikler"
+            >
+              <div className="mx-auto grid max-w-[80rem] grid-cols-1 items-start gap-8 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-9 md:grid-cols-3 md:gap-x-9 md:gap-y-10 lg:grid-cols-5 lg:gap-x-8 lg:gap-y-9">
+                {[
+                  {
+                    t: "Yazabilirsin",
+                    d: "Düşünceni metinle kur; tartışma sana ait bir çerçeveye oturur.",
+                    icon: (
+                      <>
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                      </>
+                    ),
+                  },
+                  {
+                    t: "Okuyabilirsin",
+                    d: "Akış, gazete disiplininde; başlık ve özet birlikte nefes alır.",
+                    icon: (
+                      <>
+                        <path d="M17 21v-8a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v8" />
+                        <path d="M7 3h10a1 1 0 0 1 1 1v16" />
+                      </>
+                    ),
+                  },
+                  {
+                    t: "Konuşabilirsin",
+                    d: "Yorumlar kısa tutulur; cevaplar metnin altında kalır.",
+                    icon: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
+                  },
+                  {
+                    t: "Hatırlanabilirsin",
+                    d: "Kayıtlar ve başlıklar birlikte; şehrin hafızasına yazılır.",
+                    icon: (
+                      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+                    ),
+                  },
+                  {
+                    t: "Trabzon merkezli",
+                    d: "Yerel kök, editoryal evrensel dil; sıcak ama ciddi yüzey.",
+                    icon: (
+                      <>
+                        <path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10z" />
+                        <circle cx="12" cy="11" r="2.5" />
+                      </>
+                    ),
+                  },
+                ].map((item) => (
+                  <div key={item.t} className="flex min-w-0 flex-col items-start gap-2.5">
+                    <div className="text-[color:var(--text-muted)] opacity-[0.82]" aria-hidden>
+                      <svg
+                        width="19"
+                        height="19"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.1"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        vectorEffect="non-scaling-stroke"
+                      >
+                        {item.icon}
+                      </svg>
+                    </div>
+                    <p className="site-feature-title">{item.t}</p>
+                    <p className="site-feature-desc">{item.d}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <footer
+              id="site-footer"
+              className="site-footer mt-0 px-5 md:px-10"
+            >
+              <div className="mx-auto flex max-w-[80rem] flex-col gap-7 md:flex-row md:items-baseline md:justify-between md:gap-8">
+                <button
+                  type="button"
+                  onClick={goToBrandHome}
+                  className="site-wordmark border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-90"
+                >
+                  61Larus
+                </button>
+                <nav
+                  className="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-normal md:justify-center md:gap-x-5"
+                  aria-label="Alt bağlantılar"
+                >
+                  <button
+                    type="button"
+                    className="footer-link-btn"
+                    onClick={() => setFooterInfoOpen("about")}
+                  >
+                    Hakkında
+                  </button>
+                  <span className="text-[color:rgba(240,241,244,0.25)]" aria-hidden>
+                    ·
+                  </span>
+                  <button
+                    type="button"
+                    className="footer-link-btn"
+                    onClick={() => setFooterInfoOpen("rules")}
+                  >
+                    Kurallar
+                  </button>
+                  <span className="text-[color:rgba(240,241,244,0.25)]" aria-hidden>
+                    ·
+                  </span>
+                  <button
+                    type="button"
+                    className="footer-link-btn"
+                    onClick={() => setFooterInfoOpen("privacy")}
+                  >
+                    Gizlilik
+                  </button>
+                  <span className="text-[color:rgba(240,241,244,0.25)]" aria-hidden>
+                    ·
+                  </span>
+                  <button
+                    type="button"
+                    className="footer-link-btn"
+                    onClick={() => setFooterInfoOpen("contact")}
+                  >
+                    İletişim
+                  </button>
+                </nav>
+                <p className="m-0 text-[10.5px] font-normal tabular-nums leading-none text-[color:var(--footer-link)] opacity-90 md:text-right md:text-[11px]">
+                  © {new Date().getFullYear()}{" "}
+                  <button
+                    type="button"
+                    onClick={goToBrandHome}
+                    className="inline cursor-pointer border-0 bg-transparent p-0 font-inherit text-inherit align-baseline transition-opacity duration-200 hover:opacity-100"
+                    aria-label="Ana sayfa — Akış"
+                  >
+                    61Larus
+                  </button>
+                </p>
+              </div>
+            </footer>
+          </>
         )}
       </section>
 
       {selectedEntryId && centerMode === "feed" ? (
         <div
-          className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-black/45 px-3 py-5 backdrop-blur-[1px] md:items-center md:py-8"
+          className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-[color:var(--overlay-scrim)] px-3 py-5 backdrop-blur-[1px] md:items-center md:py-8"
           role="presentation"
           onClick={() => closeEntryModal()}
         >
@@ -2332,83 +1961,8 @@ export default function HomePageClient({
         </div>
       ) : null}
 
-      {reactionsModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-[1px]">
-          <div
-            className="max-h-[500px] w-[min(calc(100vw-2rem),400px)] overflow-y-auto border border-[color:var(--divide)] bg-[var(--bg-secondary)] p-5 text-[color:var(--text-primary)] shadow-[var(--shadow-modal)] md:p-6"
-            role="dialog"
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-5 flex justify-between gap-2 border-b border-[color:var(--divide)] pb-4">
-              <button
-                type="button"
-                className="text-sm font-medium text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-primary)]"
-                onClick={() =>
-                  setReactionsModal({ ...reactionsModal, tab: "like" })
-                }
-              >
-                Beğenenler
-              </button>
-              <button
-                type="button"
-                className="text-sm font-medium text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-primary)]"
-                onClick={() =>
-                  setReactionsModal({ ...reactionsModal, tab: "dislike" })
-                }
-              >
-                Beğenmeyenler
-              </button>
-            </div>
+      {renderFooterInfoPanel()}
 
-            <div id="modal-users">
-              {reactionsModalLoading ? (
-                <p className="text-sm text-[color:var(--text-muted)]">
-                  yükleniyor...
-                </p>
-              ) : reactionsModalUsers.length === 0 ? (
-                <p className="text-sm text-[color:var(--text-muted)]">
-                  Henüz kimse yok
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {reactionsModalUsers.map((u) => (
-                    <li
-                      key={u.userId}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      {u.avatarUrl ? (
-                        <img
-                          src={u.avatarUrl}
-                          alt=""
-                          className="h-8 w-8 shrink-0 rounded-full object-cover"
-                          width={32}
-                          height={32}
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1e293b] text-xs">
-                          {u.label.trim().charAt(0).toUpperCase() || "?"}
-                        </div>
-                      )}
-                      <span className="truncate">{u.label}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className="mt-5 text-sm font-medium text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-primary)]"
-              onClick={() =>
-                setReactionsModal({ ...reactionsModal, open: false })
-              }
-            >
-              Kapat
-            </button>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
