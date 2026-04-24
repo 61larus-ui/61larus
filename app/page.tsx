@@ -278,8 +278,7 @@ export default async function Home() {
     }> {
       let res = await entriesSupabase
         .from("entries")
-        .select("id, title, content, created_at, category, user_id")
-        .order("created_at", { ascending: false });
+        .select("id, title, content, created_at, category, user_id");
       if (
         res.error &&
         /user_id/i.test(res.error.message ?? "") &&
@@ -287,8 +286,7 @@ export default async function Home() {
       ) {
         const fb = await entriesSupabase
           .from("entries")
-          .select("id, title, content, created_at, category")
-          .order("created_at", { ascending: false });
+          .select("id, title, content, created_at, category");
         return {
           rows: (fb.data ?? []).map((r) => ({
             ...r,
@@ -308,8 +306,7 @@ export default async function Home() {
     if (error && /category/i.test(error.message ?? "")) {
       const catWithUid = await entriesSupabase
         .from("entries")
-        .select("id, title, content, created_at, user_id")
-        .order("created_at", { ascending: false });
+        .select("id, title, content, created_at, user_id");
       const catFinal =
         catWithUid.error &&
         /user_id/i.test(catWithUid.error.message ?? "") &&
@@ -317,7 +314,6 @@ export default async function Home() {
           ? await entriesSupabase
               .from("entries")
               .select("id, title, content, created_at")
-              .order("created_at", { ascending: false })
           : catWithUid;
       entryRows = (catFinal.data ?? []).map((r) => {
         const uid =
@@ -519,12 +515,7 @@ export default async function Home() {
     return base;
   }
 
-  const fromDb = (entryRows ?? []).map((row) => entryItemFromRow(row));
-
-  const mergedList = [...fromDb].sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
+  const mergedList = (entryRows ?? []).map((row) => entryItemFromRow(row));
 
   const userEmail = user?.email ?? null;
   const meta = user?.user_metadata as {

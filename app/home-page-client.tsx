@@ -15,143 +15,7 @@ import AgreementPanel from "@/components/agreement-panel";
 import { anonymizeCurrentUserAccount } from "@/lib/anonymize-account";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { resolveVisibleName } from "@/lib/visible-name";
-import {
-  FEED_CATEGORY_OPTIONS,
-  normalizeEntryCategory,
-  type FeedCategoryFilter,
-} from "@/lib/entry-category";
 import { FeedEntryCard } from "./feed-entry-card";
-
-/** DB’de kategori ya label (\"Yerel lezzetler\") ya da slug (yerel-lezzetler) olabilir. */
-function dbCategoryValuesForFilter(selectedCategory: FeedCategoryFilter): string[] {
-  if (selectedCategory === "all" || (selectedCategory as string) === "tumu")
-    return [];
-  const opt = FEED_CATEGORY_OPTIONS.find((o) => o.id === selectedCategory);
-  if (!opt || opt.id === "all") return [];
-  const out = [opt.id, opt.label];
-  if (opt.id === "tarih") {
-    return [...new Set([...out, "Tarih"])];
-  }
-  return out;
-}
-
-/** Sağ kolon kategori rayı — ince çizgi, tek görsel dil (referans). */
-function categoryRailIcon(id: FeedCategoryFilter): ReactNode {
-  const t = {
-    stroke: "currentColor" as const,
-    strokeWidth: 1.05,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-  };
-  const box = "category-rail-svg block h-[1.05rem] w-[1.05rem] shrink-0";
-  switch (id) {
-    case "all":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <path {...t} d="M5 8.5h14M5 12h14M5 15.5h9.5" />
-        </svg>
-      );
-    case "gundem":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <path
-            {...t}
-            d="M8.5 4.5h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z"
-          />
-          <path {...t} d="M8 9.5h8M8 12.5h6.5M8 15.5h7.5" />
-        </svg>
-      );
-    case "sahsiyetler":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <circle {...t} cx="12" cy="8.25" r="3.15" />
-          <path {...t} d="M6.25 19.25v-.75a5.75 5.75 0 0 1 11.5 0v.75" />
-        </svg>
-      );
-    case "mahalleler":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <path
-            {...t}
-            d="M4.5 10.25 12 4.75l7.5 5.5V19a1 1 0 0 1-1 1h-4.75v-6.5h-3.5V20H5.5a1 1 0 0 1-1-1v-8.75Z"
-          />
-        </svg>
-      );
-    case "sehir-hafizasi":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <path {...t} d="M5.5 5.5h6v13h-6V5.5Z" />
-          <path {...t} d="M13.5 8.5h5v10h-5V8.5Z" />
-          <path {...t} d="M8 9.5h2M8 12h2M16 11.5h1.5M16 14h1.5" />
-        </svg>
-      );
-    case "gundelik-hayat":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <path
-            {...t}
-            d="M8.5 4.5h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z"
-          />
-          <path {...t} d="M8 9.5h8M8 12.5h6.5M8 15.5h7.5" />
-        </svg>
-      );
-    case "tarih":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <path {...t} d="M5 20V11l7-4.25L19 11v9" />
-          <path {...t} d="M5 20h14" />
-          <path {...t} d="M10 20v-4.5h4V20" />
-          <path {...t} d="M9 11.5h6" />
-        </svg>
-      );
-    case "yerel-lezzetler":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <ellipse {...t} cx="12" cy="16" rx="7" ry="2.25" />
-          <path
-            {...t}
-            d="M6.2 10.2c1.1 1.8 2.1 1.8 2.8 0M10.4 8.2c.9 1.6 1.7 1.6 2.2 0M13.4 6.2c.8 1.2 1.4 1.2 1.8 0"
-          />
-          <path {...t} d="M8.5 14.5h7" />
-        </svg>
-      );
-    case "cografya":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <path {...t} d="M4 18.5h16" />
-          <path {...t} d="m5.5 18.5 4.25-9 3.5 6 3.75-11L18.5 18.5" />
-        </svg>
-      );
-    case "yurttaslik-bilgisi":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <path {...t} d="M4 8h16" />
-          <path {...t} d="M12 5.5V19" />
-          <path {...t} d="M8 19h8" />
-          <path {...t} d="M8.5 8 6 14.5h5L8.5 8Z" />
-          <path {...t} d="M15.5 8 13 14.5h5l-2.5-6.5Z" />
-        </svg>
-      );
-    case "spor":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden className={box}>
-          <circle {...t} cx="12" cy="12" r="6.35" />
-          <path {...t} d="M12 5.65v12.7M5.65 12h12.7" />
-          <path
-            {...t}
-            d="M7.35 7.35c1.85 1.85 7.45 1.85 9.3 0M7.35 16.65c1.85-1.85 7.45-1.85 9.3 0"
-          />
-        </svg>
-      );
-  }
-}
-
-function entryCategoryEyebrow(category: string | null | undefined): string {
-  const slug = normalizeEntryCategory(category ?? null);
-  if (!slug) return "YAZI";
-  const opt = FEED_CATEGORY_OPTIONS.find((o) => o.id === slug);
-  return (opt?.label ?? "Yazı").toLocaleUpperCase("tr-TR");
-}
 
 function entryMatchesSearch(entry: EntryItem, rawQuery: string): boolean {
   const q = rawQuery.trim();
@@ -162,19 +26,7 @@ function entryMatchesSearch(entry: EntryItem, rawQuery: string): boolean {
     entry.content ?? "",
     entry.authorName ?? "",
   ];
-  const rawCat = entry.category?.trim();
-  if (rawCat) parts.push(rawCat);
-  const slug = normalizeEntryCategory(entry.category ?? null);
-  if (slug) {
-    const opt = FEED_CATEGORY_OPTIONS.find((o) => o.id === slug);
-    if (opt) parts.push(opt.label);
-  }
   return parts.some((s) => s.toLocaleLowerCase("tr-TR").includes(ql));
-}
-
-function estimateReadMinutesFromText(text: string): number {
-  const words = text.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 200));
 }
 
 const LS_PENDING_ENTRY = "pendingEntryId";
@@ -236,6 +88,34 @@ type EntryItem = {
   authorName?: string | null;
   bio61?: string | null;
 };
+
+/** Orta akış: mount başına sabit seed; önce id ile kanonik sıra, sonra Fisher–Yates (yenilemede aynı küme → aynı permütasyon). */
+function mulberry32(initial: number) {
+  let a = initial >>> 0;
+  return function next() {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function deterministicShuffle<T>(items: readonly T[], seed: number): T[] {
+  const a = [...items];
+  const rnd = mulberry32(seed);
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function entriesCanonicalById<T extends { id: string }>(
+  entries: readonly T[]
+): T[] {
+  return [...entries].sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+}
 
 type CommentItem = {
   id: string;
@@ -357,18 +237,17 @@ export default function HomePageClient({
   }, [router]);
   const [commentText, setCommentText] = useState("");
   const commentComposeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const pendingFocusAfterEntrySelectRef = useRef(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return readPendingFromStorage().entryId;
   });
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
-  const [feedCategoryFilter, setFeedCategoryFilter] =
-    useState<FeedCategoryFilter>("all");
-  const [categoryFilteredEntries, setCategoryFilteredEntries] = useState<
-    EntryItem[] | null
-  >(null);
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
+  const [mainFeedShuffleSeed] = useState(
+    () => (Math.floor(Math.random() * 0x7fff_ffff) | 0) >>> 0
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -573,9 +452,8 @@ export default function HomePageClient({
     stripEntryQueryFromUrl();
   }, [stripEntryQueryFromUrl]);
 
-  /** Tam yazı akışı: kategori tümü, arama kapalı, detay kapalı, feed modu. */
+  /** Tam yazı akışı: arama kapalı, detay kapalı, feed modu. */
   const resetToWritingsFeed = useCallback(() => {
-    setFeedCategoryFilter("all");
     setSearchQuery("");
     closeEntryModal();
   }, [closeEntryModal]);
@@ -688,7 +566,7 @@ export default function HomePageClient({
 
   useEffect(() => {
     setFeedVisibleCount(FEED_PAGE_SIZE);
-  }, [feedCategoryFilter, searchQuery]);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -853,93 +731,62 @@ export default function HomePageClient({
     return ranked.slice(0, 10).map((row) => row.entry);
   }, [centerEntries, commentsByEntryIdLive]);
 
+  const shuffledMainFeedEntries = useMemo(() => {
+    const canon = entriesCanonicalById(centerEntries);
+    return deterministicShuffle(canon, mainFeedShuffleSeed);
+  }, [centerEntries, mainFeedShuffleSeed]);
+
+  const rightRailAwaitingFirstComment = useMemo(() => {
+    const withCounts = centerEntries.map((entry) => ({
+      entry,
+      commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
+    }));
+    const zeros = withCounts.filter((r) => r.commentCount === 0);
+    zeros.sort((a, b) => {
+      const ta = new Date(a.entry.created_at).getTime();
+      const tb = new Date(b.entry.created_at).getTime();
+      return tb - ta;
+    });
+    return zeros.slice(0, 12).map((r) => r.entry);
+  }, [centerEntries, commentsByEntryIdLive]);
+
+  const focusCommentCompose = useCallback(() => {
+    window.setTimeout(() => {
+      const el = commentComposeTextareaRef.current;
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        el.focus();
+      }
+    }, 80);
+  }, []);
+
   useEffect(() => {
-    const isAll =
-      feedCategoryFilter === "all" ||
-      (feedCategoryFilter as string) === "tumu";
-    if (isAll) {
-      setCategoryFilteredEntries(null);
+    if (!pendingFocusAfterEntrySelectRef.current) return;
+    if (!selectedEntryId || centerMode !== "feed") {
+      if (!selectedEntryId) {
+        pendingFocusAfterEntrySelectRef.current = false;
+      }
       return;
     }
-
-    let cancelled = false;
-    (async () => {
-      const supabase = createSupabaseBrowserClient();
-      let query = supabase
-        .from("entries")
-        .select("id, title, content, created_at, category, user_id")
-        .order("created_at", { ascending: false });
-      const vals = dbCategoryValuesForFilter(feedCategoryFilter);
-      if (vals.length > 0) {
-        query = query.in("category", vals);
+    const t = window.setTimeout(() => {
+      const el = commentComposeTextareaRef.current;
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        el.focus();
       }
-      const { data, error } = await query;
-      if (cancelled) return;
-      if (error) {
-        console.error("[entries] category query", error);
-        setCategoryFilteredEntries(null);
-        return;
-      }
-      const rows = (data ?? []) as {
-        id: string;
-        title: string;
-        content: string;
-        created_at: string;
-        category: string | null;
-        user_id?: string | null;
-      }[];
-      const distinctCats = [
-        ...new Set(
-          rows.map((r) => (typeof r.category === "string" ? r.category : ""))
-        ),
-      ];
-      console.log(
-        "[entries fetch] selectedCategory:",
-        feedCategoryFilter,
-        "distinct category values in response:",
-        distinctCats
-      );
-      setCategoryFilteredEntries(
-        rows.map((r) => {
-          const existing = centerEntries.find((e) => e.id === r.id);
-          const rawCat = typeof r.category === "string" ? r.category : null;
-          return {
-            id: String(r.id),
-            title: r.title,
-            content: r.content,
-            created_at: r.created_at,
-            category: normalizeEntryCategory(rawCat) ?? rawCat,
-            authorName: existing?.authorName ?? null,
-            bio61: existing?.bio61 ?? null,
-          };
-        })
-      );
-    })();
+      pendingFocusAfterEntrySelectRef.current = false;
+    }, 120);
     return () => {
-      cancelled = true;
+      window.clearTimeout(t);
     };
-  }, [feedCategoryFilter, centerEntries]);
-
-  const feedEntriesFiltered = useMemo(() => {
-    if (
-      feedCategoryFilter === "all" ||
-      (feedCategoryFilter as string) === "tumu"
-    ) {
-      return centerEntries;
-    }
-    if (categoryFilteredEntries !== null) {
-      return categoryFilteredEntries;
-    }
-    return centerEntries.filter((e) => {
-      const n = normalizeEntryCategory(e.category ?? null);
-      return n === feedCategoryFilter;
-    });
-  }, [centerEntries, feedCategoryFilter, categoryFilteredEntries]);
+  }, [selectedEntryId, centerMode]);
 
   const feedEntriesSearchFiltered = useMemo(() => {
-    if (!searchQuery.trim()) return feedEntriesFiltered;
-    return feedEntriesFiltered.filter((e) => entryMatchesSearch(e, searchQuery));
-  }, [feedEntriesFiltered, searchQuery]);
+    if (!searchQuery.trim()) return shuffledMainFeedEntries;
+    return shuffledMainFeedEntries.filter((e) =>
+      entryMatchesSearch(e, searchQuery)
+    );
+  }, [shuffledMainFeedEntries, searchQuery]);
 
   const centerFeedEntries = useMemo(
     () => feedEntriesSearchFiltered.slice(0, feedVisibleCount),
@@ -1044,13 +891,6 @@ export default function HomePageClient({
         </div>
       );
     }
-    if (feedEntriesFiltered.length === 0) {
-      return (
-        <div className="flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-hair)] px-4 py-14 text-center text-sm text-[color:var(--text-muted)]">
-          Bu kategoride entry yok.
-        </div>
-      );
-    }
     if (feedEntriesSearchFiltered.length === 0 && searchQuery.trim()) {
       return (
         <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-4 py-16 text-center md:px-6 md:py-20">
@@ -1058,8 +898,7 @@ export default function HomePageClient({
             Aramana uygun bir yazı bulunamadı.
           </p>
           <p className="feed-search-empty-hint m-0 mt-3 max-w-[22rem] mx-auto text-[0.8125rem] font-normal leading-[1.65] text-[color:var(--text-muted)] md:text-[0.84375rem]">
-            Farklı bir kelime deneyebilir veya kategori filtresini
-            değiştirebilirsin.
+            Farklı bir kelime deneyebilirsin.
           </p>
         </div>
       );
@@ -1076,8 +915,6 @@ export default function HomePageClient({
                 title={entry.title}
                 contentPreview={entry.content}
                 commentCount={cc}
-                readMinutes={estimateReadMinutesFromText(entry.content)}
-                categoryEyebrow={entryCategoryEyebrow(entry.category)}
                 authorLabel={entry.authorName?.trim() || "61Larus"}
                 isActive={isActive}
                 onSelect={() => selectEntry(entry.id)}
@@ -1091,7 +928,7 @@ export default function HomePageClient({
             onClick={() =>
               setFeedVisibleCount((c) => c + FEED_PAGE_SIZE)
             }
-            className="mt-8 w-full border-0 bg-transparent py-4 text-center text-[12px] font-normal tracking-[0.03em] text-[color:var(--text-muted)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[6px] transition-colors hover:text-[color:var(--text-secondary)] hover:decoration-[color:var(--border-subtle)]"
+            className="feed-load-more mt-8 w-full border-0 bg-transparent py-4 text-center text-[12px] font-normal tracking-[0.03em] text-[color:var(--text-muted)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[6px] transition-colors hover:text-[color:var(--text-secondary)] hover:decoration-[color:var(--border-subtle)]"
           >
             Daha fazla yazı yükle ↓
           </button>
@@ -1364,14 +1201,39 @@ export default function HomePageClient({
               Soru, öneri veya teknik bildirimlerin için aşağıdaki kanalı
               kullanabilirsin. Yanıt süresi iş yüküne bağlı olarak değişebilir.
             </p>
-            <div className="site-info-contact-card" aria-label="İletişim">
-              <p className="site-info-contact-label">Genel yazışma</p>
-              <a
-                className="site-info-contact-link"
-                href="mailto:iletisim@61larus.com"
+            <div
+              onClick={() =>
+                window.open("https://wa.me/905400010462", "_blank")
+              }
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px 14px",
+                borderRadius: "10px",
+                background: "rgba(37, 211, 102, 0.08)",
+                cursor: "pointer",
+              }}
+            >
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  background: "#25D366",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                iletisim@61larus.com
-              </a>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                  <path d="M20.52 3.48A11.8 11.8 0 0 0 12.01 0C5.38 0 .01 5.38.01 12c0 2.11.55 4.17 1.6 5.99L0 24l6.19-1.61A11.96 11.96 0 0 0 12.01 24c6.63 0 12-5.38 12-12 0-3.2-1.25-6.2-3.49-8.52z" />
+                </svg>
+              </div>
+
+              <span style={{ fontWeight: 500 }}>
+                WhatsApp danışma hattı
+              </span>
             </div>
           </div>
         );
@@ -1424,24 +1286,27 @@ export default function HomePageClient({
 
   return (
     <main className="relative flex min-h-screen w-full max-w-full flex-col bg-transparent text-[color:var(--text-primary)] antialiased">
-      <header className="site-header relative mb-7 shrink-0 border-b border-[color:var(--divide-hair)] pb-5 md:mb-8 md:pb-7">
-        <div className="flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
-          <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(21rem,100%)]">
-            <button
-              type="button"
-              onClick={goToBrandHome}
-              className="site-wordmark max-w-full border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-88"
-              style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
-              aria-label="Ana sayfa — Akış"
-            >
-              61Larus
-            </button>
-            <p className="site-header-tagline m-0">
-              Trabzon’un gündemi, lafı ve hafızası
-            </p>
-          </div>
+      <header className="site-header relative mb-7 shrink-0 pb-5 md:mb-8 md:pb-7">
+        <div className="headerBlock">
+          <div className="headerBar min-w-0">
+            <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(21rem,100%)]">
+              <h1 className="m-0 p-0">
+                <button
+                  type="button"
+                  onClick={goToBrandHome}
+                  className="site-wordmark max-w-full border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-88"
+                  style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
+                  aria-label="Ana sayfa — Akış"
+                >
+                  61Larus
+                </button>
+              </h1>
+              <p className="site-header-tagline m-0">
+                Trabzon’un gündemi, lafı ve hafızası
+              </p>
+            </div>
           <div
-            className="site-header-editorial"
+            className="headerCenterText site-header-editorial"
             aria-live="polite"
             aria-atomic="true"
             aria-label="Atatürk sözleri"
@@ -1453,57 +1318,17 @@ export default function HomePageClient({
               {HEADER_ATATURK_QUOTES[headerEditorialIdx]}
             </p>
           </div>
-          <div className="site-header-aux flex w-full min-w-0 flex-wrap items-center gap-x-4 gap-y-2 sm:gap-x-5 lg:w-auto lg:max-w-none lg:shrink-0 lg:justify-end">
-            <div className="site-header-search min-w-0 flex-1 sm:flex-initial sm:max-w-[12.25rem] md:max-w-[13.25rem]">
-              <label htmlFor="site-header-search-input" className="sr-only">
-                Yazılarda ara
-              </label>
-              <span className="site-header-search-icon" aria-hidden>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.15}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="10.5" cy="10.5" r="5.75" />
-                  <path d="m16.25 16.25 3.6 3.6" />
-                </svg>
-              </span>
-              <input
-                id="site-header-search-input"
-                type="search"
-                name="q"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Başlık ara"
-                autoComplete="off"
-                spellCheck={false}
-                className="site-header-search-input"
-              />
-              {searchQuery ? (
-                <button
-                  type="button"
-                  className="site-header-search-clear"
-                  onClick={() => setSearchQuery("")}
-                  aria-label="Aramayı temizle"
-                >
-                  ×
-                </button>
-              ) : null}
-            </div>
+          <div className="headerUserName site-header-aux min-w-0 gap-x-3 sm:gap-x-4 lg:shrink-0 lg:gap-x-5 lg:pr-6">
             {!isAuthenticated ? (
-              <Link
-                href="/auth"
-                className="font-normal tracking-[0.04em] text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
-              >
-                Giriş
-              </Link>
+                <Link
+                  href="/auth"
+                  className="inline-flex shrink-0 items-center font-normal tracking-[0.04em] text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
+                >
+                  Giriş
+                </Link>
             ) : null}
             {isAuthenticated ? (
-              <>
-                <div className="relative" ref={accountMenuRef}>
+                <div className="relative min-w-0 shrink-0" ref={accountMenuRef}>
                 <button
                   type="button"
                   onClick={() => {
@@ -1514,10 +1339,10 @@ export default function HomePageClient({
                   aria-haspopup="menu"
                 >
                   <div
-                    className="account-menu-trigger-inner flex cursor-pointer items-center px-1 py-0.5 text-[color:var(--text-tertiary)] transition-colors duration-150 hover:text-[color:var(--text-secondary)]"
+                    className="account-menu-trigger-inner flex h-[28px] max-w-full min-w-0 cursor-pointer items-center justify-end px-0.5 text-[color:var(--text-tertiary)] transition-colors duration-150 hover:text-[color:var(--text-secondary)]"
                     style={{ transition: "var(--transition)" }}
                   >
-                    <span className="account-menu-handle">
+                    <span className="account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right">
                       {userEmail?.split("@")[0] || "kullanıcı"}
                     </span>
                   </div>
@@ -1576,9 +1401,9 @@ export default function HomePageClient({
                     ) : null}
                   </div>
                 ) : null}
-                  </div>
-                </>
+                </div>
             ) : null}
+          </div>
           </div>
         </div>
       </header>
@@ -1620,7 +1445,7 @@ export default function HomePageClient({
                 üzerinden bize ulaşabilirsin.
               </div>
             ) : null}
-            <div className="flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(10rem,0.88fr)_minmax(0,2.62fr)_minmax(11.25rem,0.86fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(10.5rem,0.9fr)_minmax(0,2.68fr)_minmax(12rem,0.88fr)]">
+            <div className="home-content-grid flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(0,2.5fr)_minmax(11rem,0.95fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(11.5rem,0.95fr)_minmax(0,2.5fr)_minmax(11.5rem,0.95fr)]">
             <aside
               className="flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--divide-hair)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-[calc(100dvh-6rem)] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--divide-hair)]"
               aria-label="Şu an en çok konuşulanlar"
@@ -1693,181 +1518,93 @@ export default function HomePageClient({
             </aside>
             <main className="main-column relative min-w-0 w-full bg-transparent md:border-x md:border-[color:var(--divide-hair)]">
               <div className="layout-feed-inner mx-auto w-full max-w-none px-4 py-5 sm:px-5 sm:py-6 md:px-7 md:py-7 lg:px-9">
+                <div className="feedSearchBar">
+                  <label htmlFor="feed-search-input" className="sr-only">
+                    Yazılarda ara
+                  </label>
+                  <input
+                    id="feed-search-input"
+                    name="q"
+                    type="search"
+                    className="feedSearchInput"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="İstediğin başlığı ara"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
                 {renderMainFeed()}
               </div>
             </main>
             <aside
-              className="right-column flex w-full min-w-0 shrink-0 flex-col border-t border-[color:var(--divide-hair)] bg-transparent md:sticky md:top-4 md:z-[5] md:w-full md:max-w-none md:self-start md:border-l md:border-t-0 md:border-[color:var(--divide-hair)]"
+              className="right-column side-panel flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--divide-hair)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-none md:w-full md:max-w-none md:overflow-visible md:self-start md:border-b-0 md:border-l md:border-t-0 md:border-[color:var(--divide-hair)]"
               aria-label="Yayın paneli"
             >
-              <div className="right-block flex flex-col px-3 pb-5 pt-3.5 md:px-4 md:pb-6 md:pt-4">
-                <div className="pb-5 md:pb-5">
-                  <p className="sidebar-block-title">Akış prensibi</p>
-                  <ul className="sidebar-rail-copy m-0 list-none space-y-2.5 p-0 text-[color:var(--text-secondary)] md:space-y-3">
-                    <li className="flex gap-2">
-                      <span
-                        className="mt-1.5 h-0.75 w-0.75 shrink-0 rounded-full bg-[color:var(--text-primary)] opacity-45"
-                        aria-hidden
-                      />
-                      <span>Her yazı bir duruş.</span>
-                    </li>
-                    <li className="flex gap-2">
-                      <span
-                        className="mt-1.5 h-0.75 w-0.75 shrink-0 rounded-full bg-[color:var(--text-primary)] opacity-45"
-                        aria-hidden
-                      />
-                      <span>Akış, gürültü değil düşünce sırasıdır.</span>
-                    </li>
-                    <li className="flex gap-2">
-                      <span
-                        className="mt-1.5 h-0.75 w-0.75 shrink-0 rounded-full bg-[color:var(--text-primary)] opacity-45"
-                        aria-hidden
-                      />
-                      <span>Trabzon merkezli, ama dar değil.</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="pt-1 pb-5 md:pt-1.5 md:pb-5">
-                  <p className="sidebar-block-title">Etkileşim</p>
-                  <ul className="sidebar-rail-copy m-0 list-none space-y-3.5 p-0 text-[color:var(--text-secondary)] md:space-y-4">
-                    <li className="flex gap-2">
-                      <span className="mt-0.5 shrink-0 text-[color:var(--text-muted)] opacity-65" aria-hidden>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        </svg>
-                      </span>
-                      <span>Yorumlar kısa ve saygılı tutulur.</span>
-                    </li>
-                    <li className="flex gap-2">
-                      <span className="mt-0.5 shrink-0 text-[color:var(--text-muted)] opacity-65" aria-hidden>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M12 6v6l4 2" />
-                        </svg>
-                      </span>
-                      <span>Tarihli kayıtlar; metin önceliklidir.</span>
-                    </li>
-                    <li className="flex gap-2">
-                      <span className="mt-0.5 shrink-0 text-[color:var(--text-muted)] opacity-65" aria-hidden>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke">
-                          <path d="M5 12h14" />
-                          <path d="m12 5 7 7-7 7" />
-                        </svg>
-                      </span>
-                      <span>Başlıktan içeriğe tek nefeste okuma.</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="category-rail-section pt-4 pb-0 md:pt-5 md:pb-0">
-                  <p className="sidebar-block-title">Kategoriler</p>
-                  <nav
-                    className="category-rail-nav"
-                    aria-label="Entry kategorileri"
-                  >
-                    {FEED_CATEGORY_OPTIONS.map((opt) => {
-                      const isActive = feedCategoryFilter === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          data-category-filter={opt.id}
-                          onClick={() => setFeedCategoryFilter(opt.id)}
-                          aria-current={isActive ? "true" : undefined}
-                          style={{ transition: "var(--transition)" }}
-                          className={`category-rail-item group flex w-full cursor-pointer items-center gap-3 text-left ${
-                            isActive ? "font-medium" : "font-normal"
+              <div className="shrink-0 border-b border-[color:var(--divide-hair)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-4 md:pt-5">
+                <p className="trending-rail-eyebrow mb-0">İlk katkıyı bekliyor</p>
+              </div>
+              <div
+                className="left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain md:overflow-visible"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "var(--scrollbar-thumb) transparent",
+                }}
+              >
+                <nav
+                  className="flex flex-col px-2.5 pb-4 pt-2.5 md:px-3.5 md:pb-5 md:pt-3"
+                  aria-label="Henüz yorum almamış başlıklar"
+                >
+                  {rightRailAwaitingFirstComment.map((entry, index) => {
+                    const isActive = entry.id === effectiveEntryId;
+                    const rank = index + 1;
+                    const isFirst = index === 0;
+                    return (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        onClick={() => selectEntry(entry.id)}
+                        style={{
+                          transition: "var(--transition)",
+                          boxShadow: isActive
+                            ? "inset 2px 0 0 0 var(--accent-green-line)"
+                            : undefined,
+                        }}
+                        className={`group relative flex w-full items-start gap-3 border-0 border-b border-[color:var(--divide-hair)] py-3 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3.5 md:py-3.5 md:pl-1 md:pr-1.5 ${
+                          isActive
+                            ? "bg-[var(--list-row-active)]"
+                            : "bg-transparent hover:bg-[var(--surface-hover)]"
+                        }`}
+                      >
+                        <span
+                          className={`index-rank w-[1.35rem] shrink-0 pt-0.5 text-right md:w-6 ${
+                            isActive
+                              ? "text-[color:var(--accent-green)]"
+                              : "text-[color:var(--text-tertiary)] group-hover:text-[color:var(--text-meta)]"
                           }`}
+                          aria-hidden
                         >
-                          <span className="category-rail-icon-wrap shrink-0" aria-hidden>
-                            {categoryRailIcon(opt.id)}
+                          {rank}.
+                        </span>
+                        <div className="flex min-w-0 flex-1 flex-col gap-1 md:gap-1.5">
+                          <span
+                            className={`index-entry-title line-clamp-2 ${
+                              isFirst || isActive
+                                ? "index-entry-title--emph"
+                                : "index-entry-title--quiet"
+                            }`}
+                          >
+                            {entry.title}
                           </span>
-                          <span className="category-rail-label min-w-0 flex-1">
-                            <span className="category-rail-hash"># </span>
-                            <span className="category-rail-name">{opt.label}</span>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </nav>
-                </div>
+                          <span className="index-entry-meta">0 yorum</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </nav>
               </div>
             </aside>
             </div>
-
-            <section
-              id="site-about"
-              className="mt-1 border-t border-[color:var(--divide-hair)] bg-[var(--bg-primary)] px-4 py-9 md:mt-0 md:px-6 md:py-10 lg:px-3"
-              aria-label="Özellikler"
-            >
-              <div className="mx-auto grid max-w-[80rem] grid-cols-1 items-start gap-8 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-9 md:grid-cols-3 md:gap-x-9 md:gap-y-10 lg:grid-cols-5 lg:gap-x-8 lg:gap-y-9">
-                {[
-                  {
-                    t: "Yazabilirsin",
-                    d: "Düşünceni metinle kur; tartışma sana ait bir çerçeveye oturur.",
-                    icon: (
-                      <>
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                      </>
-                    ),
-                  },
-                  {
-                    t: "Okuyabilirsin",
-                    d: "Akış, gazete disiplininde; başlık ve özet birlikte nefes alır.",
-                    icon: (
-                      <>
-                        <path d="M17 21v-8a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v8" />
-                        <path d="M7 3h10a1 1 0 0 1 1 1v16" />
-                      </>
-                    ),
-                  },
-                  {
-                    t: "Konuşabilirsin",
-                    d: "Yorumlar kısa tutulur; cevaplar metnin altında kalır.",
-                    icon: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
-                  },
-                  {
-                    t: "Hatırlanabilirsin",
-                    d: "Kayıtlar ve başlıklar birlikte; şehrin hafızasına yazılır.",
-                    icon: (
-                      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-                    ),
-                  },
-                  {
-                    t: "Trabzon merkezli",
-                    d: "Yerel kök, editoryal evrensel dil; sıcak ama ciddi yüzey.",
-                    icon: (
-                      <>
-                        <path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10z" />
-                        <circle cx="12" cy="11" r="2.5" />
-                      </>
-                    ),
-                  },
-                ].map((item) => (
-                  <div key={item.t} className="flex min-w-0 flex-col items-start gap-2.5">
-                    <div className="text-[color:var(--text-muted)] opacity-[0.82]" aria-hidden>
-                      <svg
-                        width="19"
-                        height="19"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.1"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        vectorEffect="non-scaling-stroke"
-                      >
-                        {item.icon}
-                      </svg>
-                    </div>
-                    <p className="site-feature-title">{item.t}</p>
-                    <p className="site-feature-desc">{item.d}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
 
             <footer
               id="site-footer"
