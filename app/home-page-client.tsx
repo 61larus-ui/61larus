@@ -964,7 +964,7 @@ export default function HomePageClient({
     const text = encodeURIComponent(title);
     const url = encodeURIComponent(link);
     window.open(
-      `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+      `https://x.com/intent/tweet?text=${text}&url=${url}`,
       "_blank",
       "noopener,noreferrer"
     );

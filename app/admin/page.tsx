@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
 } from "react";
@@ -19,6 +20,7 @@ import {
   type AdminRole,
 } from "@/lib/admin-role";
 import { SILINMIS_KULLANICI_LABEL } from "@/lib/deleted-user-label";
+import { AdminShareCopyBlock } from "@/components/admin-share-copy-block";
 
 type EntryRow = {
   id: string;
@@ -192,7 +194,10 @@ export default function AdminPage() {
   const [listLoading, setListLoading] = useState(false);
 
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
+  /** Entry oluşturma / düzenleme sonrası kısa bildirim (toast yok). */
+  const [publishNotice, setPublishNotice] = useState<string | null>(null);
+  const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
+  const editorComposeAutoOpenedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -227,6 +232,12 @@ export default function AdminPage() {
   const [draftTitle, setDraftTitle] = useState("");
   const [draftContent, setDraftContent] = useState("");
   const [draftCategory, setDraftCategory] = useState<EntryCategory | "">("");
+  /** Son yayınlanan entry: paylaşım linki ve metin; yeni taslak yazılmaya başlanınca temizlenir. */
+  const [justPublishedEntry, setJustPublishedEntry] = useState<{
+    id: string;
+    title: string;
+    content: string;
+  } | null>(null);
 
   const [platformMembers, setPlatformMembers] = useState<PlatformMemberRow[]>(
     []
@@ -500,6 +511,19 @@ export default function AdminPage() {
 
   const canManageEntriesFully = isSuperAdminRole(adminRole ?? "editor_admin");
 
+  useEffect(() => {
+    if (sessionOk !== true || adminRole !== "editor_admin") return;
+    if (editorComposeAutoOpenedRef.current) return;
+    editorComposeAutoOpenedRef.current = true;
+    setIsComposeModalOpen(true);
+  }, [sessionOk, adminRole]);
+
+  useEffect(() => {
+    if (!publishNotice) return;
+    const t = window.setTimeout(() => setPublishNotice(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [publishNotice]);
+
   async function onLogin(e: FormEvent) {
     e.preventDefault();
     setLoginError(null);
@@ -551,7 +575,7 @@ export default function AdminPage() {
   async function onSubmitNew(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitError(null);
-    setShowSuccess(false);
+    setPublishNotice(null);
 
     const title = draftTitle.trim();
     const content = draftContent.trim();
@@ -579,11 +603,19 @@ export default function AdminPage() {
           category,
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        id?: string;
+      };
       setSubmitting(false);
       if (!res.ok) {
         setSubmitError(data.error ?? "Kayıt oluşturulamadı.");
         return;
+      }
+      if (typeof data.id === "string" && data.id.length > 0) {
+        setJustPublishedEntry({ id: data.id, title, content });
+      } else {
+        setJustPublishedEntry(null);
       }
     } catch {
       setSubmitting(false);
@@ -594,7 +626,8 @@ export default function AdminPage() {
     setDraftTitle("");
     setDraftContent("");
     setDraftCategory("");
-    setShowSuccess(true);
+    setIsComposeModalOpen(false);
+    setPublishNotice("Entry yayınlandı");
     void loadEntries();
   }
 
@@ -628,6 +661,7 @@ export default function AdminPage() {
   }
 
   function openEdit(row: EntryRow) {
+    setIsComposeModalOpen(false);
     setEditRow(row);
     setEditTitle(row.title);
     setEditContent(row.content);
@@ -670,6 +704,7 @@ export default function AdminPage() {
         return;
       }
       setEditRow(null);
+      setPublishNotice("Entry yayınlandı");
       void loadEntries();
     } catch {
       setEditSaving(false);
@@ -844,6 +879,7 @@ export default function AdminPage() {
   }, [entries]);
 
   const applyTemplate = (text: string) => {
+    setJustPublishedEntry(null);
     setDraftContent((prev) => (prev.trim() ? `${prev}\n\n${text}` : text));
   };
 
@@ -957,6 +993,14 @@ export default function AdminPage() {
       </header>
 
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
+        {publishNotice ? (
+          <p
+            className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-emerald-200"
+            role="status"
+          >
+            {publishNotice}
+          </p>
+        ) : null}
         {!canManageEntriesFully ? (
           <div className="admin-callout rounded-xl border border-amber-500/25 bg-amber-500/5 px-4 py-3 text-amber-100/95">
             Bu hesap <strong className="font-semibold">editör</strong> rolünde:
@@ -1503,101 +1547,32 @@ export default function AdminPage() {
             ile oluşturulur. Kategori kolonu yoksa yalnızca başlık ve içerik
             yazılır.
           </p>
-          {showSuccess ? (
-            <p className="admin-msg-success mt-3 text-emerald-400">
-              Kayıt oluşturuldu.
-            </p>
-          ) : null}
-          {submitError ? (
-            <p className="admin-msg-error mt-3 text-red-300">{submitError}</p>
-          ) : null}
-          <form
-            onSubmit={(e) => void onSubmitNew(e)}
-            className="mt-4 space-y-4"
-          >
-            <label className="block">
-              <span className="admin-label">Başlık</span>
-              <input
-                value={draftTitle}
-                onChange={(e) => setDraftTitle(e.target.value)}
-                maxLength={161}
-                className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
-              />
-            </label>
-            <label className="block">
-              <span className="admin-label">Kategori</span>
-              <select
-                value={draftCategory}
-                onChange={(e) =>
-                  setDraftCategory(e.target.value as EntryCategory | "")
-                }
-                className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
-              >
-                <option value="">— Seçin —</option>
-                {FEED_CATEGORY_OPTIONS.filter((o) => o.id !== "all").map(
-                  (o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.label}
-                    </option>
-                  )
-                )}
-              </select>
-            </label>
-            <div>
-              <span className="admin-label m-0">Hızlı şablonlar</span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    applyTemplate(
-                      "@örnek_kullanici selam — mention testi için."
-                    )
-                  }
-                  className="admin-chip-text rounded-md border border-slate-700 px-2 py-1 text-slate-300 hover:bg-slate-800"
-                >
-                  Mention şablonu
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    applyTemplate(
-                      "Yanıt zinciri testi: bu metni yorumlayıp altına cevap verin."
-                    )
-                  }
-                  className="admin-chip-text rounded-md border border-slate-700 px-2 py-1 text-slate-300 hover:bg-slate-800"
-                >
-                  Yanıt zinciri
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    applyTemplate(
-                      "Kısa test içeriği — " + new Date().toISOString()
-                    )
-                  }
-                  className="admin-chip-text rounded-md border border-slate-700 px-2 py-1 text-slate-300 hover:bg-slate-800"
-                >
-                  Zaman damgalı metin
-                </button>
-              </div>
-            </div>
-            <label className="block">
-              <span className="admin-label">İçerik</span>
-              <textarea
-                value={draftContent}
-                onChange={(e) => setDraftContent(e.target.value)}
-                rows={8}
-                className="admin-field mt-1 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
-              />
-            </label>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
-              type="submit"
-              disabled={submitting}
-              className="admin-btn-text admin-btn-text--emph rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-500 disabled:opacity-50"
+              type="button"
+              onClick={() => {
+                setPublishNotice(null);
+                setIsComposeModalOpen(true);
+              }}
+              className="admin-btn-text admin-btn-text--emph rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-500"
             >
-              {submitting ? "Kaydediliyor…" : "Yayınla"}
+              Yeni entry
             </button>
-          </form>
+            <span className="admin-helper text-slate-500">
+              Yayınlama penceresinde tamamlanır; gönderdikten sonra pencere
+              kapanır.
+            </span>
+          </div>
+          {justPublishedEntry ? (
+            <div className="mt-6 border-t border-slate-800 pt-6">
+              <p className="admin-label mb-2">Paylaşım (son kayıt)</p>
+              <AdminShareCopyBlock
+                title={justPublishedEntry.title}
+                content={justPublishedEntry.content}
+                entryId={justPublishedEntry.id}
+              />
+            </div>
+          ) : null}
         </section>
 
         <section>
@@ -1705,6 +1680,153 @@ export default function AdminPage() {
         </section>
       </div>
 
+      {isComposeModalOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          role="presentation"
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-compose-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <h3
+                id="admin-compose-title"
+                className="admin-modal-title flex-1 min-w-0 pr-1"
+              >
+                Yeni entry oluştur
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsComposeModalOpen(false)}
+                className="shrink-0 rounded-md border border-slate-600 px-2 py-1 text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                aria-label="Kapat"
+              >
+                Kapat
+              </button>
+            </div>
+            {submitError ? (
+              <p className="admin-msg-error mt-3 text-red-300">{submitError}</p>
+            ) : null}
+            <form
+              onSubmit={(e) => void onSubmitNew(e)}
+              className="mt-4 space-y-4"
+            >
+              <label className="block">
+                <span className="admin-label">Başlık</span>
+                <input
+                  value={draftTitle}
+                  onChange={(e) => {
+                    setJustPublishedEntry(null);
+                    setDraftTitle(e.target.value);
+                  }}
+                  maxLength={161}
+                  className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+                />
+              </label>
+              <label className="block">
+                <span className="admin-label">Kategori</span>
+                <select
+                  value={draftCategory}
+                  onChange={(e) => {
+                    setJustPublishedEntry(null);
+                    setDraftCategory(e.target.value as EntryCategory | "");
+                  }}
+                  className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+                >
+                  <option value="">— Seçin —</option>
+                  {FEED_CATEGORY_OPTIONS.filter((o) => o.id !== "all").map(
+                    (o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.label}
+                      </option>
+                    )
+                  )}
+                </select>
+              </label>
+              <div>
+                <span className="admin-label m-0">Hızlı şablonlar</span>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      applyTemplate(
+                        "@örnek_kullanici selam — mention testi için."
+                      )
+                    }
+                    className="admin-chip-text rounded-md border border-slate-700 px-2 py-1 text-slate-300 hover:bg-slate-800"
+                  >
+                    Mention şablonu
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      applyTemplate(
+                        "Yanıt zinciri testi: bu metni yorumlayıp altına cevap verin."
+                      )
+                    }
+                    className="admin-chip-text rounded-md border border-slate-700 px-2 py-1 text-slate-300 hover:bg-slate-800"
+                  >
+                    Yanıt zinciri
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      applyTemplate(
+                        "Kısa test içeriği — " + new Date().toISOString()
+                      )
+                    }
+                    className="admin-chip-text rounded-md border border-slate-700 px-2 py-1 text-slate-300 hover:bg-slate-800"
+                  >
+                    Zaman damgalı metin
+                  </button>
+                </div>
+              </div>
+              <label className="block">
+                <span className="admin-label">İçerik</span>
+                <textarea
+                  value={draftContent}
+                  onChange={(e) => {
+                    setJustPublishedEntry(null);
+                    setDraftContent(e.target.value);
+                  }}
+                  rows={8}
+                  className="admin-field mt-1 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+                />
+              </label>
+              <AdminShareCopyBlock
+                title={
+                  justPublishedEntry ? justPublishedEntry.title : draftTitle
+                }
+                content={
+                  justPublishedEntry ? justPublishedEntry.content : draftContent
+                }
+                entryId={justPublishedEntry?.id ?? null}
+              />
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsComposeModalOpen(false)}
+                  className="admin-btn-text rounded-lg border border-slate-600 px-3 py-2 text-slate-300"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="admin-btn-text admin-btn-text--emph rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-500 disabled:opacity-50"
+                >
+                  {submitting ? "Kaydediliyor…" : "Yayınla"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
       {editRow ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
@@ -1714,9 +1836,22 @@ export default function AdminPage() {
             className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-xl"
             role="dialog"
             aria-modal="true"
+            aria-labelledby="admin-edit-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="admin-modal-title">Entry düzenle</h3>
+            <div className="flex items-start justify-between gap-3">
+              <h3 id="admin-edit-title" className="admin-modal-title flex-1 min-w-0 pr-1">
+                Entry düzenle
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditRow(null)}
+                className="shrink-0 rounded-md border border-slate-600 px-2 py-1 text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                aria-label="Kapat"
+              >
+                Kapat
+              </button>
+            </div>
             {editError ? (
               <p className="admin-msg-error mt-2 text-red-300">{editError}</p>
             ) : null}
@@ -1752,6 +1887,11 @@ export default function AdminPage() {
                 className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
               />
             </label>
+            <AdminShareCopyBlock
+              title={editTitle}
+              content={editContent}
+              entryId={editRow.id}
+            />
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
