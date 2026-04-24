@@ -77,6 +77,9 @@ export async function generateMetadata({
       description: description.length > 0 ? description : undefined,
     },
     robots: { index: true, follow: true },
+    alternates: {
+      canonical: `https://61larus.com/?entry=${id}`,
+    },
   };
 }
 

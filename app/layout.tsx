@@ -20,8 +20,26 @@ const libreBaskerville = Libre_Baskerville({
 });
 
 export const metadata: Metadata = {
-  title: "61Larus",
-  description: "Trabzon’un gündemi, lafı ve hafızası",
+  metadataBase: new URL("https://61larus.com"),
+  title: "61LARUS",
+  description: "Trabzon’un yaşayan bilgi bankası",
+  keywords: ["trabzon", "trabzon tarih", "trabzon gündem", "karadeniz"],
+  openGraph: {
+    title: "61LARUS",
+    description: "Trabzon’un yaşayan bilgi bankası",
+    url: "https://61larus.com",
+    siteName: "61LARUS",
+    locale: "tr_TR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "61LARUS",
+    description: "Trabzon’un yaşayan bilgi bankası",
+  },
+  alternates: {
+    canonical: "https://61larus.com",
+  },
 };
 
 export default function RootLayout({

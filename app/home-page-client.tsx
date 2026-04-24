@@ -544,6 +544,7 @@ export default function HomePageClient({
     // auth redirect, router.refresh, and re-renders until successful open clears it.
     writePendingReturn(id, "comment");
     setSelectedEntryId(id);
+    void routerRef.current.replace(`/?entry=${id}`, { scroll: false });
     if (!isAuthenticatedRef.current) {
       setCenterMode("auth");
       return;
