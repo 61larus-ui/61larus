@@ -1732,35 +1732,37 @@ export default function HomePageClient({
               </div>
             ) : null}
             <div className="home-manifesto">
-              <h2 className="home-manifesto-title m-0">61Larus</h2>
-              <p className="home-manifesto-subtitle m-0">
-                Trabzon&apos;un yaşayan şehir ansiklopedisi
-              </p>
-              <div className="home-manifesto-copy">
-                <p>
-                  Trabzon hakkında merak edilen her şey burada birikir.
+              <div className="home-manifesto-inner">
+                <h2 className="home-manifesto-title m-0">61Larus</h2>
+                <p className="home-manifesto-subtitle m-0">
+                  Trabzon&apos;un yaşayan şehir ansiklopedisi
                 </p>
-                <p>Okuyanlar öğrenir, yazanlar iz bırakır.</p>
+                <div className="home-manifesto-copy">
+                  <p>
+                    Trabzon hakkında merak edilen her şey burada birikir.
+                  </p>
+                  <p>Okuyanlar öğrenir, yazanlar iz bırakır.</p>
+                </div>
+                <div className="home-manifesto-search">
+                  <label htmlFor="feed-search-input" className="sr-only">
+                    Yazılarda ara
+                  </label>
+                  <input
+                    id="feed-search-input"
+                    name="q"
+                    type="search"
+                    className="home-manifesto-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Başlık ara…"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+                <p className="home-manifesto-prompt m-0">
+                  Bugün burada ne öğrenebilirim?
+                </p>
               </div>
-              <div className="home-manifesto-search">
-                <label htmlFor="feed-search-input" className="sr-only">
-                  Yazılarda ara
-                </label>
-                <input
-                  id="feed-search-input"
-                  name="q"
-                  type="search"
-                  className="home-manifesto-input"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Başlık ara…"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-              </div>
-              <p className="home-manifesto-prompt m-0">
-                Bugün burada ne öğrenebilirim?
-              </p>
             </div>
             {todayDiscoveryEntries.length > 0 ? (
               <section
