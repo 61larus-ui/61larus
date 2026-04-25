@@ -1737,12 +1737,6 @@ export default function HomePageClient({
                 <p className="home-manifesto-subtitle m-0">
                   Trabzon&apos;un yaşayan şehir ansiklopedisi
                 </p>
-                <div className="home-manifesto-copy">
-                  <p>
-                    Trabzon hakkında merak edilen her şey burada birikir.
-                  </p>
-                  <p>Okuyanlar öğrenir, yazanlar iz bırakır.</p>
-                </div>
                 <div className="home-manifesto-search">
                   <label htmlFor="feed-search-input" className="sr-only">
                     Yazılarda ara
