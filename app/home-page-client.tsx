@@ -1779,12 +1779,12 @@ export default function HomePageClient({
               </section>
             ) : null}
             <div className="home-main-columns-wrap home-main-columns-wrap--faz51 min-h-0 w-full min-w-0 max-w-full">
-            <div className="home-editorial-cols home-content-grid home-content-grid--editorial home-content-grid--flow home-content-grid--faz3 flex w-full min-h-0 min-w-0 max-w-full flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(12rem,1fr)_minmax(0,2.5fr)] md:items-stretch md:gap-0 md:min-h-0 lg:grid-cols-[minmax(11.5rem,1fr)_minmax(12.5rem,1.05fr)_minmax(0,2.6fr)]">
+            <div className="home-editorial-cols home-editorial-cols--faz52 home-content-grid home-content-grid--editorial home-content-grid--flow home-content-grid--faz3 flex w-full min-h-0 min-w-0 max-w-full flex-col gap-0 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.1fr)] md:items-stretch md:gap-0 md:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.1fr)]">
             <aside
               className="home-rail home-rail--awaiting home-rail--faz5-left home-rail--editorial-col home-rail--column await-col flex max-h-[42vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Yazılmayı bekleyenler"
             >
-              <div className="col-section-head col-head-band home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
+              <div className="col-section-head col-head-band col-head-band--faz52-support home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
                 <p className="col-section-head__kicker">BEKLEYEN BAŞLIKLAR</p>
                 <h2 className="col-section-head__title m-0">
                   Yazılmayı bekleyenler
@@ -1795,7 +1795,7 @@ export default function HomePageClient({
               </div>
               <div className="home-rail-body home-rail-body--awaiting col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <nav
-                  className="home-rail-nav home-rail-nav--awaiting flex flex-col px-2.5 pb-4 md:px-3.5 md:pb-5"
+                  className="home-rail-nav home-rail-nav--faz52-support home-rail-nav--awaiting flex flex-col px-2.5 pb-4 md:px-3.5 md:pb-5"
                   aria-label="Henüz yorum almamış başlıklar"
                 >
                   {rightRailAwaitingFirstComment.map((entry, index) => {
@@ -1834,7 +1834,7 @@ export default function HomePageClient({
               className="home-rail home-rail--trending home-rail--faz5-mid home-rail--editorial-col home-rail--column flex max-h-[40vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Şu an en çok konuşulanlar"
             >
-              <div className="col-section-head col-head-band col-head-band--trending home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
+              <div className="col-section-head col-head-band col-head-band--faz52-support home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
                 <p className="col-section-head__kicker">GÜNDEMİN NABZI</p>
                 <h2 className="col-section-head__title m-0">
                   Şu an en çok konuşulanlar
@@ -1845,7 +1845,7 @@ export default function HomePageClient({
               </div>
               <div className="home-rail-body home-rail-body--trending col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <nav
-                  className="home-rail-nav flex flex-col px-2.5 pb-4 md:px-3.5 md:pb-5"
+                  className="home-rail-nav home-rail-nav--faz52-support flex flex-col px-2.5 pb-4 md:px-3.5 md:pb-5"
                   aria-label="En çok yorumlananlar"
                 >
                   {mostCommentedEntries.map((entry, index) => {

@@ -1767,11 +1767,9 @@ main > header .site-header-tagline--manifesto {
 }
 
 /* --- FAZ 5: üç kolon — sol indeks, orta akış, sağ ana okuma --- */
-.home-rail--faz5-left .col-section-head__micro {
-  display: none;
-}
-
-.home-rail--faz5-mid .col-section-head__micro {
+.col-head-band--faz52-support .col-section-head__micro {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
   max-width: 16rem;
   font-size: calc(var(--type-scale-body) * 0.9);
   line-height: 1.4;
@@ -1783,6 +1781,7 @@ main > header .site-header-tagline--manifesto {
   opacity: 0.75;
   -webkit-line-clamp: 1;
   line-clamp: 1;
+  overflow: hidden;
 }
 
 .home-rail--faz5-left .col-section-head__kicker,
@@ -1800,30 +1799,6 @@ main > header .site-header-tagline--manifesto {
     var(--wordmark-ink) 90%,
     var(--text-secondary) 10%
   );
-}
-
-.home-rail--faz5-left .home-index-title {
-  font-size: clamp(0.75rem, 0.72rem + 0.12vw, 0.8125rem);
-  line-height: 1.3;
-  font-weight: 400;
-  color: color-mix(
-    in srgb,
-    var(--wordmark-ink) 72%,
-    var(--text-secondary) 28%
-  );
-  letter-spacing: -0.008em;
-}
-
-.home-rail--faz5-mid .home-index-title {
-  font-size: clamp(0.8125rem, 0.78rem + 0.14vw, 0.90625rem);
-  line-height: 1.3;
-  font-weight: 500;
-  color: color-mix(
-    in srgb,
-    var(--wordmark-ink) 86%,
-    var(--text-secondary) 14%
-  );
-  letter-spacing: -0.01em;
 }
 
 .home-rail--faz5-left .home-index-num,
@@ -2034,14 +2009,17 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-.home-rail--faz5-left .home-index-title {
-  font-size: clamp(0.69rem, 0.66rem + 0.1vw, 0.76rem);
-  line-height: 1.28;
-}
-
+.home-rail--faz5-left .home-index-title,
 .home-rail--faz5-mid .home-index-title {
-  font-size: clamp(0.75rem, 0.72rem + 0.12vw, 0.84rem);
-  line-height: 1.28;
+  font-size: clamp(0.66rem, 0.63rem + 0.09vw, 0.74rem);
+  line-height: 1.26;
+  font-weight: 400;
+  color: color-mix(
+    in srgb,
+    var(--wordmark-ink) 74%,
+    var(--text-secondary) 26%
+  );
+  letter-spacing: -0.008em;
 }
 
 .home-rail--faz5-left .col-section-head__title,
@@ -2065,6 +2043,44 @@ main > header .site-header-tagline--manifesto {
 
 .home-rail--faz5-primary .feed-entry-card--editorial .feed-entry-bottom {
   margin-top: 1.15rem;
+}
+
+/* --- FAZ 5.2: 1:1:2.1 ızgara, destek kolonları hizası, sağ ayrışımı --- */
+@media (min-width: 768px) {
+  main
+    > section
+    .home-content-grid--editorial.home-editorial-cols--faz52
+    > main[class*="border"] {
+    border-left: 1px solid
+      color-mix(in srgb, var(--divide-column) 52%, transparent) !important;
+    border-right: 1px solid
+      color-mix(in srgb, var(--divide-column) 48%, transparent) !important;
+  }
+
+  .home-editorial-cols--faz52
+    .home-rail--faz5-primary
+    .home-feed-rail.layout-feed-inner {
+    padding-left: 1.05rem !important;
+    padding-right: 1.1rem !important;
+  }
+}
+
+.home-rail--faz5-primary
+  .layout-feed-inner
+  nav[aria-label="Hafızaya eklenen maddeler"]
+  > .feed-entry-card:first-of-type
+  .feed-entry-title--editorial {
+  font-size: clamp(1.1rem, 1.04rem + 0.28vw, 1.22rem);
+  line-height: 1.22;
+}
+
+.home-rail--faz5-primary
+  .layout-feed-inner
+  nav[aria-label="Hafızaya eklenen maddeler"]
+  > .feed-entry-card:not(:first-of-type)
+  .feed-entry-title--editorial {
+  font-size: clamp(1.02rem, 0.97rem + 0.18vw, 1.08rem);
+  line-height: 1.28;
 }
 
 @media (min-width: 768px) {
@@ -2704,23 +2720,16 @@ main
   }
 }
 
-/* Tablet: sol / orta ray + geniş hafıza sütunu */
+/* Tablet + küçük laptop: destek sütunları eşit, ana sütun ~2.1fr (FAZ 5.2) */
 @media (min-width: 768px) and (max-width: 1023.98px) {
-  .home-content-grid.home-content-grid--editorial {
-    grid-template-columns: minmax(11.25rem, 1fr) minmax(12rem, 1.05fr) minmax(
-        0,
-        2.2fr
-      ) !important;
+  .home-content-grid.home-content-grid--editorial.home-editorial-cols--faz52 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2.1fr) !important;
   }
 }
 
-/* Küçük laptop */
 @media (min-width: 1024px) and (max-width: 1279.98px) {
-  .home-content-grid.home-content-grid--editorial {
-    grid-template-columns: minmax(11.5rem, 1fr) minmax(12.25rem, 1.05fr) minmax(
-        0,
-        2.5fr
-      ) !important;
+  .home-content-grid.home-content-grid--editorial.home-editorial-cols--faz52 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2.1fr) !important;
   }
 }
 
@@ -2782,6 +2791,7 @@ main > section .home-content-grid--editorial > main[class*="border"] {
 }
 
 /* Yan kolonlar: eşit iç boşluk, hizalı üst band, sıkı ama nefesli liste satırları */
+aside[aria-label="Yazılmayı bekleyenler"] > div:first-child,
 aside[aria-label="Şu an en çok konuşulanlar"] > div:first-child,
 aside[aria-label="Yayın paneli"] > div:first-child {
   padding-left: 0.8125rem !important;
@@ -2791,6 +2801,7 @@ aside[aria-label="Yayın paneli"] > div:first-child {
 }
 
 @media (min-width: 768px) {
+  aside[aria-label="Yazılmayı bekleyenler"] > div:first-child,
   aside[aria-label="Şu an en çok konuşulanlar"] > div:first-child,
   aside[aria-label="Yayın paneli"] > div:first-child {
     padding-left: 0.9375rem !important;
@@ -2800,6 +2811,7 @@ aside[aria-label="Yayın paneli"] > div:first-child {
   }
 }
 
+aside[aria-label="Yazılmayı bekleyenler"] nav,
 aside[aria-label="Şu an en çok konuşulanlar"] nav,
 aside[aria-label="Yayın paneli"] nav {
   padding-left: 0.6875rem !important;
@@ -2809,6 +2821,7 @@ aside[aria-label="Yayın paneli"] nav {
 }
 
 @media (min-width: 768px) {
+  aside[aria-label="Yazılmayı bekleyenler"] nav,
   aside[aria-label="Şu an en çok konuşulanlar"] nav,
   aside[aria-label="Yayın paneli"] nav {
     padding-left: 0.8125rem !important;
@@ -2818,6 +2831,7 @@ aside[aria-label="Yayın paneli"] nav {
   }
 }
 
+aside[aria-label="Yazılmayı bekleyenler"] nav button.group,
 aside[aria-label="Şu an en çok konuşulanlar"] nav button.group,
 aside[aria-label="Yayın paneli"] nav button.group {
   padding-top: 0.48rem !important;
@@ -2825,6 +2839,7 @@ aside[aria-label="Yayın paneli"] nav button.group {
 }
 
 @media (min-width: 768px) {
+  aside[aria-label="Yazılmayı bekleyenler"] nav button.group,
   aside[aria-label="Şu an en çok konuşulanlar"] nav button.group,
   aside[aria-label="Yayın paneli"] nav button.group {
     padding-top: 0.54rem !important;
