@@ -16,11 +16,7 @@ import AgreementPanel from "@/components/agreement-panel";
 import { anonymizeCurrentUserAccount } from "@/lib/anonymize-account";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { resolveVisibleName } from "@/lib/visible-name";
-import {
-  FEED_CATEGORY_OPTIONS,
-  type FeedCategoryFilter,
-  normalizeEntryCategory,
-} from "@/lib/entry-category";
+import { normalizeEntryCategory } from "@/lib/entry-category";
 
 const STARTER_ENCYCLOPEDIA_CATEGORY_IDS = new Set<string>([
   "tarih",
@@ -284,8 +280,6 @@ export default function HomePageClient({
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] =
-    useState<FeedCategoryFilter>("all");
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [accountDeleteStep, setAccountDeleteStep] = useState<"idle" | "confirm">(
@@ -521,7 +515,6 @@ export default function HomePageClient({
   /** Tam yazı akışı: arama kapalı, detay kapalı, feed modu. */
   const resetToWritingsFeed = useCallback(() => {
     setSearchQuery("");
-    setSelectedCategory("all");
     closeEntryModal();
   }, [closeEntryModal]);
 
@@ -682,7 +675,7 @@ export default function HomePageClient({
 
   useEffect(() => {
     setFeedVisibleCount(FEED_PAGE_SIZE);
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -1001,34 +994,13 @@ export default function HomePageClient({
     };
   }, [selectedEntryId, centerMode]);
 
-  const categoryIndexStats = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const e of centerEntries) {
-      const c = e.category;
-      if (typeof c === "string" && c.length > 0) {
-        counts.set(c, (counts.get(c) ?? 0) + 1);
-      }
-    }
-    const rows = FEED_CATEGORY_OPTIONS.filter((o) => o.id !== "all")
-      .map((o) => ({
-        id: o.id,
-        label: o.label,
-        count: counts.get(o.id) ?? 0,
-      }))
-      .filter((r) => r.count > 0);
-    return { rows, total: centerEntries.length, counts };
-  }, [centerEntries]);
-
   const feedEntriesSearchFiltered = useMemo(() => {
     let list = shuffledMainFeedEntries;
     if (searchQuery.trim()) {
       list = list.filter((e) => entryMatchesSearch(e, searchQuery));
     }
-    if (selectedCategory !== "all") {
-      list = list.filter((e) => e.category === selectedCategory);
-    }
     return list;
-  }, [shuffledMainFeedEntries, searchQuery, selectedCategory]);
+  }, [shuffledMainFeedEntries, searchQuery]);
 
   const centerFeedEntries = useMemo(
     () => feedEntriesSearchFiltered.slice(0, feedVisibleCount),
@@ -1145,18 +1117,17 @@ export default function HomePageClient({
       );
     }
     if (feedEntriesSearchFiltered.length === 0) {
-      const hasFilter =
-        searchQuery.trim().length > 0 || selectedCategory !== "all";
+      const hasSearch = searchQuery.trim().length > 0;
       return (
         <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-4 py-16 text-center md:px-6 md:py-20">
           <p className="feed-search-empty-title m-0 text-[0.9375rem] font-normal leading-relaxed text-[color:var(--text-secondary)] md:text-[0.96875rem]">
-            {hasFilter
-              ? "Aramana veya seçtiğin kategoriye uygun madde yok."
+            {hasSearch
+              ? "Aramana uygun madde yok."
               : "Aramana uygun bir yazı bulunamadı."}
           </p>
           <p className="feed-search-empty-hint m-0 mt-3 max-w-[22rem] mx-auto text-[0.8125rem] font-normal leading-[1.65] text-[color:var(--text-muted)] md:text-[0.84375rem]">
-            {hasFilter
-              ? "Farklı bir arama, kategori veya “Tümü” ile yeniden dene."
+            {hasSearch
+              ? "Farklı bir kelime veya ifade dene; aramayı boşaltıp tüm yazılara dön."
               : "Farklı bir kelime deneyebilirsin."}
           </p>
         </div>
@@ -1807,9 +1778,64 @@ export default function HomePageClient({
                 </div>
               </section>
             ) : null}
-            <div className="home-content-grid home-content-grid--editorial home-content-grid--flow flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(0,2.5fr)_minmax(11rem,0.95fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(11.5rem,0.95fr)_minmax(0,2.5fr)_minmax(11.5rem,0.95fr)]">
+            <div className="home-content-grid home-content-grid--editorial home-content-grid--flow home-content-grid--faz3 flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(12rem,1fr)_minmax(0,2.5fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(11.5rem,1fr)_minmax(12.5rem,1.05fr)_minmax(0,2.6fr)]">
             <aside
-              className="home-rail home-rail--trending flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-[calc(100dvh-6rem)] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
+              className="home-rail home-rail--awaiting home-rail--column await-col flex max-h-[42vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-[min(32rem,calc(100dvh-6rem))] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
+              aria-label="Yazılmayı bekleyenler"
+            >
+              <div className="home-rail-header shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-3 md:pt-4">
+                <p className="trending-rail-eyebrow home-rail-eyebrow mb-0">
+                  Yazılmayı bekleyenler
+                </p>
+                <p className="home-rail-subline m-0 mt-1 text-[0.65rem] font-normal leading-snug text-[color:var(--text-muted)] md:text-[0.68rem]">
+                  Henüz yorum yok; ilk notu bırak.
+                </p>
+              </div>
+              <div
+                className="left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "var(--scrollbar-thumb) transparent",
+                }}
+              >
+                <nav
+                  className="home-rail-nav home-rail-nav--awaiting flex flex-col px-2.5 pb-4 pt-2.5 md:px-3.5 md:pb-5 md:pt-3"
+                  aria-label="Henüz yorum almamış başlıklar"
+                >
+                  {rightRailAwaitingFirstComment.map((entry, index) => {
+                    const isActive = entry.id === effectiveEntryId;
+                    const rank = index + 1;
+                    return (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        onClick={() => selectEntry(entry.id)}
+                        className={`home-index-row group flex w-full items-start gap-2.5 border-0 border-b border-[color:var(--editorial-hairline)] py-2.5 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3 md:py-2.5 md:pl-1 ${
+                          isActive
+                            ? "home-index-row--active"
+                            : "bg-transparent"
+                        }`}
+                      >
+                        <span
+                          className="home-index-num w-[1.2rem] shrink-0 text-right text-[0.7rem] tabular-nums text-[color:var(--text-muted)] md:w-[1.35rem]"
+                          aria-hidden
+                        >
+                          {String(rank).padStart(2, "0")}
+                        </span>
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className="home-index-title line-clamp-2">
+                            {entry.title}
+                          </span>
+                          <span className="home-index-meta">0 yorum</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+            </aside>
+            <aside
+              className="home-rail home-rail--trending home-rail--column flex max-h-[40vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:sticky md:top-4 md:z-[4] md:max-h-[min(32rem,calc(100dvh-6rem))] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Şu an en çok konuşulanlar"
             >
               <div className="home-rail-header shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-3.5 md:pt-5">
@@ -1863,7 +1889,7 @@ export default function HomePageClient({
                 </nav>
               </div>
             </aside>
-            <main className="main-column home-rail--center relative min-w-0 w-full bg-transparent md:border-x md:border-[color:var(--editorial-hairline)]">
+            <main className="main-column home-rail--center home-rail--column feed-col min-w-0 w-full bg-transparent md:border-l md:border-[color:var(--editorial-hairline)]">
               <div className="layout-feed-inner layout-feed-inner--post-manifesto mx-auto w-full max-w-none px-4 py-5 sm:px-5 sm:py-6 md:px-7 md:py-6 lg:px-9">
                 <h2
                   className="home-feed-column-title m-0"
@@ -1874,117 +1900,6 @@ export default function HomePageClient({
                 {renderMainFeed()}
               </div>
             </main>
-            <div className="home-rail-stack">
-            <aside
-              className="home-rail home-rail--index right-column side-panel flex max-h-[50vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-[min(28rem,70vh)] md:overflow-y-auto md:border-b md:border-[color:var(--editorial-hairline)]"
-              aria-label="Başlık dizini"
-            >
-              <div className="home-rail-header shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-3.5 md:pt-4">
-                <p className="trending-rail-eyebrow home-rail-eyebrow home-rail-eyebrow--index mb-0">
-                  Başlık dizini
-                </p>
-              </div>
-              <div
-                className="left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
-                style={{
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "var(--scrollbar-thumb) transparent",
-                }}
-              >
-                <nav
-                  className="title-index-nav flex flex-col gap-0 px-2.5 pt-1.5 pb-3 md:px-3.5 md:pt-2 md:pb-4"
-                  aria-label="Kategorilere göre filtrele"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory("all")}
-                    className={
-                      selectedCategory === "all"
-                        ? "title-index-btn title-index-btn--active"
-                        : "title-index-btn"
-                    }
-                  >
-                    <span className="title-index-label">Tümü</span>
-                    <span className="title-index-count tabular-nums">
-                      {categoryIndexStats.total}
-                    </span>
-                  </button>
-                  {categoryIndexStats.rows.map((row) => (
-                    <button
-                      key={row.id}
-                      type="button"
-                      onClick={() => setSelectedCategory(row.id)}
-                      className={
-                        selectedCategory === row.id
-                          ? "title-index-btn title-index-btn--active"
-                          : "title-index-btn"
-                      }
-                    >
-                      <span className="title-index-label">{row.label}</span>
-                      <span className="title-index-count tabular-nums">
-                        {row.count}
-                      </span>
-                    </button>
-                  ))}
-                </nav>
-              </div>
-            </aside>
-            <aside
-              className="home-rail home-rail--awaiting right-column side-panel flex max-h-[40vh] w-full min-w-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:flex-1 md:overflow-y-auto"
-              aria-label="Yazılmayı bekleyenler"
-            >
-              <div className="home-rail-header shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3 pt-3.5 md:px-4 md:pb-2.5 md:pt-4">
-                <p className="trending-rail-eyebrow home-rail-eyebrow mb-0">
-                  Yazılmayı bekleyenler
-                </p>
-                <p className="home-rail-subline m-0 mt-1 text-[0.65rem] font-normal leading-snug text-[color:var(--text-muted)] md:text-[0.68rem]">
-                  Henüz yorum yok; ilk notu bırak.
-                </p>
-              </div>
-              <div
-                className="left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain md:overflow-visible"
-                style={{
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "var(--scrollbar-thumb) transparent",
-                }}
-              >
-                <nav
-                  className="home-rail-nav flex flex-col px-2.5 pb-4 pt-2.5 md:px-3.5 md:pb-5 md:pt-2"
-                  aria-label="Henüz yorum almamış başlıklar"
-                >
-                  {rightRailAwaitingFirstComment.map((entry, index) => {
-                    const isActive = entry.id === effectiveEntryId;
-                    const rank = index + 1;
-                    return (
-                      <button
-                        key={entry.id}
-                        type="button"
-                        onClick={() => selectEntry(entry.id)}
-                        className={`home-index-row group flex w-full items-start gap-2.5 border-0 border-b border-[color:var(--editorial-hairline)] py-2.5 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3 md:py-2.5 md:pl-1 ${
-                          isActive
-                            ? "home-index-row--active"
-                            : "bg-transparent"
-                        }`}
-                      >
-                        <span
-                          className="home-index-num w-[1.2rem] shrink-0 text-right text-[0.7rem] tabular-nums text-[color:var(--text-muted)] md:w-[1.35rem]"
-                          aria-hidden
-                        >
-                          {String(rank).padStart(2, "0")}
-                        </span>
-                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                          <span className="home-index-title line-clamp-2">
-                            {entry.title}
-                          </span>
-                          <span className="home-index-meta">0 yorum</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-            </aside>
-            </div>
             </div>
 
             {hasHomeExplore ? (

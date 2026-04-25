@@ -388,7 +388,7 @@ body {
   opacity: 1;
 }
 
-/* Ana grid: sağ sütun yığın + mobil sıra (manifesto → … → tümü → gündem → bekleyen) */
+/* Ana grid: 3 sütun (FAZ3: bekleyen | en çok | hafıza) */
 @media (min-width: 768px) {
   .home-content-grid--editorial {
     align-items: start;
@@ -410,7 +410,6 @@ body {
     gap: 0;
   }
 
-  .home-rail--index,
   .home-rail--awaiting {
     max-height: none;
   }
@@ -1725,13 +1724,11 @@ main > header .site-header-tagline--manifesto {
   }
 
   .home-content-grid--editorial .home-rail--trending,
-  .home-content-grid--editorial .home-rail--index,
   .home-content-grid--editorial .home-rail--awaiting {
     max-height: none !important;
   }
 
   .home-content-grid--editorial .home-rail--trending,
-  .home-content-grid--editorial .home-rail--index,
   .home-content-grid--editorial .home-rail--awaiting {
     border-radius: var(--radius-sm);
     margin-left: 0;
@@ -1764,22 +1761,22 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-/* Tablet: yan sütunlar biraz nefes, orta sütun ezilmesin */
+/* Tablet: sol / orta ray + geniş hafıza sütunu */
 @media (min-width: 768px) and (max-width: 1023.98px) {
   .home-content-grid.home-content-grid--editorial {
-    grid-template-columns: minmax(12.25rem, 1.08fr) minmax(0, 2.2fr) minmax(
-        12.25rem,
-        1.08fr
+    grid-template-columns: minmax(11.25rem, 1fr) minmax(12rem, 1.05fr) minmax(
+        0,
+        2.2fr
       ) !important;
   }
 }
 
-/* Küçük laptop: sütun dengesi (Tailwind md/lg arası) */
+/* Küçük laptop */
 @media (min-width: 1024px) and (max-width: 1279.98px) {
   .home-content-grid.home-content-grid--editorial {
-    grid-template-columns: minmax(11.5rem, 1fr) minmax(0, 2.6fr) minmax(
-        12rem,
-        1.05fr
+    grid-template-columns: minmax(11.5rem, 1fr) minmax(12.25rem, 1.05fr) minmax(
+        0,
+        2.5fr
       ) !important;
   }
 }
@@ -4145,28 +4142,23 @@ aside[aria-label="Yayın paneli"] .right-block {
     min-width: 0;
   }
 
-  /* Mobil sıra: Hafıza → Başlık dizini → En çok konuşulanlar → Bekleyenler */
+  /* Mobil sıra: Hafıza → En çok konuşulanlar → Bekleyenler */
   .home-content-grid--editorial > main.main-column,
   .home-content-grid--editorial > main,
   .home-content-grid--editorial > .main-column {
     order: 1;
   }
 
-  .home-content-grid--editorial .home-rail--index,
-  .home-content-grid--editorial > aside[aria-label="Başlık dizini"] {
-    order: 2;
-  }
-
   .home-content-grid--editorial .home-rail--trending,
   .home-content-grid--editorial
     > aside[aria-label="Şu an en çok konuşulanlar"] {
-    order: 3;
+    order: 2;
   }
 
   .home-content-grid--editorial .home-rail--awaiting,
   .home-content-grid--editorial
     > aside[aria-label="Yazılmayı bekleyenler"] {
-    order: 4;
+    order: 3;
   }
 
   .home-content-grid:not(.home-content-grid--editorial) > main.main-column,
@@ -4379,28 +4371,23 @@ aside[aria-label="Yayın paneli"] .right-block {
 }
 
 @media (max-width: 768px) {
-  /* Mobil: Hafıza → Başlık dizini → Gündem → Bekleyen */
+  /* Mobil: Hafıza → En çok → Bekleyen */
   .home-content-grid--editorial > main.main-column,
   .home-content-grid--editorial > main,
   .home-content-grid--editorial > .main-column {
     order: 1 !important;
   }
 
-  .home-content-grid--editorial .home-rail--index,
-  .home-content-grid--editorial > aside[aria-label="Başlık dizini"] {
-    order: 2 !important;
-  }
-
   .home-content-grid--editorial .home-rail--trending,
   .home-content-grid--editorial
     > aside[aria-label="Şu an en çok konuşulanlar"] {
-    order: 3 !important;
+    order: 2 !important;
   }
 
   .home-content-grid--editorial .home-rail--awaiting,
   .home-content-grid--editorial
     > aside[aria-label="Yazılmayı bekleyenler"] {
-    order: 4 !important;
+    order: 3 !important;
   }
 
   /* Eski: tek kolon akış; editorial olmayan ızgaralarda gündem (sol) → sağ */
@@ -4530,7 +4517,6 @@ aside[aria-label="Yayın paneli"] .right-block {
   }
 
   .home-content-grid--editorial .home-rail--trending,
-  .home-content-grid--editorial .home-rail--index,
   .home-content-grid--editorial .home-rail--awaiting {
     margin-top: 0 !important;
   }
