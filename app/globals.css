@@ -1398,6 +1398,115 @@ main > header .site-header-tagline--manifesto {
   border-bottom-color: var(--text-muted);
 }
 
+/* --- FAZ 5: mobil / tablet premium responsive (sıra: home-page-client aynı) --- */
+@media (max-width: 767.98px) {
+  main:has(> header.site-header) {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .home-manifesto-prompt {
+    font-size: 0.75rem !important;
+    letter-spacing: 0.075em;
+    line-height: 1.5;
+  }
+
+  .home-manifesto-title {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .title-index-nav {
+    gap: 0.1rem;
+  }
+
+  .title-index-btn {
+    min-height: 44px;
+    padding: 0.5rem 0.4rem 0.5rem 0.45rem;
+  }
+
+  .title-index-label {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+  }
+
+  .title-index-count {
+    font-size: 0.7rem;
+  }
+
+  .today-discovery-head {
+    margin-bottom: 0.75rem;
+  }
+
+  .today-discovery-item {
+    min-height: 5.5rem;
+    padding: 0.85rem 0.8rem 1rem;
+  }
+
+  .today-discovery-title {
+    -webkit-line-clamp: 3;
+  }
+
+  .home-content-grid--editorial .home-rail--trending,
+  .home-content-grid--editorial .home-rail--index,
+  .home-content-grid--editorial .home-rail--awaiting {
+    max-height: none !important;
+  }
+
+  .home-content-grid--editorial .home-rail--trending,
+  .home-content-grid--editorial .home-rail--index,
+  .home-content-grid--editorial .home-rail--awaiting {
+    border-radius: var(--radius-sm);
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .home-index-row {
+    min-height: 44px;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+  }
+
+  .home-index-title {
+    line-height: 1.32;
+  }
+
+  .home-explore-grid {
+    gap: 0.65rem;
+    border: 0;
+    background: transparent;
+  }
+
+  .home-explore-panel {
+    border: 1px solid var(--editorial-hairline);
+    border-radius: var(--radius-md);
+  }
+
+  .home-explore-panel:last-child {
+    border-bottom: 1px solid var(--editorial-hairline);
+  }
+}
+
+/* Tablet: yan sütunlar biraz nefes, orta sütun ezilmesin */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .home-content-grid.home-content-grid--editorial {
+    grid-template-columns: minmax(12.25rem, 1.08fr) minmax(0, 2.2fr) minmax(
+        12.25rem,
+        1.08fr
+      ) !important;
+  }
+}
+
+/* Küçük laptop: sütun dengesi (Tailwind md/lg arası) */
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .home-content-grid.home-content-grid--editorial {
+    grid-template-columns: minmax(11.5rem, 1fr) minmax(0, 2.6fr) minmax(
+        12rem,
+        1.05fr
+      ) !important;
+  }
+}
+
 main > section.border-y {
   /* Header altı ile çift çizgi yok; alt sınır tek saç teli */
   border-top: none !important;
@@ -3756,27 +3865,28 @@ aside[aria-label="Yayın paneli"] .right-block {
     min-width: 0;
   }
 
+  /* Mobil sıra: Hafıza → Başlık dizini → En çok konuşulanlar → Bekleyenler */
   .home-content-grid--editorial > main.main-column,
   .home-content-grid--editorial > main,
   .home-content-grid--editorial > .main-column {
-    order: 3;
+    order: 1;
+  }
+
+  .home-content-grid--editorial .home-rail--index,
+  .home-content-grid--editorial > aside[aria-label="Başlık dizini"] {
+    order: 2;
   }
 
   .home-content-grid--editorial .home-rail--trending,
   .home-content-grid--editorial
     > aside[aria-label="Şu an en çok konuşulanlar"] {
-    order: 5;
-  }
-
-  .home-content-grid--editorial .home-rail--index,
-  .home-content-grid--editorial > aside[aria-label="Başlık dizini"] {
-    order: 4;
+    order: 3;
   }
 
   .home-content-grid--editorial .home-rail--awaiting,
   .home-content-grid--editorial
     > aside[aria-label="Yazılmayı bekleyenler"] {
-    order: 6;
+    order: 4;
   }
 
   .home-content-grid:not(.home-content-grid--editorial) > main.main-column,
@@ -3989,28 +4099,28 @@ aside[aria-label="Yayın paneli"] .right-block {
 }
 
 @media (max-width: 768px) {
-  /* FAZ3 — manifesto / keşf / hafıza / dizin / gündem / bekleyen (sıra) */
+  /* Mobil: Hafıza → Başlık dizini → Gündem → Bekleyen */
   .home-content-grid--editorial > main.main-column,
   .home-content-grid--editorial > main,
   .home-content-grid--editorial > .main-column {
-    order: 3 !important;
+    order: 1 !important;
+  }
+
+  .home-content-grid--editorial .home-rail--index,
+  .home-content-grid--editorial > aside[aria-label="Başlık dizini"] {
+    order: 2 !important;
   }
 
   .home-content-grid--editorial .home-rail--trending,
   .home-content-grid--editorial
     > aside[aria-label="Şu an en çok konuşulanlar"] {
-    order: 5 !important;
-  }
-
-  .home-content-grid--editorial .home-rail--index,
-  .home-content-grid--editorial > aside[aria-label="Başlık dizini"] {
-    order: 4 !important;
+    order: 3 !important;
   }
 
   .home-content-grid--editorial .home-rail--awaiting,
   .home-content-grid--editorial
     > aside[aria-label="Yazılmayı bekleyenler"] {
-    order: 6 !important;
+    order: 4 !important;
   }
 
   /* Eski: tek kolon akış; editorial olmayan ızgaralarda gündem (sol) → sağ */
@@ -4046,13 +4156,22 @@ aside[aria-label="Yayın paneli"] .right-block {
     border-bottom: 1px solid rgba(15, 23, 42, 0.04) !important;
   }
 
-  /* ANA AKIŞ BLOKLARI ARASI BOŞLUK */
+  /* ANA AKIŞ BLOKLARI ARASI BOŞLUK (editorial: nefes + sıra) */
   .content-grid,
-  .home-content-grid,
   .home-grid,
   .main-grid {
     gap: 0 !important;
     padding-top: 12px !important;
+  }
+
+  .home-content-grid:not(.home-content-grid--editorial) {
+    gap: 0 !important;
+    padding-top: 12px !important;
+  }
+
+  .home-content-grid--editorial {
+    gap: 1.125rem !important;
+    padding-top: 0.35rem !important;
   }
 
   .center-column,
@@ -4106,12 +4225,34 @@ aside[aria-label="Yayın paneli"] .right-block {
     opacity: 0.7 !important;
   }
 
-  /* LOAD MORE ALT BOŞLUK */
+  /* LOAD MORE — dokunma + tam genişlik */
   .feed-load-more,
   .load-more,
   .load-more-button {
-    margin: 6px 0 6px !important;
-    padding: 6px 0 !important;
+    min-height: 48px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    margin: 0.5rem 0 0.35rem !important;
+    padding: 0.65rem 0.5rem !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .feed-entry-card--editorial {
+    padding: 0.7rem 0.15rem 1.1rem 0.1rem !important;
+  }
+
+  .feed-entry-title--editorial {
+    overflow-wrap: anywhere !important;
+    word-break: break-word;
+    font-weight: 500 !important;
+  }
+
+  .home-content-grid--editorial .home-rail--trending,
+  .home-content-grid--editorial .home-rail--index,
+  .home-content-grid--editorial .home-rail--awaiting {
+    margin-top: 0 !important;
   }
 
   /* “İLK KATKI” üst çizgiyi kaldır */
@@ -4450,34 +4591,62 @@ aside[aria-label="Yayın paneli"] .right-block {
 }
 
 @media (max-width: 768px) {
+  /* İki satır: [marka + slogan | giriş] / [Atatürk sözü tam genişlik] */
   .headerBar {
-    display: block;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(2.75rem, max-content);
+    grid-template-rows: auto auto;
+    column-gap: 0.5rem;
+    row-gap: 0.5rem;
+    align-items: start;
   }
 
-  .headerCenterText {
-    display: block;
-    text-align: left;
-    margin-top: 22px;
-    max-width: 100%;
+  .headerBar > :nth-child(1) {
+    min-width: 0;
   }
 
   .headerBar > .headerUserName {
-    width: 100%;
-    max-width: 100%;
-    margin-top: 10px;
-    justify-content: flex-end;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    align-self: start;
+    width: auto;
+    min-width: 0;
+    max-width: min(11.5rem, 42vw);
+    margin-top: 0;
   }
 
-  /* ---- Mobile: ultra premium editorial (headerBlock) — depth + type + spacing ---- */
+  .headerBar .account-menu-name-trigger,
+  .headerBar .site-header-aux a[href] {
+    min-height: 44px;
+    padding: 0.2rem 0.15rem;
+    box-sizing: border-box;
+  }
+
+  .headerCenterText {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: block;
+    text-align: left;
+    margin-top: 0;
+    max-width: 100%;
+    min-height: 0;
+  }
+
+  .headerBlock > .headerBar > .headerUserName {
+    margin-top: 0;
+  }
+
+  /* ---- Mobile: headerBlock — nefes, taşma yok ---- */
   .headerBlock {
-    padding: 20px 16px 12px;
+    padding: 1rem 0.9rem 0.85rem;
     position: relative;
   }
 
   .headerBlock h1 {
-    font-size: 30px;
-    letter-spacing: -0.5px;
-    line-height: 1.1;
+    font-size: clamp(1.65rem, 7.5vw, 1.95rem);
+    letter-spacing: -0.04em;
+    line-height: 1.12;
     color: rgba(15, 23, 42, 0.92);
   }
 
@@ -4491,42 +4660,40 @@ aside[aria-label="Yayın paneli"] .right-block {
 
   .headerBlock p:first-of-type,
   .headerBlock p.site-header-tagline {
-    margin-top: 6px !important;
-    font-size: 11px !important;
-    letter-spacing: 1.2px !important;
+    margin-top: 0.35rem !important;
+    max-width: 100% !important;
+    font-size: 10.5px !important;
+    letter-spacing: 0.11em !important;
     text-transform: uppercase !important;
-    color: rgba(15, 23, 42, 0.38) !important;
+    line-height: 1.5 !important;
+    color: rgba(15, 23, 42, 0.4) !important;
   }
 
   .headerBlock .headerCenterText {
-    margin-top: 18px;
-    font-size: 12.5px;
-    line-height: 1.6;
-    color: rgba(15, 23, 42, 0.55);
-    max-width: 85%;
+    margin-top: 0;
+    max-width: 100%;
     white-space: normal;
   }
 
-  .headerBlock .headerBar > .headerUserName {
-    position: absolute;
-    z-index: 30;
-    right: 16px;
-    top: 24px;
-    width: auto;
-    min-width: 0;
-    max-width: 120px;
-    margin-top: 0;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    font-size: 11.5px;
-    color: rgba(15, 23, 42, 0.45);
+  .headerBlock .headerCenterText.site-header-editorial {
+    min-height: 0;
+  }
+
+  .headerBlock .site-header-editorial-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    max-width: 100%;
   }
 
   .headerBlock::after {
     content: "";
     display: block;
-    margin-top: 18px;
+    margin-top: 0.9rem;
     height: 1px;
     background: linear-gradient(
       to right,

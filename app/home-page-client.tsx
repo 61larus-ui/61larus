@@ -1189,7 +1189,7 @@ export default function HomePageClient({
             onClick={() =>
               setFeedVisibleCount((c) => c + FEED_PAGE_SIZE)
             }
-            className="feed-load-more mt-8 w-full border-0 bg-transparent py-4 text-center text-[12px] font-normal tracking-[0.03em] text-[color:var(--text-muted)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[6px] transition-colors hover:text-[color:var(--text-secondary)] hover:decoration-[color:var(--border-subtle)]"
+            className="feed-load-more mt-6 w-full min-h-[3rem] border-0 bg-transparent py-3 text-center text-[13px] font-medium tracking-[0.04em] text-[color:var(--text-secondary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-primary)] hover:decoration-[color:var(--border-subtle)] md:mt-8 md:min-h-0 md:py-4 md:text-[12px] md:font-normal md:tracking-[0.03em] md:text-[color:var(--text-muted)] md:hover:text-[color:var(--text-secondary)]"
           >
             Daha fazla yazı yükle ↓
           </button>
