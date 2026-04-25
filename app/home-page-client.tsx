@@ -1111,7 +1111,7 @@ export default function HomePageClient({
   function renderMainFeed() {
     if (centerEntries.length === 0) {
       return (
-        <div className="flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-hair)] px-4 py-14 text-center text-sm text-[color:var(--text-muted)]">
+        <div className="feed-index-empty-message flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-hair)] px-4 py-14 text-center">
           Henüz içerik yok
         </div>
       );
@@ -1120,12 +1120,12 @@ export default function HomePageClient({
       const hasSearch = searchQuery.trim().length > 0;
       return (
         <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-4 py-16 text-center md:px-6 md:py-20">
-          <p className="feed-search-empty-title m-0 text-[0.9375rem] font-normal leading-relaxed text-[color:var(--text-secondary)] md:text-[0.96875rem]">
+          <p className="feed-search-empty-title m-0">
             {hasSearch
               ? "Aramana uygun madde yok."
               : "Aramana uygun bir yazı bulunamadı."}
           </p>
-          <p className="feed-search-empty-hint m-0 mt-3 max-w-[22rem] mx-auto text-[0.8125rem] font-normal leading-[1.65] text-[color:var(--text-muted)] md:text-[0.84375rem]">
+          <p className="feed-search-empty-hint m-0 mt-3 max-w-[22rem] mx-auto">
             {hasSearch
               ? "Farklı bir kelime veya ifade dene; aramayı boşaltıp tüm yazılara dön."
               : "Farklı bir kelime deneyebilirsin."}
@@ -1160,7 +1160,7 @@ export default function HomePageClient({
             onClick={() =>
               setFeedVisibleCount((c) => c + FEED_PAGE_SIZE)
             }
-            className="feed-load-more mt-6 w-full min-h-[3rem] border-0 bg-transparent py-3 text-center text-[13px] font-medium tracking-[0.04em] text-[color:var(--text-secondary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-primary)] hover:decoration-[color:var(--border-subtle)] md:mt-8 md:min-h-0 md:py-4 md:text-[12px] md:font-normal md:tracking-[0.03em] md:text-[color:var(--text-muted)] md:hover:text-[color:var(--text-secondary)]"
+            className="feed-load-more mt-6 w-full min-h-[3rem] border-0 bg-transparent py-3 text-center underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-primary)] hover:decoration-[color:var(--border-subtle)] md:mt-8 md:min-h-0 md:py-4"
           >
             Daha fazla yazı yükle ↓
           </button>
@@ -1813,7 +1813,7 @@ export default function HomePageClient({
                         }`}
                       >
                         <span
-                          className="home-index-num w-[1.2rem] shrink-0 text-right text-[0.7rem] tabular-nums text-[color:var(--text-muted)] md:w-[1.35rem]"
+                          className="home-index-num w-[1.2rem] shrink-0 text-right tabular-nums md:w-[1.35rem]"
                           aria-hidden
                         >
                           {String(rank).padStart(2, "0")}
@@ -1864,7 +1864,7 @@ export default function HomePageClient({
                         }`}
                       >
                         <span
-                          className="home-index-num w-[1.2rem] shrink-0 text-right text-[0.7rem] tabular-nums text-[color:var(--text-muted)] md:w-[1.35rem]"
+                          className="home-index-num w-[1.2rem] shrink-0 text-right tabular-nums md:w-[1.35rem]"
                           aria-hidden
                         >
                           {String(rank).padStart(2, "0")}
