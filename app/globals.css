@@ -612,6 +612,206 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
+/* --- Bugün 61Larus’ta — görselsiz keşif şeridi --- */
+.today-discovery {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0 1.35rem;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--editorial-hairline);
+  background: transparent;
+}
+
+@media (min-width: 640px) {
+  .today-discovery {
+    padding: 0.15rem 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .today-discovery {
+    max-width: min(100%, 100%);
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0.25rem 0 1.65rem;
+  }
+}
+
+.today-discovery-head {
+  margin-bottom: 0.9rem;
+  max-width: min(38rem, 100%);
+  padding: 0 0.1rem;
+}
+
+@media (min-width: 768px) {
+  .today-discovery-head {
+    margin-bottom: 1.05rem;
+  }
+}
+
+.today-discovery-kicker {
+  font-family: var(--font-editorial-display);
+  font-size: clamp(1.15rem, 1.9vw, 1.4rem);
+  font-weight: 400;
+  letter-spacing: -0.011em;
+  line-height: 1.2;
+  color: var(--wordmark-ink);
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+.today-discovery-copy {
+  margin-top: 0.38rem;
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  letter-spacing: 0.018em;
+  color: var(--text-meta);
+  max-width: 34rem;
+}
+
+@media (min-width: 768px) {
+  .today-discovery-copy {
+    font-size: 0.84375rem;
+  }
+}
+
+.today-discovery-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  min-width: 0;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--editorial-hairline);
+}
+
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  .today-discovery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .today-discovery-grid:has(> :nth-child(5)) > .today-discovery-item:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .today-discovery-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.today-discovery-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  width: 100%;
+  min-width: 0;
+  min-height: 6.75rem;
+  margin: 0;
+  padding: 0.8rem 0.7rem 0.95rem;
+  box-sizing: border-box;
+  border: 0;
+  background: color-mix(
+    in srgb,
+    var(--bg-secondary) 55%,
+    var(--bg-primary) 45%
+  );
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+@media (min-width: 1024px) {
+  .today-discovery-item {
+    min-height: 7.5rem;
+    padding: 0.95rem 0.6rem 1.05rem;
+  }
+}
+
+.today-discovery-item:hover {
+  background: color-mix(
+    in srgb,
+    var(--surface-hover) 75%,
+    var(--bg-secondary) 25%
+  );
+}
+
+.today-discovery-item:focus-visible {
+  outline: 2px solid color-mix(
+    in srgb,
+    var(--accent-green-line) 55%,
+    var(--divide-muted) 45%
+  );
+  outline-offset: 0;
+  z-index: 1;
+}
+
+.today-discovery-item:active {
+  background: color-mix(in srgb, var(--surface-hover) 100%, transparent);
+}
+
+.today-discovery-number {
+  display: block;
+  flex-shrink: 0;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-ui);
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+.today-discovery-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  max-width: 100%;
+  margin: 0 0 auto;
+  font-family: var(--font-editorial-display);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.008em;
+  color: color-mix(
+    in srgb,
+    var(--text-primary) 92%,
+    var(--text-secondary) 8%
+  );
+  text-rendering: optimizeLegibility;
+}
+
+@media (min-width: 1024px) {
+  .today-discovery-title {
+    font-size: 0.90625rem;
+    line-height: 1.28;
+  }
+}
+
+.today-discovery-meta {
+  margin-top: 0.45rem;
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.625rem;
+  line-height: 1.3;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
 main > section.border-y {
   /* Header altı ile çift çizgi yok; alt sınır tek saç teli */
   border-top: none !important;

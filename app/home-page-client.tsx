@@ -845,6 +845,21 @@ export default function HomePageClient({
     return zeros.slice(0, 12).map((r) => r.entry);
   }, [centerEntries, commentsByEntryIdLive]);
 
+  /** Manifesto / ana grid arası: en çok yorum → eşitlikte yeni; en fazla 5. */
+  const todayDiscoveryEntries = useMemo(() => {
+    const ranked = centerEntries.map((entry) => ({
+      entry,
+      commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
+    }));
+    ranked.sort((a, b) => {
+      if (b.commentCount !== a.commentCount) {
+        return b.commentCount - a.commentCount;
+      }
+      return compareEntriesByNewest(a.entry, b.entry);
+    });
+    return ranked.slice(0, 5).map((r) => r.entry);
+  }, [centerEntries, commentsByEntryIdLive]);
+
   const focusCommentCompose = useCallback(() => {
     window.setTimeout(() => {
       const el = commentComposeTextareaRef.current;
@@ -1607,6 +1622,58 @@ export default function HomePageClient({
                 Bugün burada ne öğrenebilirim?
               </p>
             </div>
+            {todayDiscoveryEntries.length > 0 ? (
+              <section
+                className="today-discovery"
+                aria-labelledby="today-discovery-title"
+              >
+                <div className="today-discovery-head">
+                  <h2
+                    id="today-discovery-title"
+                    className="today-discovery-kicker m-0"
+                  >
+                    Bugün 61Larus’ta
+                  </h2>
+                  <p className="today-discovery-copy m-0">
+                    Yeni eklenenlerden, çok konuşulanlara; Trabzon’un
+                    hafızasında kısa bir tur.
+                  </p>
+                </div>
+                <div
+                  className="today-discovery-grid"
+                  role="list"
+                  aria-label="Bugün vurgulanan maddeler"
+                >
+                  {todayDiscoveryEntries.map((entry, index) => {
+                    const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
+                    const num = String(index + 1).padStart(2, "0");
+                    return (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        role="listitem"
+                        className="today-discovery-item"
+                        onClick={() => selectEntry(entry.id)}
+                        aria-label={`Aç: ${entry.title}`}
+                      >
+                        <span
+                          className="today-discovery-number"
+                          aria-hidden
+                        >
+                          {num}
+                        </span>
+                        <span className="today-discovery-title">
+                          {entry.title}
+                        </span>
+                        <span className="today-discovery-meta">
+                          {cc > 0 ? `${cc} yorum` : "Yeni madde"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
             <div className="home-content-grid flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(0,2.5fr)_minmax(11rem,0.95fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(11.5rem,0.95fr)_minmax(0,2.5fr)_minmax(11.5rem,0.95fr)]">
             <aside
               className="flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--divide-hair)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-[calc(100dvh-6rem)] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--divide-hair)]"
