@@ -948,7 +948,7 @@ export default function HomePageClient({
     waitingEntriesForExplore.length > 0 ||
     dailyQuestionEntry !== null;
 
-  /** Manifesto / ana grid arası: en çok yorum → eşitlikte yeni; en fazla 5. */
+  /** Manifesto / ana grid arası: en çok yorum → eşitlikte yeni; FAZ5: en fazla 3 (giriş notu). */
   const todayDiscoveryEntries = useMemo(() => {
     const ranked = centerEntries.map((entry) => ({
       entry,
@@ -960,7 +960,7 @@ export default function HomePageClient({
       }
       return compareEntriesByNewest(a.entry, b.entry);
     });
-    return ranked.slice(0, 5).map((r) => r.entry);
+    return ranked.slice(0, 3).map((r) => r.entry);
   }, [centerEntries, commentsByEntryIdLive]);
 
   const focusCommentCompose = useCallback(() => {
@@ -1728,7 +1728,7 @@ export default function HomePageClient({
             </div>
             {todayDiscoveryEntries.length > 0 ? (
               <section
-                className="today-discovery today-discovery--vitrin"
+                className="today-discovery today-discovery--vitrin today-discovery--faz5"
                 aria-labelledby="today-discovery-title"
               >
                 <div className="today-discovery-head">
@@ -1781,7 +1781,7 @@ export default function HomePageClient({
             <div className="home-main-columns-wrap min-h-0 w-full min-w-0 max-w-full">
             <div className="home-editorial-cols home-content-grid home-content-grid--editorial home-content-grid--flow home-content-grid--faz3 flex w-full min-h-0 min-w-0 max-w-full flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(12rem,1fr)_minmax(0,2.5fr)] md:items-stretch md:gap-0 md:min-h-0 lg:grid-cols-[minmax(11.5rem,1fr)_minmax(12.5rem,1.05fr)_minmax(0,2.6fr)]">
             <aside
-              className="home-rail home-rail--awaiting home-rail--editorial-col home-rail--column await-col flex max-h-[42vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
+              className="home-rail home-rail--awaiting home-rail--faz5-left home-rail--editorial-col home-rail--column await-col flex max-h-[42vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Yazılmayı bekleyenler"
             >
               <div className="col-section-head col-head-band home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
@@ -1831,7 +1831,7 @@ export default function HomePageClient({
               </div>
             </aside>
             <aside
-              className="home-rail home-rail--trending home-rail--editorial-col home-rail--column flex max-h-[40vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
+              className="home-rail home-rail--trending home-rail--faz5-mid home-rail--editorial-col home-rail--column flex max-h-[40vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Şu an en çok konuşulanlar"
             >
               <div className="col-section-head col-head-band col-head-band--trending home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
@@ -1883,9 +1883,9 @@ export default function HomePageClient({
                 </nav>
               </div>
             </aside>
-            <main className="main-column home-rail--center home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-full md:border-l md:border-[color:var(--editorial-hairline)]">
+            <main className="main-column home-rail--center home-rail--faz5-primary home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-full md:border-l md:border-[color:var(--editorial-hairline)]">
               <div className="home-feed-rail layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-4 py-5 sm:px-5 sm:py-6 md:h-full md:min-h-0 md:px-7 md:py-0 lg:px-9">
-                <div className="col-section-head col-head-band col-head-band--feed home-feed-rail__head home-rail-header--col shrink-0">
+                <div className="col-section-head col-head-band col-head-band--feed col-head-band--faz5-primary home-feed-rail__head home-rail-header--col shrink-0">
                   <p className="col-section-head__kicker">YENİ EKLENENLER</p>
                   <h2
                     className="col-section-head__title m-0"
