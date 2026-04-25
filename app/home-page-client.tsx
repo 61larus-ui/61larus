@@ -16,6 +16,10 @@ import AgreementPanel from "@/components/agreement-panel";
 import { anonymizeCurrentUserAccount } from "@/lib/anonymize-account";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { resolveVisibleName } from "@/lib/visible-name";
+import {
+  FEED_CATEGORY_OPTIONS,
+  type FeedCategoryFilter,
+} from "@/lib/entry-category";
 import { FeedEntryCard } from "./feed-entry-card";
 
 function entryMatchesSearch(entry: EntryItem, rawQuery: string): boolean {
@@ -173,6 +177,17 @@ function formatEntryDetailDate(value: string) {
   });
 }
 
+/** Kısa tarih: meta satır (ör. 12 Oca 2025) */
+function formatFeedLineDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function entryPublicUrl(entryId: string, slug?: string | null): string {
   if (typeof window === "undefined") return "";
   const origin = window.location.origin;
@@ -256,6 +271,8 @@ export default function HomePageClient({
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] =
+    useState<FeedCategoryFilter>("all");
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [accountDeleteStep, setAccountDeleteStep] = useState<"idle" | "confirm">(
@@ -491,6 +508,7 @@ export default function HomePageClient({
   /** Tam yazı akışı: arama kapalı, detay kapalı, feed modu. */
   const resetToWritingsFeed = useCallback(() => {
     setSearchQuery("");
+    setSelectedCategory("all");
     closeEntryModal();
   }, [closeEntryModal]);
 
@@ -651,7 +669,7 @@ export default function HomePageClient({
 
   useEffect(() => {
     setFeedVisibleCount(FEED_PAGE_SIZE);
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategory]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -891,12 +909,34 @@ export default function HomePageClient({
     };
   }, [selectedEntryId, centerMode]);
 
+  const categoryIndexStats = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const e of centerEntries) {
+      const c = e.category;
+      if (typeof c === "string" && c.length > 0) {
+        counts.set(c, (counts.get(c) ?? 0) + 1);
+      }
+    }
+    const rows = FEED_CATEGORY_OPTIONS.filter((o) => o.id !== "all")
+      .map((o) => ({
+        id: o.id,
+        label: o.label,
+        count: counts.get(o.id) ?? 0,
+      }))
+      .filter((r) => r.count > 0);
+    return { rows, total: centerEntries.length, counts };
+  }, [centerEntries]);
+
   const feedEntriesSearchFiltered = useMemo(() => {
-    if (!searchQuery.trim()) return shuffledMainFeedEntries;
-    return shuffledMainFeedEntries.filter((e) =>
-      entryMatchesSearch(e, searchQuery)
-    );
-  }, [shuffledMainFeedEntries, searchQuery]);
+    let list = shuffledMainFeedEntries;
+    if (searchQuery.trim()) {
+      list = list.filter((e) => entryMatchesSearch(e, searchQuery));
+    }
+    if (selectedCategory !== "all") {
+      list = list.filter((e) => e.category === selectedCategory);
+    }
+    return list;
+  }, [shuffledMainFeedEntries, searchQuery, selectedCategory]);
 
   const centerFeedEntries = useMemo(
     () => feedEntriesSearchFiltered.slice(0, feedVisibleCount),
@@ -1012,21 +1052,27 @@ export default function HomePageClient({
         </div>
       );
     }
-    if (feedEntriesSearchFiltered.length === 0 && searchQuery.trim()) {
+    if (feedEntriesSearchFiltered.length === 0) {
+      const hasFilter =
+        searchQuery.trim().length > 0 || selectedCategory !== "all";
       return (
         <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-4 py-16 text-center md:px-6 md:py-20">
           <p className="feed-search-empty-title m-0 text-[0.9375rem] font-normal leading-relaxed text-[color:var(--text-secondary)] md:text-[0.96875rem]">
-            Aramana uygun bir yazı bulunamadı.
+            {hasFilter
+              ? "Aramana veya seçtiğin kategoriye uygun madde yok."
+              : "Aramana uygun bir yazı bulunamadı."}
           </p>
           <p className="feed-search-empty-hint m-0 mt-3 max-w-[22rem] mx-auto text-[0.8125rem] font-normal leading-[1.65] text-[color:var(--text-muted)] md:text-[0.84375rem]">
-            Farklı bir kelime deneyebilirsin.
+            {hasFilter
+              ? "Farklı bir arama, kategori veya “Tümü” ile yeniden dene."
+              : "Farklı bir kelime deneyebilirsin."}
           </p>
         </div>
       );
     }
     return (
       <div className="relative z-0 pb-5 md:pb-8">
-        <nav className="flex flex-col" aria-label="Entry akışı">
+        <nav className="flex flex-col" aria-label="Hafızaya eklenen maddeler">
           {centerFeedEntries.map((entry) => {
             const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
             const isActive = entry.id === effectiveEntryId;
@@ -1037,6 +1083,8 @@ export default function HomePageClient({
                 contentPreview={entry.content}
                 commentCount={cc}
                 authorLabel={entry.authorName?.trim() || "61Larus"}
+                metaDate={formatFeedLineDate(entry.created_at)}
+                createdAtRaw={entry.created_at}
                 isActive={isActive}
                 onSelect={() => selectEntry(entry.id)}
               />
@@ -1674,13 +1722,13 @@ export default function HomePageClient({
                 </div>
               </section>
             ) : null}
-            <div className="home-content-grid flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(0,2.5fr)_minmax(11rem,0.95fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(11.5rem,0.95fr)_minmax(0,2.5fr)_minmax(11.5rem,0.95fr)]">
+            <div className="home-content-grid home-content-grid--editorial flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(0,2.5fr)_minmax(11rem,0.95fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(11.5rem,0.95fr)_minmax(0,2.5fr)_minmax(11.5rem,0.95fr)]">
             <aside
-              className="flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--divide-hair)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-[calc(100dvh-6rem)] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--divide-hair)]"
+              className="home-rail home-rail--trending flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-[calc(100dvh-6rem)] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Şu an en çok konuşulanlar"
             >
-              <div className="shrink-0 border-b border-[color:var(--divide-hair)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-4 md:pt-5">
-                <p className="trending-rail-eyebrow mb-0">
+              <div className="home-rail-header shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-3.5 md:pt-5">
+                <p className="trending-rail-eyebrow home-rail-eyebrow mb-0">
                   Şu an en çok konuşulanlar
                 </p>
               </div>
@@ -1692,52 +1740,37 @@ export default function HomePageClient({
                 }}
               >
                 <nav
-                  className="flex flex-col px-2.5 pb-4 pt-2.5 md:px-3.5 md:pb-5 md:pt-3"
+                  className="home-rail-nav flex flex-col px-2.5 pb-4 pt-2.5 md:px-3.5 md:pb-5 md:pt-3"
                   aria-label="En çok yorumlananlar"
                 >
                   {mostCommentedEntries.map((entry, index) => {
                     const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
                     const isActive = entry.id === effectiveEntryId;
                     const rank = index + 1;
-                    const isFirst = index === 0;
                     return (
                       <button
                         key={entry.id}
                         type="button"
                         onClick={() => selectEntry(entry.id)}
-                        style={{
-                          transition: "var(--transition)",
-                          boxShadow: isActive
-                            ? "inset 2px 0 0 0 var(--accent-green-line)"
-                            : undefined,
-                        }}
-                        className={`group relative flex w-full items-start gap-3 border-0 border-b border-[color:var(--divide-hair)] py-3 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3.5 md:py-3.5 md:pl-1 md:pr-1.5 ${
+                        className={`home-index-row group flex w-full items-start gap-2.5 border-0 border-b border-[color:var(--editorial-hairline)] py-2.5 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3 md:py-2.5 md:pl-1 ${
                           isActive
-                            ? "bg-[var(--list-row-active)]"
-                            : "bg-transparent hover:bg-[var(--surface-hover)]"
+                            ? "home-index-row--active"
+                            : "bg-transparent"
                         }`}
                       >
                         <span
-                          className={`index-rank w-[1.35rem] shrink-0 pt-0.5 text-right md:w-6 ${
-                            isActive
-                              ? "text-[color:var(--accent-green)]"
-                              : "text-[color:var(--text-tertiary)] group-hover:text-[color:var(--text-meta)]"
-                          }`}
+                          className="home-index-num w-[1.2rem] shrink-0 text-right text-[0.7rem] tabular-nums text-[color:var(--text-muted)] md:w-[1.35rem]"
                           aria-hidden
                         >
-                          {rank}.
+                          {String(rank).padStart(2, "0")}
                         </span>
-                        <div className="flex min-w-0 flex-1 flex-col gap-1 md:gap-1.5">
-                          <span
-                            className={`index-entry-title line-clamp-2 ${
-                              isFirst || isActive
-                                ? "index-entry-title--emph"
-                                : "index-entry-title--quiet"
-                            }`}
-                          >
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className="home-index-title line-clamp-2">
                             {entry.title}
                           </span>
-                          <span className="index-entry-meta">{cc} yorum</span>
+                          <span className="home-index-meta">
+                            {cc} yorum
+                          </span>
                         </div>
                       </button>
                     );
@@ -1745,17 +1778,83 @@ export default function HomePageClient({
                 </nav>
               </div>
             </aside>
-            <main className="main-column relative min-w-0 w-full bg-transparent md:border-x md:border-[color:var(--divide-hair)]">
-              <div className="layout-feed-inner layout-feed-inner--post-manifesto mx-auto w-full max-w-none px-4 py-5 sm:px-5 sm:py-6 md:px-7 md:py-7 lg:px-9">
+            <main className="main-column home-rail--center relative min-w-0 w-full bg-transparent md:border-x md:border-[color:var(--editorial-hairline)]">
+              <div className="layout-feed-inner layout-feed-inner--post-manifesto mx-auto w-full max-w-none px-4 py-5 sm:px-5 sm:py-6 md:px-7 md:py-6 lg:px-9">
+                <h2
+                  className="home-feed-column-title m-0"
+                  id="main-feed-title"
+                >
+                  Hafızaya eklenenler
+                </h2>
                 {renderMainFeed()}
               </div>
             </main>
+            <div className="home-rail-stack">
             <aside
-              className="right-column side-panel flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--divide-hair)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-none md:w-full md:max-w-none md:overflow-visible md:self-start md:border-b-0 md:border-l md:border-t-0 md:border-[color:var(--divide-hair)]"
-              aria-label="Yayın paneli"
+              className="home-rail home-rail--index right-column side-panel flex max-h-[50vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-[min(28rem,70vh)] md:overflow-y-auto md:border-b md:border-[color:var(--editorial-hairline)]"
+              aria-label="Başlık dizini"
             >
-              <div className="shrink-0 border-b border-[color:var(--divide-hair)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-4 md:pt-5">
-                <p className="trending-rail-eyebrow mb-0">İlk katkıyı bekliyor</p>
+              <div className="home-rail-header shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-3.5 md:pt-4">
+                <p className="trending-rail-eyebrow home-rail-eyebrow home-rail-eyebrow--index mb-0">
+                  Başlık dizini
+                </p>
+              </div>
+              <div
+                className="left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "var(--scrollbar-thumb) transparent",
+                }}
+              >
+                <nav
+                  className="title-index-nav flex flex-col gap-0 px-2.5 pt-1.5 pb-3 md:px-3.5 md:pt-2 md:pb-4"
+                  aria-label="Kategorilere göre filtrele"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategory("all")}
+                    className={
+                      selectedCategory === "all"
+                        ? "title-index-btn title-index-btn--active"
+                        : "title-index-btn"
+                    }
+                  >
+                    <span className="title-index-label">Tümü</span>
+                    <span className="title-index-count tabular-nums">
+                      {categoryIndexStats.total}
+                    </span>
+                  </button>
+                  {categoryIndexStats.rows.map((row) => (
+                    <button
+                      key={row.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(row.id)}
+                      className={
+                        selectedCategory === row.id
+                          ? "title-index-btn title-index-btn--active"
+                          : "title-index-btn"
+                      }
+                    >
+                      <span className="title-index-label">{row.label}</span>
+                      <span className="title-index-count tabular-nums">
+                        {row.count}
+                      </span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </aside>
+            <aside
+              className="home-rail home-rail--awaiting right-column side-panel flex max-h-[40vh] w-full min-w-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:flex-1 md:overflow-y-auto"
+              aria-label="Yazılmayı bekleyenler"
+            >
+              <div className="home-rail-header shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3 pt-3.5 md:px-4 md:pb-2.5 md:pt-4">
+                <p className="trending-rail-eyebrow home-rail-eyebrow mb-0">
+                  Yazılmayı bekleyenler
+                </p>
+                <p className="home-rail-subline m-0 mt-1 text-[0.65rem] font-normal leading-snug text-[color:var(--text-muted)] md:text-[0.68rem]">
+                  Henüz yorum yok; ilk notu bırak.
+                </p>
               </div>
               <div
                 className="left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain md:overflow-visible"
@@ -1765,51 +1864,34 @@ export default function HomePageClient({
                 }}
               >
                 <nav
-                  className="flex flex-col px-2.5 pb-4 pt-2.5 md:px-3.5 md:pb-5 md:pt-3"
+                  className="home-rail-nav flex flex-col px-2.5 pb-4 pt-2.5 md:px-3.5 md:pb-5 md:pt-2"
                   aria-label="Henüz yorum almamış başlıklar"
                 >
                   {rightRailAwaitingFirstComment.map((entry, index) => {
                     const isActive = entry.id === effectiveEntryId;
                     const rank = index + 1;
-                    const isFirst = index === 0;
                     return (
                       <button
                         key={entry.id}
                         type="button"
                         onClick={() => selectEntry(entry.id)}
-                        style={{
-                          transition: "var(--transition)",
-                          boxShadow: isActive
-                            ? "inset 2px 0 0 0 var(--accent-green-line)"
-                            : undefined,
-                        }}
-                        className={`group relative flex w-full items-start gap-3 border-0 border-b border-[color:var(--divide-hair)] py-3 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3.5 md:py-3.5 md:pl-1 md:pr-1.5 ${
+                        className={`home-index-row group flex w-full items-start gap-2.5 border-0 border-b border-[color:var(--editorial-hairline)] py-2.5 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3 md:py-2.5 md:pl-1 ${
                           isActive
-                            ? "bg-[var(--list-row-active)]"
-                            : "bg-transparent hover:bg-[var(--surface-hover)]"
+                            ? "home-index-row--active"
+                            : "bg-transparent"
                         }`}
                       >
                         <span
-                          className={`index-rank w-[1.35rem] shrink-0 pt-0.5 text-right md:w-6 ${
-                            isActive
-                              ? "text-[color:var(--accent-green)]"
-                              : "text-[color:var(--text-tertiary)] group-hover:text-[color:var(--text-meta)]"
-                          }`}
+                          className="home-index-num w-[1.2rem] shrink-0 text-right text-[0.7rem] tabular-nums text-[color:var(--text-muted)] md:w-[1.35rem]"
                           aria-hidden
                         >
-                          {rank}.
+                          {String(rank).padStart(2, "0")}
                         </span>
-                        <div className="flex min-w-0 flex-1 flex-col gap-1 md:gap-1.5">
-                          <span
-                            className={`index-entry-title line-clamp-2 ${
-                              isFirst || isActive
-                                ? "index-entry-title--emph"
-                                : "index-entry-title--quiet"
-                            }`}
-                          >
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className="home-index-title line-clamp-2">
                             {entry.title}
                           </span>
-                          <span className="index-entry-meta">0 yorum</span>
+                          <span className="home-index-meta">0 yorum</span>
                         </div>
                       </button>
                     );
@@ -1817,6 +1899,7 @@ export default function HomePageClient({
                 </nav>
               </div>
             </aside>
+            </div>
             </div>
 
             <footer

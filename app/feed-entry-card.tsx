@@ -7,6 +7,10 @@ export type FeedEntryCardProps = {
   contentPreview: string;
   commentCount: number;
   authorLabel: string;
+  /** Kısa tarih, örn. 12 Oca 2025 */
+  metaDate: string;
+  /** `dateTime` için ISO kaynak */
+  createdAtRaw: string;
   isActive: boolean;
   onSelect: () => void;
 };
@@ -16,6 +20,8 @@ export function FeedEntryCard({
   contentPreview,
   commentCount,
   authorLabel,
+  metaDate,
+  createdAtRaw,
   isActive,
   onSelect,
 }: FeedEntryCardProps) {
@@ -31,35 +37,47 @@ export function FeedEntryCard({
       role="button"
       tabIndex={0}
       aria-current={isActive ? "true" : undefined}
+      data-active={isActive ? "true" : undefined}
       onClick={onSelect}
       onKeyDown={handleKeyDown}
-      className="feed-entry-card group w-full cursor-pointer border-0 text-left transition-[background-color,box-shadow] duration-150 ease-out last:border-b-0 hover:bg-[color-mix(in_srgb,var(--surface-hover)_88%,transparent)]"
-      style={{
-        background: isActive
-          ? "color-mix(in srgb, var(--list-row-active) 92%, transparent)"
-          : "transparent",
-        boxShadow: isActive
-          ? "inset 1px 0 0 0 color-mix(in srgb, var(--accent-green-line) 75%, transparent)"
-          : undefined,
-      }}
+      className="feed-entry-card feed-entry-card--editorial group w-full cursor-pointer border-0 text-left last:border-b-0"
     >
-      <div className="flex min-w-0 flex-col">
-        <h2 className="feed-entry-title">{title}</h2>
-        <p className="entry-excerpt feed-entry-excerpt mt-1 md:mt-1.5">
+      <div className="feed-entry-card-inner">
+        <h2 className="feed-entry-title feed-entry-title--editorial">{title}</h2>
+        <p className="entry-excerpt feed-entry-excerpt feed-entry-excerpt--editorial mt-1.5">
           {contentPreview}
         </p>
-        <div className="mt-2.5 flex min-w-0 flex-col gap-1 sm:mt-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
-          <div className="feed-meta-row flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 md:gap-x-2">
-            <span className="feed-meta-author min-w-0 truncate">{authorLabel}</span>
-            <span className="text-[color:var(--divide-muted)] opacity-80" aria-hidden>
+        <div className="feed-entry-bottom mt-3 flex min-w-0 flex-col gap-2 sm:mt-3.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+          <p className="feed-meta-row feed-meta-row--editorial m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[0.75rem] md:gap-x-2 md:text-[0.8125rem]">
+            <span className="feed-meta-author min-w-0">{authorLabel}</span>
+            {metaDate ? (
+              <>
+                <span
+                  className="text-[color:var(--divide-muted)] opacity-75"
+                  aria-hidden
+                >
+                  ·
+                </span>
+                <time
+                  className="feed-meta-date text-[color:var(--text-meta)]"
+                  dateTime={createdAtRaw}
+                >
+                  {metaDate}
+                </time>
+              </>
+            ) : null}
+            <span
+              className="text-[color:var(--divide-muted)] opacity-75"
+              aria-hidden
+            >
               ·
             </span>
-            <span className="feed-meta-stat tabular-nums">
+            <span className="feed-meta-stat tabular-nums text-[color:var(--text-meta)]">
               {commentCount} yorum
             </span>
-          </div>
-          <span className="feed-read-more-cue shrink-0 text-right opacity-90">
-            Devamını oku →
+          </p>
+          <span className="feed-entry-cta shrink-0 text-left sm:text-right">
+            Maddeyi aç →
           </span>
         </div>
       </div>
