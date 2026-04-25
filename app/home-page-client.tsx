@@ -19,7 +19,20 @@ import { resolveVisibleName } from "@/lib/visible-name";
 import {
   FEED_CATEGORY_OPTIONS,
   type FeedCategoryFilter,
+  normalizeEntryCategory,
 } from "@/lib/entry-category";
+
+const STARTER_ENCYCLOPEDIA_CATEGORY_IDS = new Set<string>([
+  "tarih",
+  "sahsiyetler",
+  "cografya",
+  "mahalleler",
+]);
+
+function isStarterEncyclopediaEntry(entry: EntryItem): boolean {
+  const n = normalizeEntryCategory(entry.category);
+  return n != null && STARTER_ENCYCLOPEDIA_CATEGORY_IDS.has(n);
+}
 import { FeedEntryCard } from "./feed-entry-card";
 
 function entryMatchesSearch(entry: EntryItem, rawQuery: string): boolean {
@@ -862,6 +875,85 @@ export default function HomePageClient({
     });
     return zeros.slice(0, 12).map((r) => r.entry);
   }, [centerEntries, commentsByEntryIdLive]);
+
+  const waitingEntriesForExplore = useMemo(
+    () => rightRailAwaitingFirstComment.slice(0, 4),
+    [rightRailAwaitingFirstComment]
+  );
+
+  const starterEntries = useMemo(() => {
+    const withMeta = centerEntries.map((entry) => ({
+      entry,
+      commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
+    }));
+    const sortByEngagement = (
+      a: (typeof withMeta)[0],
+      b: (typeof withMeta)[0]
+    ) => {
+      if (b.commentCount !== a.commentCount) {
+        return b.commentCount - a.commentCount;
+      }
+      return compareEntriesByNewest(a.entry, b.entry);
+    };
+    const encyclopedic = withMeta
+      .filter((w) => isStarterEncyclopediaEntry(w.entry))
+      .sort(sortByEngagement);
+    const picked: EntryItem[] = [];
+    const used = new Set<string>();
+    for (const w of encyclopedic) {
+      if (picked.length >= 4) break;
+      picked.push(w.entry);
+      used.add(w.entry.id);
+    }
+    if (picked.length < 4) {
+      const rest = withMeta
+        .filter((w) => !used.has(w.entry.id))
+        .sort(sortByEngagement);
+      for (const w of rest) {
+        if (picked.length >= 4) break;
+        picked.push(w.entry);
+      }
+    }
+    return picked;
+  }, [centerEntries, commentsByEntryIdLive]);
+
+  const dailyQuestionEntry = useMemo((): EntryItem | null => {
+    if (centerEntries.length === 0) return null;
+    const withMeta = centerEntries.map((entry) => ({
+      entry,
+      commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
+    }));
+    const sortByEngagement = (
+      a: (typeof withMeta)[0],
+      b: (typeof withMeta)[0]
+    ) => {
+      if (b.commentCount !== a.commentCount) {
+        return b.commentCount - a.commentCount;
+      }
+      return compareEntriesByNewest(a.entry, b.entry);
+    };
+    const withQuestionMark = withMeta.filter((w) =>
+      w.entry.title.includes("?")
+    );
+    if (withQuestionMark.length > 0) {
+      withQuestionMark.sort(sortByEngagement);
+      return withQuestionMark[0].entry;
+    }
+    const gundem = withMeta.filter(
+      (w) => normalizeEntryCategory(w.entry.category) === "gundem"
+    );
+    if (gundem.length > 0) {
+      gundem.sort(sortByEngagement);
+      return gundem[0].entry;
+    }
+    const sorted = [...withMeta].sort(sortByEngagement);
+    return sorted[0].entry;
+  }, [centerEntries, commentsByEntryIdLive]);
+
+  const hasHomeExplore =
+    starterEntries.length > 0 ||
+    waitingEntriesForExplore.length > 0 ||
+    dailyQuestionEntry !== null;
 
   /** Manifesto / ana grid arası: en çok yorum → eşitlikte yeni; en fazla 5. */
   const todayDiscoveryEntries = useMemo(() => {
@@ -1901,6 +1993,118 @@ export default function HomePageClient({
             </aside>
             </div>
             </div>
+
+            {hasHomeExplore ? (
+              <section
+                className="home-explore"
+                aria-labelledby="home-explore-title"
+              >
+                <div className="home-explore-inner">
+                  <header className="home-explore-head">
+                    <p className="home-explore-kicker">Keşif</p>
+                    <h2
+                      id="home-explore-title"
+                      className="home-explore-title m-0"
+                    >
+                      Trabzon&apos;u keşfetmeye devam et
+                    </h2>
+                    <p className="home-explore-copy m-0">
+                      61Larus&apos;ta her başlık bir kapı açar; tarihten
+                      mahallelere, gündemden sofraya.
+                    </p>
+                  </header>
+                  <div className="home-explore-grid">
+                    {starterEntries.length > 0 ? (
+                      <div className="home-explore-panel home-explore-panel--starter">
+                        <h3 className="home-explore-panel-title">
+                          Trabzon&apos;u anlamak için başla
+                        </h3>
+                        <ul className="home-explore-list" role="list">
+                          {starterEntries.map((entry) => {
+                            const cc =
+                              commentsByEntryIdLive[entry.id]?.length ?? 0;
+                            return (
+                              <li key={entry.id}>
+                                <button
+                                  type="button"
+                                  className="home-explore-item"
+                                  onClick={() => selectEntry(entry.id)}
+                                  aria-label={`Aç: ${entry.title}`}
+                                >
+                                  <span className="home-explore-item-title">
+                                    {entry.title}
+                                  </span>
+                                  <span className="home-explore-item-meta">
+                                    {cc > 0
+                                      ? `${cc} yorum`
+                                      : "Yeni madde"}
+                                  </span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ) : null}
+                    {waitingEntriesForExplore.length > 0 ? (
+                      <div className="home-explore-panel home-explore-panel--waiting">
+                        <h3 className="home-explore-panel-title">
+                          Yazılmayı bekleyenler
+                        </h3>
+                        <ul className="home-explore-list" role="list">
+                          {waitingEntriesForExplore.map((entry) => (
+                            <li key={entry.id}>
+                              <button
+                                type="button"
+                                className="home-explore-item"
+                                onClick={() => selectEntry(entry.id)}
+                                aria-label={`Aç: ${entry.title}`}
+                              >
+                                <span className="home-explore-item-title">
+                                  {entry.title}
+                                </span>
+                                <span className="home-explore-item-meta">
+                                  0 yorum
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                    {dailyQuestionEntry ? (
+                      <div className="home-explore-panel home-explore-panel--question">
+                        <h3 className="home-explore-panel-title">
+                          Günün sorusu
+                        </h3>
+                        <button
+                          type="button"
+                          className="home-explore-question"
+                          onClick={() =>
+                            selectEntry(dailyQuestionEntry.id)
+                          }
+                          aria-label={`Aç: ${dailyQuestionEntry.title}`}
+                        >
+                          <span className="home-explore-item-title">
+                            {dailyQuestionEntry.title}
+                          </span>
+                          <span className="home-explore-item-meta">
+                            {(commentsByEntryIdLive[
+                              dailyQuestionEntry.id
+                            ]?.length ?? 0) > 0
+                              ? `${commentsByEntryIdLive[dailyQuestionEntry.id]?.length ?? 0} yorum`
+                              : "Yeni madde"}
+                          </span>
+                          <span className="home-explore-cta">
+                            Maddeyi aç →
+                          </span>
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </section>
+            ) : null}
 
             <footer
               id="site-footer"

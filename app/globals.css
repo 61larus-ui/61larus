@@ -1079,6 +1079,323 @@ main > header .site-header-tagline--manifesto {
   opacity: 0.9;
 }
 
+/* --- Alt keşif — Trabzon’u anlamak / bekleyenler / günün sorusu --- */
+.home-explore {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border-top: 1px solid var(--editorial-hairline);
+  background: color-mix(in srgb, var(--bg-tertiary) 78%, var(--bg-primary) 22%);
+}
+
+.home-explore-inner {
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2.5rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .home-explore-inner {
+    padding: 1.75rem 2.5rem 2.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-explore-inner {
+    padding: 2rem 2.5rem 3rem;
+  }
+}
+
+.home-explore-head {
+  margin: 0 0 1.5rem;
+  max-width: 38rem;
+}
+
+@media (min-width: 768px) {
+  .home-explore-head {
+    margin-bottom: 1.75rem;
+  }
+}
+
+.home-explore-kicker {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-ui);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.home-explore-title {
+  font-family: var(--font-editorial-display);
+  font-size: clamp(1.1rem, 1.7vw, 1.3rem);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--wordmark-ink);
+  text-rendering: optimizeLegibility;
+}
+
+.home-explore-copy {
+  margin-top: 0.5rem;
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  letter-spacing: 0.012em;
+  color: var(--text-meta);
+  max-width: 34rem;
+}
+
+@media (min-width: 768px) {
+  .home-explore-copy {
+    font-size: 0.84375rem;
+  }
+}
+
+.home-explore-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--editorial-hairline);
+  background: var(--editorial-hairline);
+}
+
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .home-explore-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-explore-panel--question {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-explore-grid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 0.9fr);
+  }
+
+  .home-explore-panel--question {
+    grid-column: auto;
+  }
+}
+
+.home-explore-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  margin: 0;
+  padding: 1.1rem 1rem 1.25rem;
+  box-sizing: border-box;
+  border: 0;
+  background: color-mix(
+    in srgb,
+    var(--bg-secondary) 60%,
+    var(--bg-primary) 40%
+  );
+  border-bottom: 1px solid var(--editorial-hairline);
+}
+
+.home-explore-panel:last-child {
+  border-bottom: 0;
+}
+
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .home-explore-panel--starter {
+    border-right: 1px solid var(--editorial-hairline);
+  }
+
+  .home-explore-panel--waiting {
+    border-right: 0;
+  }
+
+  .home-explore-panel--question {
+    border-top: 1px solid var(--editorial-hairline);
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-explore-panel {
+    padding: 1.2rem 1.1rem 1.4rem;
+    border-bottom: 0;
+    border-right: 1px solid var(--editorial-hairline);
+  }
+
+  .home-explore-panel:last-child {
+    border-right: 0;
+  }
+}
+
+.home-explore-panel-title {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.home-explore-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.home-explore-list > li {
+  border-top: 1px solid var(--editorial-hairline);
+}
+
+.home-explore-list > li:first-of-type {
+  border-top: 0;
+}
+
+.home-explore-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0.65rem 0 0.75rem;
+  box-sizing: border-box;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.16s ease;
+}
+
+.home-explore-item:hover {
+  background: var(--surface-hover);
+}
+
+.home-explore-item:focus-visible {
+  outline: 2px solid
+    color-mix(in srgb, var(--accent-green-line) 50%, var(--divide-muted) 50%);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.home-explore-item-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-family: var(--font-editorial-display);
+  font-size: 0.90625rem;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.006em;
+  color: color-mix(
+    in srgb,
+    var(--text-primary) 94%,
+    var(--text-secondary) 6%
+  );
+  text-rendering: optimizeLegibility;
+}
+
+@media (min-width: 1024px) {
+  .home-explore-item-title {
+    font-size: 0.9375rem;
+  }
+}
+
+.home-explore-item-meta {
+  margin-top: 0.4rem;
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.625rem;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
+.home-explore-question {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0.35rem 0 0;
+  box-sizing: border-box;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.16s ease;
+  gap: 0.4rem;
+}
+
+.home-explore-question:hover {
+  opacity: 0.92;
+}
+
+.home-explore-question:focus-visible {
+  outline: 2px solid
+    color-mix(in srgb, var(--accent-green-line) 50%, var(--divide-muted) 50%);
+  outline-offset: 2px;
+}
+
+.home-explore-question .home-explore-item-title {
+  -webkit-line-clamp: 4;
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  line-height: 1.28;
+  letter-spacing: -0.012em;
+  font-weight: 400;
+}
+
+@media (min-width: 1024px) {
+  .home-explore-question .home-explore-item-title {
+    font-size: 1.2rem;
+  }
+}
+
+.home-explore-cta {
+  margin-top: 0.35rem;
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--accent-green);
+  text-decoration: none;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--accent-green-line) 45%, transparent);
+  padding-bottom: 0.1rem;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+
+.home-explore-question:hover .home-explore-cta,
+.home-explore-question:focus-visible .home-explore-cta {
+  color: var(--text-primary);
+  border-bottom-color: var(--text-muted);
+}
+
 main > section.border-y {
   /* Header altı ile çift çizgi yok; alt sınır tek saç teli */
   border-top: none !important;
