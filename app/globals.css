@@ -1136,6 +1136,27 @@ main > header .site-header-tagline--manifesto {
   margin-right: 0;
 }
 
+/* FAZ 3.5: ana 3 kolon → alt keşif — net nefes, scroll bu kuşakta kalır */
+.home-main-columns-wrap {
+  min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  position: relative;
+  z-index: 0;
+  /* ~32–40px: kolon bantı bitti; keşif ayrı bir bölüm */
+  padding-bottom: 2.25rem;
+  box-sizing: border-box;
+  /* Kolon listelerinin taşmasını keşif alanına sızdırmaz (scroll kendi panellerinde) */
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .home-main-columns-wrap {
+    /* ~48–64px arası editorial boşluk */
+    padding-bottom: clamp(3rem, 4.5vw, 4rem);
+  }
+}
+
 /* --- FAZ 3.2: 3 kolon — üst bant hizası, eş yükseklik, eşit scroll (md+); mobil doğal --- */
 @media (min-width: 768px) {
   .home-editorial-cols {
@@ -1543,44 +1564,53 @@ main > header .site-header-tagline--manifesto {
 .home-explore {
   width: 100%;
   margin: 0;
-  padding: 0.85rem 0 1.5rem;
   box-sizing: border-box;
-  border-top: 1px solid
-    color-mix(in srgb, var(--editorial-hairline) 90%, transparent);
   background: transparent;
+  /* Ayrım: ince saç çizgisi; asıl dikey hava home-main-columns-wrap padding ile */
+  border-top: 1px solid
+    color-mix(in srgb, var(--editorial-hairline) 88%, transparent);
+  /* Üst: hairline + yeni bölüm nefesi (kolonlardan ayrı section hissi) */
+  padding: 0.75rem 0 1.5rem;
 }
 
 @media (min-width: 768px) {
   .home-explore {
-    padding: 0.9rem 0 1.65rem;
+    padding: 0.85rem 0 1.65rem;
   }
 }
 
 @media (min-width: 1024px) {
   .home-explore {
-    padding: 0.95rem 0 1.9rem;
+    padding: 0.9rem 0 1.9rem;
   }
 }
 
-/* Üç kolon gridi ile araya editorial nefes; ayraç üst bant + keşif */
-.home-content-grid--flow + .home-explore--prefooter {
-  margin-top: 0.45rem;
-}
-
-@media (min-width: 768px) {
-  .home-content-grid--flow + .home-explore--prefooter {
-    margin-top: 0.55rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .home-content-grid--flow + .home-explore--prefooter {
-    margin-top: 0.5rem;
-  }
+/* FAZ 3.5: aralık wrap padding-bottom ile; keşif üst margin yığılması yok */
+.home-main-columns-wrap + .home-explore--prefooter {
+  margin-top: 0;
 }
 
 .home-page-editorial .home-explore--prefooter {
   margin-top: 0;
+}
+
+/* KEŞİF başlığı: kendi bölümü, kolon ızgarasından görsel bağımsız */
+.home-explore--after-main-columns {
+  position: relative;
+  z-index: 1;
+  clear: both;
+  isolation: isolate;
+}
+
+.home-explore-head--section-start {
+  margin-top: 0.15rem;
+  padding-top: 0.35rem;
+}
+
+@media (min-width: 768px) {
+  .home-explore-head--section-start {
+    padding-top: 0.45rem;
+  }
 }
 
 .home-page-editorial .home-explore--prefooter .home-explore-head,
