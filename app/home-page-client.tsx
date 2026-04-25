@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -250,6 +251,8 @@ export default function HomePageClient({
   const routerRef = useRef(router);
   routerRef.current = router;
   const searchParams = useSearchParams();
+  const openEntryNavRef = useRef(false);
+  const openEntryNavTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const entriesByIdRef = useRef<EntryItem[]>([]);
   entriesByIdRef.current = [
     ...centerEntries,
@@ -270,10 +273,7 @@ export default function HomePageClient({
   const commentComposeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const pendingFocusAfterEntrySelectRef = useRef(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return readPendingFromStorage().entryId;
-  });
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
   const [mainFeedShuffleSeed] = useState(
@@ -450,6 +450,11 @@ export default function HomePageClient({
   // Stable callback + refs for gate flags so post-onboarding code can call this in the
   // same tick as setOnboardingDone without a stale closure (same mutations as a click).
   const selectEntry = useCallback((id: string) => {
+    openEntryNavRef.current = true;
+    if (openEntryNavTimerRef.current) clearTimeout(openEntryNavTimerRef.current);
+    openEntryNavTimerRef.current = setTimeout(() => {
+      openEntryNavRef.current = false;
+    }, 600);
     // Source of truth: persist immediately on every entry click so pending survives
     // auth redirect, router.refresh, and re-renders until successful open clears it.
     writePendingReturn(id, "comment");
@@ -492,6 +497,11 @@ export default function HomePageClient({
   }, []);
 
   const closeEntryModal = useCallback(() => {
+    openEntryNavRef.current = false;
+    if (openEntryNavTimerRef.current) {
+      clearTimeout(openEntryNavTimerRef.current);
+      openEntryNavTimerRef.current = null;
+    }
     clearPendingReturn();
     setSelectedEntryId(null);
     setCenterMode("feed");
@@ -554,14 +564,33 @@ export default function HomePageClient({
   /** OAuth dönüşünde entry modalı açma; pending + URL temizliği, ana akışta kal. */
   useEffect(() => {
     if (!isOAuthReturnQuery(searchParams)) return;
+    openEntryNavRef.current = false;
+    if (openEntryNavTimerRef.current) {
+      clearTimeout(openEntryNavTimerRef.current);
+      openEntryNavTimerRef.current = null;
+    }
     clearPendingReturn();
     setSelectedEntryId(null);
     setCenterMode("feed");
     void routerRef.current.replace("/", { scroll: false });
   }, [searchParams]);
 
+  /**
+   * ?entry= veya [slug] yokken entry modalı açma. Tıkla→replace tamamlanırken
+   * openEntryNavRef kısa süre temizliği erteler; auth/ agreement moduna dokunmaz.
+   */
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isOAuthReturnQuery(searchParams)) return;
+    if (pathCanonicalSlug && initialOpenEntryIdFromPath) return;
+    if (window.location.search.includes("entry=")) return;
+    if (openEntryNavRef.current) return;
+    clearPendingReturn();
+    setSelectedEntryId(null);
+  }, [searchParams, pathCanonicalSlug, initialOpenEntryIdFromPath]);
+
+  /** Yalnızca ?entry= veya /[slug] ile URL güdümlü; localStorage ile otomatik açma yok. */
   useEffect(() => {
-    if (!isAuthenticated || !agreementDone || platformAccessSuspended) return;
     if (isOAuthReturnQuery(searchParams)) return;
 
     const raw = searchParams.get("entry");
@@ -573,9 +602,10 @@ export default function HomePageClient({
       pathCanonicalSlug && initialOpenEntryIdFromPath
         ? initialOpenEntryIdFromPath
         : null;
-    const { entryId: storedId } = readPendingFromStorage();
-    const entryId = urlEntryId ?? pathEntryId ?? storedId;
+    const entryId = urlEntryId ?? pathEntryId;
     if (!entryId) return;
+
+    if (!isAuthenticated || !agreementDone || platformAccessSuspended) return;
 
     const combined = [...centerEntries, ...leftEntries, ...rightEntries];
     if (combined.length === 0) {
@@ -658,9 +688,17 @@ export default function HomePageClient({
       return;
     }
     if (centerMode === "auth") {
-      const { entryId } = readPendingFromStorage();
-      if (entryId) {
-        selectEntry(entryId);
+      const raw = searchParams.get("entry");
+      const urlEntryId =
+        raw && isRealUuid(decodeURIComponent(raw.trim()))
+          ? decodeURIComponent(raw.trim())
+          : null;
+      const pathId =
+        pathCanonicalSlug && initialOpenEntryIdFromPath
+          ? initialOpenEntryIdFromPath
+          : null;
+      if (urlEntryId || pathId) {
+        selectEntry((urlEntryId ?? pathId) as string);
       } else {
         setCenterMode("feed");
       }
@@ -670,8 +708,10 @@ export default function HomePageClient({
     agreementDone,
     platformAccessSuspended,
     centerMode,
-    selectedEntryId,
     selectEntry,
+    searchParams,
+    pathCanonicalSlug,
+    initialOpenEntryIdFromPath,
   ]);
 
   const persistStateBeforeOAuth = useCallback(() => {
@@ -892,9 +932,17 @@ export default function HomePageClient({
     agreementDoneRef.current = true;
     onboardingDoneRef.current = true;
 
-    const pending = readPendingFromStorage();
-    if (pending?.entryId) {
-      selectEntry(pending.entryId);
+    const raw = searchParams.get("entry");
+    const urlEntryId =
+      raw && isRealUuid(decodeURIComponent(raw.trim()))
+        ? decodeURIComponent(raw.trim())
+        : null;
+    const pathId =
+      pathCanonicalSlug && initialOpenEntryIdFromPath
+        ? initialOpenEntryIdFromPath
+        : null;
+    if (urlEntryId || pathId) {
+      selectEntry((urlEntryId ?? pathId) as string);
     } else {
       setCenterMode("feed");
     }
