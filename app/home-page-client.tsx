@@ -1111,7 +1111,7 @@ export default function HomePageClient({
   function renderMainFeed() {
     if (centerEntries.length === 0) {
       return (
-        <div className="feed-index-empty-message flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-hair)] px-4 py-14 text-center">
+        <div className="feed-index-empty-message flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-hair)] px-0 py-14 text-center">
           Henüz içerik yok
         </div>
       );
@@ -1119,7 +1119,7 @@ export default function HomePageClient({
     if (feedEntriesSearchFiltered.length === 0) {
       const hasSearch = searchQuery.trim().length > 0;
       return (
-        <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-4 py-16 text-center md:px-6 md:py-20">
+        <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-0 py-16 text-center md:py-20">
           <p className="feed-search-empty-title m-0">
             {hasSearch
               ? "Aramana uygun madde yok."
@@ -1533,7 +1533,7 @@ export default function HomePageClient({
   return (
     <main className="relative flex min-h-screen w-full max-w-full flex-col bg-transparent text-[color:var(--text-primary)] antialiased">
       <header className="site-header relative z-20 shrink-0">
-        <div className="headerBlock">
+        <div className="headerBlock home-page-container">
           <div className="headerBar min-w-0">
             <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(21rem,100%)]">
               <h1 className="m-0 p-0">
@@ -1884,7 +1884,7 @@ export default function HomePageClient({
               </div>
             </aside>
             <main className="main-column home-rail--center home-rail--faz5-primary home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-full md:border-l md:border-[color:var(--editorial-hairline)]">
-              <div className="home-feed-rail layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-4 py-5 sm:px-5 sm:py-6 md:h-full md:min-h-0 md:px-7 md:py-0 lg:px-9">
+              <div className="home-feed-rail layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-0 py-5 sm:py-6 md:h-full md:min-h-0 md:py-0">
                 <div className="col-section-head col-head-band col-head-band--feed col-head-band--faz5-primary home-feed-rail__head home-rail-header--col shrink-0">
                   <p className="col-section-head__kicker">YENİ EKLENENLER</p>
                   <h2
@@ -2024,9 +2024,9 @@ export default function HomePageClient({
 
             <footer
               id="site-footer"
-              className="site-footer home-page-footer home-page-footer--after-explore px-5 md:px-10"
+              className="site-footer home-page-footer home-page-footer--after-explore"
             >
-              <div className="mx-auto flex max-w-[80rem] flex-col gap-7 md:flex-row md:items-baseline md:justify-between md:gap-8">
+              <div className="home-page-container flex flex-col gap-7 md:flex-row md:items-baseline md:justify-between md:gap-8">
                 <button
                   type="button"
                   onClick={goToBrandHome}

@@ -162,6 +162,33 @@
   /* Footer nav */
   --type-footer-nav-size: 0.75rem;
   --type-footer-nav-size-md: 0.75rem;
+
+  /* FAZ 5.3: ana sayfa tek omurga — max genişlik + yatay iç boşluk */
+  --home-container-max: 72.5rem; /* 1160px (1120–1180 aralığı) */
+  --home-container-px: 1rem; /* 16px mobil */
+}
+
+@media (min-width: 768px) {
+  :root {
+    --home-container-px: 1.25rem; /* 20px tablet */
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --home-container-px: 1.5rem; /* 24px desktop */
+  }
+}
+
+/* Ortak: header iç çizgisi, arama, vitrin, üç kolon, keşif, footer içeriği */
+.home-page-container {
+  width: 100%;
+  max-width: var(--home-container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--home-container-px);
+  padding-right: var(--home-container-px);
+  box-sizing: border-box;
 }
 
 * {
@@ -813,6 +840,18 @@ h3.col-section-head__kicker {
 
 /* --- Home shell: fewer lines, surface rails, premium brand (structure-only) --- */
 
+main > header.site-header .headerBlock.home-page-container {
+  padding-top: 1rem;
+  padding-bottom: 0.85rem;
+}
+
+@media (min-width: 768px) {
+  main > header.site-header .headerBlock.home-page-container {
+    padding-top: 1.1rem;
+    padding-bottom: 1rem;
+  }
+}
+
 main > header.site-header {
   margin-bottom: 1.15rem !important;
   padding-bottom: 0.85rem !important;
@@ -892,36 +931,15 @@ main > header .site-header-tagline--manifesto {
   letter-spacing: 0.1em;
 }
 
-/* Ana sayfa gövdesi: tek sütun hissi, üst bölümler + grid aynı optik genişlik */
+/* Ana sayfa gövdesi: .home-page-container ile aynı max-width + yatay padding (FAZ 5.3) */
 .home-page-editorial {
   width: 100%;
-  max-width: 80rem;
+  max-width: var(--home-container-max);
   margin-left: auto;
   margin-right: auto;
   box-sizing: border-box;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-@media (min-width: 640px) {
-  .home-page-editorial {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .home-page-editorial {
-    padding-left: 1.75rem;
-    padding-right: 1.75rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .home-page-editorial {
-    padding-left: 2.25rem;
-    padding-right: 2.25rem;
-  }
+  padding-left: var(--home-container-px);
+  padding-right: var(--home-container-px);
 }
 
 /* --- Ana sayfa: manifesto — header ile “Bugün” arasında sessiz geçit --- */
@@ -937,8 +955,9 @@ main > header .site-header-tagline--manifesto {
 }
 
 .home-page-editorial .home-manifesto {
-  padding-left: 0;
-  padding-right: 0;
+  /* Üst sarmal yatay tekrar yok; omurga .home-page-editorial’da */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 @media (min-width: 640px) {
@@ -2297,9 +2316,9 @@ main
 
 .home-explore-head {
   width: 100%;
-  max-width: min(80rem, 100%);
-  margin: 0 auto 0.9rem;
-  padding: 0.15rem 1.25rem 0.55rem;
+  max-width: 100%;
+  margin: 0 0 0.9rem;
+  padding: 0.15rem 0 0.55rem;
   box-sizing: border-box;
   border-bottom: 1px solid
     color-mix(in srgb, var(--editorial-hairline) 90%, transparent);
@@ -2322,8 +2341,6 @@ main
 @media (min-width: 768px) {
   .home-explore-head {
     margin-bottom: 0.95rem;
-    padding-left: 2.5rem;
-    padding-right: 2.5rem;
     padding-bottom: 0.6rem;
   }
 }
@@ -2384,9 +2401,9 @@ main
   grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   width: 100%;
-  max-width: min(80rem, 100%);
-  margin: 0 auto;
-  padding: 0 1.25rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
   border-radius: 0;
   overflow: visible;
@@ -2399,7 +2416,6 @@ main
 @media (min-width: 768px) and (max-width: 1023.98px) {
   .home-explore-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: 0 2.5rem;
     row-gap: 0.6rem;
   }
 
@@ -2411,7 +2427,6 @@ main
 @media (min-width: 1024px) {
   .home-explore-grid {
     grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 0.9fr);
-    padding: 0 2.5rem;
     column-gap: 1.35rem;
     row-gap: 0;
   }
@@ -3381,8 +3396,11 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
 
 /* —— Askıdaki üyelik (salt okuma, yorum kapalı) —— */
 .platform-access-suspended-notice {
-  max-width: 100%;
-  padding: 0.65rem 1rem;
+  box-sizing: border-box;
+  max-width: var(--home-container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.65rem var(--home-container-px);
   text-align: center;
   font-size: 0.8125rem;
   line-height: 1.55;
@@ -5884,9 +5902,8 @@ aside[aria-label="Yayın paneli"] .right-block {
     margin-top: 0;
   }
 
-  /* ---- Mobile: headerBlock — nefes, taşma yok ---- */
-  .headerBlock {
-    padding: 1rem 0.9rem 0.85rem;
+  /* ---- Mobile: headerBlock — yatay .home-page-container; dikey yukarıda ---- */
+  .headerBlock.home-page-container {
     position: relative;
   }
 
