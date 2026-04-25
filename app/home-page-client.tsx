@@ -57,6 +57,16 @@ function isSeedId(value: string) {
   return value.startsWith("seed-") || !isRealUuid(value);
 }
 
+/** OAuth / PKCE redirect artıkları — entry derin bağlantısı değil. */
+function isOAuthReturnQuery(sp: { get: (key: string) => string | null }): boolean {
+  const code = sp.get("code");
+  const state = sp.get("state");
+  return (
+    (typeof code === "string" && code.length > 0) ||
+    (typeof state === "string" && state.length > 0)
+  );
+}
+
 function readPendingFromStorage(): { entryId: string | null; action: string | null } {
   if (typeof window === "undefined") {
     return { entryId: null, action: null };
@@ -528,6 +538,7 @@ export default function HomePageClient({
   }, []);
 
   useEffect(() => {
+    if (isOAuthReturnQuery(searchParams)) return;
     const raw = searchParams.get("entry");
     const urlEntryId =
       raw && isRealUuid(decodeURIComponent(raw.trim()))
@@ -540,8 +551,18 @@ export default function HomePageClient({
     }
   }, [searchParams, pathCanonicalSlug, initialOpenEntryIdFromPath]);
 
+  /** OAuth dönüşünde entry modalı açma; pending + URL temizliği, ana akışta kal. */
+  useEffect(() => {
+    if (!isOAuthReturnQuery(searchParams)) return;
+    clearPendingReturn();
+    setSelectedEntryId(null);
+    setCenterMode("feed");
+    void routerRef.current.replace("/", { scroll: false });
+  }, [searchParams]);
+
   useEffect(() => {
     if (!isAuthenticated || !agreementDone || platformAccessSuspended) return;
+    if (isOAuthReturnQuery(searchParams)) return;
 
     const raw = searchParams.get("entry");
     const urlEntryId =
