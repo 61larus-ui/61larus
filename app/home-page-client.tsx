@@ -1672,7 +1672,7 @@ export default function HomePageClient({
         className={
           centerMode === "auth" || centerMode === "agreement"
             ? "relative z-0 flex w-full flex-col"
-            : "relative z-0 flex w-full flex-col border-y border-[color:var(--divide-hair)] bg-[var(--bg-primary)]"
+            : "relative z-0 flex w-full flex-col border-0 bg-[var(--bg-primary)]"
         }
       >
         {centerMode === "auth" || centerMode === "agreement" ? (
@@ -1705,7 +1705,7 @@ export default function HomePageClient({
                 üzerinden bize ulaşabilirsin.
               </div>
             ) : null}
-            <div className="home-page-editorial">
+            <div className="home-page-editorial home-page-editorial--section-stack">
             <div className="home-manifesto home-manifesto--bridge home-search-bridge">
               <div className="home-manifesto-inner home-manifesto-inner--bridge home-search-field">
                 <div className="home-manifesto-search">
