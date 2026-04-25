@@ -2015,9 +2015,9 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-/* --- FAZ 5.1 / FAZ 5.5: satır yüksekliği sağ “3 entry” omurgasına; sabit 39rem kalktı --- */
+/* --- FAZ 5.1 / FAZ 5.5: md–lg üç kolon yüksekliği serbest (tablet) --- */
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1023.98px) {
   .home-page-editorial .home-editorial-cols {
     height: auto;
     max-height: none;
@@ -2111,6 +2111,71 @@ main > header .site-header-tagline--manifesto {
     font-size: calc(var(--type-scale-meta) * 0.95);
     letter-spacing: 0.04em;
     opacity: 0.9;
+  }
+}
+
+/* --- FAZ 5.6: lg+ tek editorial blok yüksekliği (~520px), bitiş çizgisi, sol/orta grid içinde scroll --- */
+@media (min-width: 1024px) {
+  .home-page-editorial .home-editorial-cols {
+    /* 3 entry + bant + “Daha fazla” için görünür alan; tek bitiş çizgisi */
+    height: 32.5rem;
+    max-height: 32.5rem;
+    min-height: 0;
+    align-items: stretch;
+  }
+
+  .home-page-editorial
+    .home-editorial-cols
+    > .home-rail--feed-main.home-rail--editorial-col {
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    align-self: stretch;
+    overflow: hidden;
+  }
+
+  .home-page-editorial .home-rail--feed-main .home-feed-rail--faz55 {
+    height: 100% !important;
+    min-height: 0;
+    max-height: 100%;
+    flex: 1 1 0%;
+  }
+
+  .home-page-editorial
+    .home-rail--feed-main
+    .home-feed-rail__body--faz55.home-rail-body--feed {
+    flex: 1 1 0%;
+    min-height: 0;
+    max-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-page-editorial .home-main-columns-wrap--faz51.home-main-columns-wrap--faz56 {
+    padding-bottom: 0;
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--editorial-hairline) 88%, transparent);
+  }
+
+  .home-page-editorial
+    .home-main-columns-wrap--faz56
+    + .home-explore--prefooter.home-explore {
+    margin-top: clamp(3rem, 3.5vw, 4rem);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .home-page-editorial .home-main-columns-wrap--faz56 {
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--editorial-hairline) 88%, transparent);
+  }
+
+  .home-page-editorial
+    .home-main-columns-wrap--faz56
+    + .home-explore--prefooter.home-explore {
+    margin-top: clamp(2.75rem, 3.2vw, 3.5rem);
   }
 }
 

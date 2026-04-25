@@ -1822,7 +1822,7 @@ export default function HomePageClient({
                 </div>
               </section>
             ) : null}
-            <div className="home-main-columns-wrap home-main-columns-wrap--faz51 min-h-0 w-full min-w-0 max-w-full">
+            <div className="home-main-columns-wrap home-main-columns-wrap--faz51 home-main-columns-wrap--faz56 min-h-0 w-full min-w-0 max-w-full">
             <div className="home-editorial-cols home-editorial-cols--faz52 home-content-grid home-content-grid--editorial home-content-grid--flow home-content-grid--faz3 flex w-full min-h-0 min-w-0 max-w-full flex-col gap-0 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.1fr)] md:items-stretch md:gap-0 md:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.1fr)]">
             <aside
               className="home-rail home-rail--awaiting home-rail--faz5-left home-rail--editorial-col home-rail--column await-col flex max-h-[42vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
@@ -1927,8 +1927,8 @@ export default function HomePageClient({
                 </nav>
               </div>
             </aside>
-            <main className="main-column home-rail--center home-rail--faz5-primary home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-auto md:min-h-0 md:max-h-none md:overflow-visible md:border-l md:border-[color:var(--editorial-hairline)]">
-              <div className="home-feed-rail home-feed-rail--faz55 layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-0 py-5 sm:py-6 md:h-auto md:min-h-0 md:flex-none md:py-0">
+            <main className="main-column home-rail--center home-rail--faz5-primary home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-auto md:min-h-0 md:max-h-none md:overflow-visible md:border-l md:border-[color:var(--editorial-hairline)] lg:min-h-0 lg:max-h-full lg:h-full lg:overflow-hidden">
+              <div className="home-feed-rail home-feed-rail--faz55 layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-0 py-5 sm:py-6 md:h-auto md:min-h-0 md:flex-none md:py-0 lg:min-h-0 lg:max-h-full lg:h-full lg:flex-1">
                 <div className="col-section-head col-head-band col-head-band--feed col-head-band--faz5-primary home-feed-rail__head home-rail-header--col shrink-0">
                   <p className="col-section-head__kicker">YENİ EKLENENLER</p>
                   <h2
@@ -1941,7 +1941,7 @@ export default function HomePageClient({
                     Son eklenen maddeler burada akar.
                   </p>
                 </div>
-                <div className="home-feed-rail__body home-feed-rail__body--faz55 home-rail-body home-rail-body--feed col-list-panel min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain max-md:left-scroll max-md:overscroll-contain md:flex-none md:min-h-0 md:overflow-visible md:overscroll-auto">
+                <div className="home-feed-rail__body home-feed-rail__body--faz55 home-rail-body home-rail-body--feed col-list-panel min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain max-md:left-scroll max-md:overscroll-contain md:flex-none md:min-h-0 md:overflow-visible md:overscroll-auto lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-contain">
                   {renderMainFeed()}
                 </div>
               </div>
