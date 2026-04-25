@@ -2015,6 +2015,210 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
+/* --- FAZ 5.1: daha sakin yoğunluk, ferah nefes, keşif/footer hizası --- */
+
+@media (min-width: 768px) {
+  .home-page-editorial .home-editorial-cols {
+    height: min(30rem, 55vh);
+    max-height: min(30rem, 55vh);
+  }
+}
+
+.home-main-columns-wrap--faz51 {
+  padding-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .home-main-columns-wrap--faz51 {
+    padding-bottom: clamp(1.85rem, 2.5vw, 2.35rem);
+  }
+}
+
+.home-rail--faz5-left .home-index-title {
+  font-size: clamp(0.69rem, 0.66rem + 0.1vw, 0.76rem);
+  line-height: 1.28;
+}
+
+.home-rail--faz5-mid .home-index-title {
+  font-size: clamp(0.75rem, 0.72rem + 0.12vw, 0.84rem);
+  line-height: 1.28;
+}
+
+.home-rail--faz5-left .col-section-head__title,
+.home-rail--faz5-mid .col-section-head__title {
+  font-size: clamp(0.96rem, 0.92rem + 0.14vw, 1.04rem);
+}
+
+.home-rail--faz5-primary .feed-entry-card--editorial {
+  padding: 1.05rem 0.12rem 1.2rem 0.2rem;
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--editorial-hairline) 34%,
+    transparent
+  );
+}
+
+.home-rail--faz5-primary .feed-entry-excerpt--editorial {
+  line-height: 1.62 !important;
+  margin-top: 0.25rem !important;
+}
+
+.home-rail--faz5-primary .feed-entry-card--editorial .feed-entry-bottom {
+  margin-top: 1.15rem;
+}
+
+@media (min-width: 768px) {
+  .home-editorial-cols
+    .home-rail--faz5-left
+    .left-scroll::-webkit-scrollbar,
+  .home-editorial-cols
+    .home-rail--faz5-mid
+    .left-scroll::-webkit-scrollbar,
+  .home-editorial-cols
+    .home-rail--faz5-primary
+    .left-scroll::-webkit-scrollbar {
+    width: 2px;
+  }
+
+  .home-editorial-cols
+    .home-rail--faz5-left
+    .left-scroll::-webkit-scrollbar-thumb,
+  .home-editorial-cols
+    .home-rail--faz5-mid
+    .left-scroll::-webkit-scrollbar-thumb,
+  .home-editorial-cols
+    .home-rail--faz5-primary
+    .left-scroll::-webkit-scrollbar-thumb {
+    background-color: color-mix(
+      in srgb,
+      var(--scrollbar-thumb) 28%,
+      transparent
+    );
+    border-radius: 99px;
+  }
+
+  .home-editorial-cols
+    .home-rail--faz5-left
+    .left-scroll::-webkit-scrollbar-track,
+  .home-editorial-cols
+    .home-rail--faz5-mid
+    .left-scroll::-webkit-scrollbar-track,
+  .home-editorial-cols
+    .home-rail--faz5-primary
+    .left-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .home-editorial-cols
+    .home-rail--faz5-left
+    .left-scroll,
+  .home-editorial-cols
+    .home-rail--faz5-mid
+    .left-scroll,
+  .home-editorial-cols
+    .home-rail--faz5-primary
+    .left-scroll {
+    scrollbar-color: color-mix(
+        in srgb,
+        var(--scrollbar-thumb) 28%,
+        transparent
+      )
+      transparent;
+  }
+}
+
+.home-explore--faz51.home-explore {
+  border-top-color: color-mix(
+    in srgb,
+    var(--editorial-hairline) 72%,
+    transparent
+  );
+  padding-top: 0.65rem;
+  padding-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .home-explore--faz51.home-explore {
+    padding: 0.75rem 0 2.35rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-explore--faz51.home-explore {
+    padding-bottom: 2.65rem;
+  }
+}
+
+.home-explore--faz51 .home-explore-head .col-section-head__kicker {
+  opacity: 0.54;
+  font-size: calc(var(--type-scale-meta) * 0.94);
+  letter-spacing: 0.1em;
+}
+
+.home-explore--faz51 .home-explore-head .col-section-head__title {
+  font-size: clamp(1.06rem, 1rem + 0.2vw, 1.2rem);
+  line-height: 1.22;
+  font-weight: 500;
+  color: color-mix(
+    in srgb,
+    var(--wordmark-ink) 92%,
+    var(--text-secondary) 8%
+  );
+}
+
+.home-explore--faz51 .home-explore-copy {
+  font-size: calc(var(--type-scale-body) * 0.94);
+  line-height: 1.52;
+  opacity: 0.88;
+  max-width: 32rem;
+}
+
+.home-explore--faz51 .home-explore-item-title {
+  font-size: clamp(0.8rem, 0.76rem + 0.12vw, 0.875rem) !important;
+  line-height: 1.3 !important;
+}
+
+.home-explore--faz51 .home-explore-question .home-explore-item-title {
+  font-size: clamp(0.82rem, 0.78rem + 0.12vw, 0.9rem) !important;
+}
+
+.home-explore--faz51 .home-explore-panel-head .col-section-head__kicker,
+.home-explore--faz51 .home-explore-panel-head h3.col-section-head__kicker {
+  opacity: 0.58;
+  font-size: calc(var(--type-scale-meta) * 0.92);
+  letter-spacing: 0.1em;
+}
+
+.home-explore--faz51 .home-explore-item-meta {
+  opacity: 0.68;
+  font-size: calc(var(--type-scale-meta) * 0.92);
+}
+
+main
+  > section
+  > .home-page-editorial:has(.home-explore--faz51)
+  + footer#site-footer.home-page-footer--after-explore {
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  main
+    > section
+    > .home-page-editorial:has(.home-explore--faz51)
+    + footer#site-footer.home-page-footer--after-explore {
+    margin-top: 2.35rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  main
+    > section
+    > .home-page-editorial:has(.home-explore--faz51)
+    + footer#site-footer.home-page-footer--after-explore {
+    margin-top: 2.6rem;
+  }
+}
+
 /* --- Alt keşif — FAZ 3.4: üst kolon başlık ailesiyle devam, ayrı kutu değil --- */
 .home-explore {
   width: 100%;

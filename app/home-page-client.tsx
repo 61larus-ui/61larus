@@ -1778,7 +1778,7 @@ export default function HomePageClient({
                 </div>
               </section>
             ) : null}
-            <div className="home-main-columns-wrap min-h-0 w-full min-w-0 max-w-full">
+            <div className="home-main-columns-wrap home-main-columns-wrap--faz51 min-h-0 w-full min-w-0 max-w-full">
             <div className="home-editorial-cols home-content-grid home-content-grid--editorial home-content-grid--flow home-content-grid--faz3 flex w-full min-h-0 min-w-0 max-w-full flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(12rem,1fr)_minmax(0,2.5fr)] md:items-stretch md:gap-0 md:min-h-0 lg:grid-cols-[minmax(11.5rem,1fr)_minmax(12.5rem,1.05fr)_minmax(0,2.6fr)]">
             <aside
               className="home-rail home-rail--awaiting home-rail--faz5-left home-rail--editorial-col home-rail--column await-col flex max-h-[42vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
@@ -1907,7 +1907,7 @@ export default function HomePageClient({
 
             {hasHomeExplore ? (
               <section
-                className="home-explore home-explore--prefooter home-explore--after-main-columns"
+                className="home-explore home-explore--prefooter home-explore--after-main-columns home-explore--faz51"
                 aria-labelledby="home-explore-title"
               >
                   <header className="col-section-head col-explore-section-head home-explore-head home-explore-head--section-start">
