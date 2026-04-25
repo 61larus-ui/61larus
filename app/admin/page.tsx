@@ -191,6 +191,7 @@ export default function AdminPage() {
 
   const [entries, setEntries] = useState<EntryRow[]>([]);
   const [entryTotal, setEntryTotal] = useState<number | null>(null);
+  const [entryRecent7d, setEntryRecent7d] = useState<number | null>(null);
   const [authorByEntryId, setAuthorByEntryId] = useState<Record<string, string>>(
     {}
   );
@@ -316,10 +317,12 @@ export default function AdminPage() {
         entries?: EntryRow[];
         authorByEntryId?: Record<string, string>;
         entryTotal?: number;
+        entryRecent7d?: number | null;
       };
       if (!res.ok) {
         setEntries([]);
         setEntryTotal(null);
+        setEntryRecent7d(null);
         setAuthorByEntryId({});
         setListBanner(data.error ?? "Entry listesi alınamadı.");
         return;
@@ -330,10 +333,24 @@ export default function AdminPage() {
           ? data.entryTotal
           : (data.entries ?? []).length
       );
+      if (
+        typeof data.entryRecent7d === "number" &&
+        Number.isFinite(data.entryRecent7d)
+      ) {
+        setEntryRecent7d(data.entryRecent7d);
+      } else {
+        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        setEntryRecent7d(
+          (data.entries ?? []).filter(
+            (e) => new Date(e.created_at).getTime() >= weekAgo
+          ).length
+        );
+      }
       setAuthorByEntryId(data.authorByEntryId ?? {});
     } catch {
       setEntries([]);
       setEntryTotal(null);
+      setEntryRecent7d(null);
       setAuthorByEntryId({});
       setListBanner("Ağ hatası.");
     } finally {
@@ -593,6 +610,7 @@ export default function AdminPage() {
     setSessionOk(false);
     setEntries([]);
     setEntryTotal(null);
+    setEntryRecent7d(null);
     setPlatformMembers([]);
     setMembersError(null);
     setAdminUsername(null);
@@ -946,11 +964,13 @@ export default function AdminPage() {
   const stats = useMemo(() => {
     const n = entryTotal !== null ? entryTotal : entries.length;
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const recent = entries.filter(
+    const recentFromList = entries.filter(
       (e) => new Date(e.created_at).getTime() >= weekAgo
     ).length;
+    const recent =
+      entryRecent7d !== null ? entryRecent7d : recentFromList;
     return { n, recent };
-  }, [entries, entryTotal]);
+  }, [entries, entryTotal, entryRecent7d]);
 
   const justPublishedLiveUrl = useMemo(() => {
     if (!justPublishedEntry) return null;

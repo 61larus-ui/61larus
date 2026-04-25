@@ -115,6 +115,17 @@ export async function GET() {
     logEntriesDebugPgErr("admin_entries_total", countError);
   }
 
+  const weekAgoIso = new Date(
+    Date.now() - 7 * 24 * 60 * 60 * 1000
+  ).toISOString();
+  const { count: recent7RowCount, error: recent7Error } = await service
+    .from("entries")
+    .select("id", { head: true, count: "exact" })
+    .gte("created_at", weekAgoIso);
+  if (recent7Error) {
+    logEntriesDebugPgErr("admin_entries_recent7", recent7Error);
+  }
+
   let rows: EntryListRow[] = [];
   const withCat = await service
     .from("entries")
@@ -210,12 +221,17 @@ export async function GET() {
 
   const entryTotal =
     !countError && typeof rowCount === "number" ? rowCount : rows.length;
+  const entryRecent7d =
+    !recent7Error && typeof recent7RowCount === "number"
+      ? recent7RowCount
+      : null;
 
   return NextResponse.json({
     ok: true,
     entries: rows,
     authorByEntryId,
     entryTotal,
+    entryRecent7d,
   });
 }
 
