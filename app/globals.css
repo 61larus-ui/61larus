@@ -1375,6 +1375,12 @@ main > header .site-header-tagline--manifesto {
     padding: 0.7rem 0.75rem 1.35rem !important;
   }
 
+  .home-editorial-cols .col-head-band.col-head-band--settled {
+    min-height: 3.35rem;
+    height: auto;
+    max-height: none;
+  }
+
   .home-editorial-cols
     aside[aria-label="Yazılmayı bekleyenler"]
     > .col-head-band,
@@ -1791,6 +1797,24 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
+/* Bugün — vitrin: sakin başlık, vitrin büyütmesi yok */
+.today-discovery--settled .today-discovery-head {
+  margin-bottom: 0.5rem;
+}
+
+.today-discovery--settled .today-discovery-kicker {
+  font-family: var(--font-sans) !important;
+  font-size: clamp(0.9rem, 0.86rem + 0.1vw, 0.98rem) !important;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  color: color-mix(
+    in srgb,
+    var(--wordmark-ink) 78%,
+    var(--text-secondary) 22%
+  );
+}
+
 /* --- FAZ 5: üç kolon — sol indeks, orta akış, sağ ana okuma --- */
 .col-head-band--faz52-support .col-section-head__micro {
   display: -webkit-box;
@@ -1874,6 +1898,27 @@ main > header .site-header-tagline--manifesto {
     color-mix(in srgb, var(--accent-green-line) 45%, transparent);
 }
 
+/* Toparla: rail h2 — sakin, display tipografisi yok */
+.home-rail--faz5-left .col-section-head__title--rail,
+.home-rail--faz5-mid .col-section-head__title--rail,
+.col-head-band--faz5-primary .col-section-head__title--rail {
+  font-family: var(--font-sans) !important;
+  font-size: clamp(0.98rem, 0.92rem + 0.16vw, 1.05rem) !important;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  color: color-mix(
+    in srgb,
+    var(--wordmark-ink) 86%,
+    var(--text-secondary) 14%
+  );
+}
+
+.home-rail--faz5-mid .home-index-row {
+  padding-top: 0.36rem;
+  padding-bottom: 0.4rem;
+}
+
 /* Sağ: ana okuma alanı */
 .col-head-band--faz5-primary .col-section-head__title {
   font-size: clamp(1.28rem, 1.15rem + 0.4vw, 1.42rem);
@@ -1905,7 +1950,7 @@ main > header .site-header-tagline--manifesto {
 
 .home-rail--faz5-primary
   .layout-feed-inner
-  nav[aria-label="Hafızaya eklenen maddeler"]
+  nav[aria-label="Hafızaya eklenen yazılar"]
   > .feed-entry-card:first-of-type
   .feed-entry-title--editorial {
   font-size: clamp(1.09rem, 1.02rem + 0.3vw, 1.2rem);
@@ -1915,7 +1960,7 @@ main > header .site-header-tagline--manifesto {
 
 .home-rail--faz5-primary
   .layout-feed-inner
-  nav[aria-label="Hafızaya eklenen maddeler"]
+  nav[aria-label="Hafızaya eklenen yazılar"]
   > .feed-entry-card:first-of-type {
   padding-top: 0.5rem;
   padding-bottom: 1.2rem;
@@ -1928,7 +1973,7 @@ main > header .site-header-tagline--manifesto {
 
 .home-rail--faz5-primary
   .layout-feed-inner
-  nav[aria-label="Hafızaya eklenen maddeler"]
+  nav[aria-label="Hafızaya eklenen yazılar"]
   > .feed-entry-card:not(:first-of-type)
   .feed-entry-title--editorial {
   font-size: clamp(0.98rem, 0.94rem + 0.15vw, 1.05rem);
@@ -1961,25 +2006,62 @@ main > header .site-header-tagline--manifesto {
   );
 }
 
+/* Görsel metin yalnız “Yazıyı aç” (bileşen kaynaklı metin ekranda gizli) */
 .home-rail--faz5-primary .feed-entry-cta {
+  position: relative;
   min-height: 1.4rem;
+  min-width: 6.75rem;
   display: inline-flex;
   align-items: center;
-  font-size: calc(var(--type-scale-meta) * 0.95);
+  justify-content: flex-end;
   padding: 0.1rem 0;
-  letter-spacing: 0.1em;
-  opacity: 0.85;
+  font-size: 0 !important;
+  letter-spacing: 0 !important;
+  line-height: 0 !important;
+  text-transform: none !important;
+  color: transparent !important;
+  opacity: 1;
+}
+
+.home-rail--faz5-primary .feed-entry-cta::after {
+  content: "Yazıyı aç →";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-sans);
+  font-size: calc(var(--type-scale-meta) * 0.95);
+  font-weight: 500;
+  line-height: var(--type-leading-meta);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  white-space: nowrap;
   color: color-mix(
     in srgb,
     var(--text-meta) 80%,
     var(--text-secondary) 20%
   );
+  opacity: 0.88;
+  pointer-events: none;
 }
 
-.home-rail--faz5-primary .feed-entry-card--editorial:hover .feed-entry-cta,
-.home-rail--faz5-primary .feed-entry-card--editorial:focus-within .feed-entry-cta {
-  opacity: 0.95;
+@media (max-width: 639.98px) {
+  .home-rail--faz5-primary .feed-entry-cta {
+    justify-content: flex-start;
+  }
+
+  .home-rail--faz5-primary .feed-entry-cta::after {
+    right: auto;
+    left: 0;
+  }
+}
+
+.home-rail--faz5-primary .feed-entry-card--editorial:hover .feed-entry-cta::after,
+.home-rail--faz5-primary
+  .feed-entry-card--editorial:focus-within
+  .feed-entry-cta::after {
   color: var(--text-secondary);
+  opacity: 0.96;
 }
 
 /* Scrollbar: daha hayalet (üç kolon) */
@@ -2015,16 +2097,6 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-/* --- FAZ 5.1 / FAZ 5.5: md–lg üç kolon yüksekliği serbest (tablet) --- */
-
-@media (min-width: 768px) and (max-width: 1023.98px) {
-  .home-page-editorial .home-editorial-cols {
-    height: auto;
-    max-height: none;
-    min-height: 0;
-  }
-}
-
 /* --- FAZ 5.4: sol/orta indeks satırı — snap + scroll; sağ: FAZ 5.5 --- */
 @media (min-width: 768px) {
   .home-editorial-cols
@@ -2052,7 +2124,7 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-/* --- FAZ 5.5: Hafızaya eklenenler — iç scroll yok, en fazla 3 entry, omurga yükseklik --- */
+/* --- FAZ 5.5: Hafızaya — md+ aynı omurgada; iç scroll, ~3-4 entry görünür, alt nefes --- */
 @media (min-width: 768px) {
   .home-page-editorial .home-editorial-cols > aside.home-rail--editorial-col {
     min-height: 0;
@@ -2063,36 +2135,38 @@ main > header .site-header-tagline--manifesto {
   .home-page-editorial
     .home-editorial-cols
     > .home-rail--feed-main.home-rail--editorial-col {
-    height: auto;
-    max-height: none;
     min-height: 0;
-    align-self: start;
+    align-self: stretch;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
   }
 
   .home-page-editorial .home-rail--feed-main .home-feed-rail--faz55 {
-    height: auto !important;
+    height: 100% !important;
     min-height: 0;
-    max-height: none;
-    flex: 0 1 auto;
+    max-height: 100%;
+    flex: 1 1 0%;
   }
 
   .home-page-editorial
     .home-rail--feed-main
     .home-feed-rail__body--faz55.home-rail-body--feed {
-    overflow: visible !important;
-    flex: 0 1 auto;
+    flex: 1 1 0% !important;
     min-height: 0;
-    max-height: none;
-    scroll-snap-type: none;
-    scroll-padding-bottom: 0;
-    overscroll-behavior: auto;
-    -webkit-overflow-scrolling: auto;
+    max-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: y proximity;
+    scroll-padding-bottom: 1.35rem;
   }
 
   .home-page-editorial
     .home-feed-rail__body--faz55
-    nav[aria-label="Hafızaya eklenen maddeler"] {
-    padding-bottom: 0.5rem;
+    nav[aria-label="Hafızaya eklenen yazılar"] {
+    padding-bottom: 1.5rem;
   }
 
   .home-page-editorial
@@ -2110,6 +2184,16 @@ main > header .site-header-tagline--manifesto {
     padding-bottom: 0.4rem;
     font-size: calc(var(--type-scale-meta) * 0.95);
     letter-spacing: 0.04em;
+    opacity: 0.9;
+  }
+
+  .feed-load-more--calm {
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    opacity: 0.72;
+  }
+
+  .feed-load-more--calm:hover {
     opacity: 0.9;
   }
 }
@@ -2251,7 +2335,7 @@ main > header .site-header-tagline--manifesto {
 
 .home-rail--faz5-primary
   .layout-feed-inner
-  nav[aria-label="Hafızaya eklenen maddeler"]
+  nav[aria-label="Hafızaya eklenen yazılar"]
   > .feed-entry-card:first-of-type
   .feed-entry-title--editorial {
   font-size: clamp(1.1rem, 1.04rem + 0.28vw, 1.22rem);
@@ -2260,7 +2344,7 @@ main > header .site-header-tagline--manifesto {
 
 .home-rail--faz5-primary
   .layout-feed-inner
-  nav[aria-label="Hafızaya eklenen maddeler"]
+  nav[aria-label="Hafızaya eklenen yazılar"]
   > .feed-entry-card:not(:first-of-type)
   .feed-entry-title--editorial {
   font-size: clamp(1.02rem, 0.97rem + 0.18vw, 1.08rem);
@@ -2364,6 +2448,35 @@ main > header .site-header-tagline--manifesto {
     var(--wordmark-ink) 92%,
     var(--text-secondary) 8%
   );
+}
+
+.home-explore--faz51 .home-explore-head--settled .col-section-head__title--explore {
+  font-family: var(--font-sans);
+  font-size: clamp(1rem, 0.95rem + 0.15vw, 1.1rem);
+  line-height: 1.32;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+  color: color-mix(
+    in srgb,
+    var(--wordmark-ink) 88%,
+    var(--text-secondary) 12%
+  );
+}
+
+.home-explore--faz51 .home-explore-panel-label {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: calc(var(--type-scale-meta) * 1.02);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  color: color-mix(
+    in srgb,
+    var(--text-secondary) 60%,
+    var(--text-muted) 40%
+  );
+  opacity: 0.9;
 }
 
 .home-explore--faz51 .home-explore-copy {

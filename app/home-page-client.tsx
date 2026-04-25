@@ -49,9 +49,6 @@ const LS_PENDING_ACTION = "pendingAction";
 /** Center feed pagination (initial + each “Daha fazla yükle” batch). */
 const FEED_PAGE_SIZE = 12;
 
-/** 3-kolon masaüstünde “Hafızaya eklenenler”: aynı anda en fazla bu kadar entry (iç scroll yok). */
-const HOME_RIGHT_COL_MAX = 3;
-
 /** Header orta alan — tek satır, yavaş dönen Atatürk sözleri. */
 const HEADER_ATATURK_QUOTES = [
   "Ne mutlu Türküm diyene!",
@@ -282,10 +279,6 @@ export default function HomePageClient({
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
-  /** Masaüstü grid: gösterilecek 3’lük pencere ofseti (0, 3, 6, …). */
-  const [rightColWindowStart, setRightColWindowStart] = useState(0);
-  /** md+ grid: yan/orta scroll kalır, sağ sütun 3 entry ile kilitlenir. */
-  const [homeGridDesktop, setHomeGridDesktop] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -680,18 +673,8 @@ export default function HomePageClient({
     };
   }, [isUserMenuOpen]);
 
-  useLayoutEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(min-width: 768px)");
-    const sync = () => setHomeGridDesktop(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-
   useEffect(() => {
     setFeedVisibleCount(FEED_PAGE_SIZE);
-    setRightColWindowStart(0);
   }, [searchQuery]);
 
   useEffect(() => {
@@ -1021,32 +1004,12 @@ export default function HomePageClient({
 
   const mainColumnDisplayEntries = useMemo(() => {
     const list = feedEntriesSearchFiltered;
-    if (homeGridDesktop) {
-      return list.slice(
-        rightColWindowStart,
-        rightColWindowStart + HOME_RIGHT_COL_MAX
-      );
-    }
     return list.slice(0, feedVisibleCount);
-  }, [
-    feedEntriesSearchFiltered,
-    homeGridDesktop,
-    rightColWindowStart,
-    feedVisibleCount,
-  ]);
+  }, [feedEntriesSearchFiltered, feedVisibleCount]);
 
   const feedHasMore = useMemo(
-    () =>
-      homeGridDesktop
-        ? rightColWindowStart + HOME_RIGHT_COL_MAX <
-          feedEntriesSearchFiltered.length
-        : feedVisibleCount < feedEntriesSearchFiltered.length,
-    [
-      homeGridDesktop,
-      rightColWindowStart,
-      feedVisibleCount,
-      feedEntriesSearchFiltered.length,
-    ]
+    () => feedVisibleCount < feedEntriesSearchFiltered.length,
+    [feedVisibleCount, feedEntriesSearchFiltered.length]
   );
 
   const copyEntryLink = (entryId: string, title: string, slug?: string | null) => {
@@ -1162,7 +1125,7 @@ export default function HomePageClient({
         <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-0 py-16 text-center md:py-20">
           <p className="feed-search-empty-title m-0">
             {hasSearch
-              ? "Aramana uygun madde yok."
+              ? "Aramana uygun yazı yok."
               : "Aramana uygun bir yazı bulunamadı."}
           </p>
           <p className="feed-search-empty-hint m-0 mt-3 max-w-[22rem] mx-auto">
@@ -1175,7 +1138,7 @@ export default function HomePageClient({
     }
     return (
       <div className="relative z-0 pb-5 md:pb-8">
-        <nav className="flex flex-col" aria-label="Hafızaya eklenen maddeler">
+        <nav className="flex flex-col" aria-label="Hafızaya eklenen yazılar">
           {mainColumnDisplayEntries.map((entry) => {
             const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
             const isActive = entry.id === effectiveEntryId;
@@ -1198,13 +1161,9 @@ export default function HomePageClient({
           <button
             type="button"
             onClick={() => {
-              if (homeGridDesktop) {
-                setRightColWindowStart((s) => s + HOME_RIGHT_COL_MAX);
-              } else {
-                setFeedVisibleCount((c) => c + FEED_PAGE_SIZE);
-              }
+              setFeedVisibleCount((c) => c + FEED_PAGE_SIZE);
             }}
-            className="feed-load-more feed-load-more--faz55 mt-6 w-full min-h-[3rem] border-0 bg-transparent py-3 text-center underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-primary)] hover:decoration-[color:var(--border-subtle)] md:mt-8 md:min-h-0 md:py-4"
+            className="feed-load-more feed-load-more--faz55 feed-load-more--calm mt-6 w-full min-h-[3rem] border-0 bg-transparent py-3 text-center underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-primary)] hover:decoration-[color:var(--border-subtle)] md:mt-6 md:min-h-0 md:py-3.5"
           >
             Daha fazla yazı yükle ↓
           </button>
@@ -1752,9 +1711,9 @@ export default function HomePageClient({
                 <div className="home-manifesto-search">
                   <label
                     htmlFor="feed-search-input"
-                    className="home-manifesto-utility home-manifesto-utility--search m-0"
+                    className="sr-only"
                   >
-                    Yazılarda ara
+                    Arama
                   </label>
                   <input
                     id="feed-search-input"
@@ -1772,7 +1731,7 @@ export default function HomePageClient({
             </div>
             {todayDiscoveryEntries.length > 0 ? (
               <section
-                className="today-discovery today-discovery--vitrin today-discovery--faz5"
+                className="today-discovery today-discovery--vitrin today-discovery--faz5 today-discovery--settled"
                 aria-labelledby="today-discovery-title"
               >
                 <div className="today-discovery-head">
@@ -1782,15 +1741,11 @@ export default function HomePageClient({
                   >
                     Bugün 61Larus’ta
                   </h2>
-                  <p className="today-discovery-copy m-0">
-                    Yeni eklenenlerden, çok konuşulanlara; Trabzon’un
-                    hafızasında kısa bir tur.
-                  </p>
                 </div>
                 <div
                   className="today-discovery-grid"
                   role="list"
-                  aria-label="Bugün vurgulanan maddeler"
+                  aria-label="Bugün vurgulanan yazılar"
                 >
                   {todayDiscoveryEntries.map((entry, index) => {
                     const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
@@ -1814,7 +1769,7 @@ export default function HomePageClient({
                           {entry.title}
                         </span>
                         <span className="today-discovery-meta">
-                          {cc > 0 ? `${cc} yorum` : "Yeni madde"}
+                          {cc > 0 ? `${cc} yorum` : "Yeni yazı"}
                         </span>
                       </button>
                     );
@@ -1828,14 +1783,10 @@ export default function HomePageClient({
               className="home-rail home-rail--awaiting home-rail--faz5-left home-rail--editorial-col home-rail--column await-col flex max-h-[42vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Yazılmayı bekleyenler"
             >
-              <div className="col-section-head col-head-band col-head-band--faz52-support home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
-                <p className="col-section-head__kicker">BEKLEYEN BAŞLIKLAR</p>
-                <h2 className="col-section-head__title m-0">
+              <div className="col-section-head col-head-band col-head-band--faz52-support col-head-band--settled home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
+                <h2 className="col-section-head__title col-section-head__title--rail m-0">
                   Yazılmayı bekleyenler
                 </h2>
-                <p className="col-section-head__micro m-0">
-                  Henüz yorum yok; ilk notu bırak.
-                </p>
               </div>
               <div className="home-rail-body home-rail-body--awaiting col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <nav
@@ -1878,14 +1829,10 @@ export default function HomePageClient({
               className="home-rail home-rail--trending home-rail--faz5-mid home-rail--editorial-col home-rail--column flex max-h-[40vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Şu an en çok konuşulanlar"
             >
-              <div className="col-section-head col-head-band col-head-band--faz52-support home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
-                <p className="col-section-head__kicker">GÜNDEMİN NABZI</p>
-                <h2 className="col-section-head__title m-0">
+              <div className="col-section-head col-head-band col-head-band--faz52-support col-head-band--settled col-head-band--trending home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
+                <h2 className="col-section-head__title col-section-head__title--rail m-0">
                   Şu an en çok konuşulanlar
                 </h2>
-                <p className="col-section-head__micro m-0">
-                  Yorum alan başlıklar öne çıkar.
-                </p>
               </div>
               <div className="home-rail-body home-rail-body--trending col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <nav
@@ -1929,19 +1876,15 @@ export default function HomePageClient({
             </aside>
             <main className="main-column home-rail--center home-rail--faz5-primary home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-auto md:min-h-0 md:max-h-none md:overflow-visible md:border-l md:border-[color:var(--editorial-hairline)] lg:min-h-0 lg:max-h-full lg:h-full lg:overflow-hidden">
               <div className="home-feed-rail home-feed-rail--faz55 layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-0 py-5 sm:py-6 md:h-auto md:min-h-0 md:flex-none md:py-0 lg:min-h-0 lg:max-h-full lg:h-full lg:flex-1">
-                <div className="col-section-head col-head-band col-head-band--feed col-head-band--faz5-primary home-feed-rail__head home-rail-header--col shrink-0">
-                  <p className="col-section-head__kicker">YENİ EKLENENLER</p>
+                <div className="col-section-head col-head-band col-head-band--feed col-head-band--faz5-primary col-head-band--settled col-head-band--hafiza home-feed-rail__head home-rail-header--col shrink-0">
                   <h2
-                    className="col-section-head__title m-0"
+                    className="col-section-head__title col-section-head__title--rail m-0"
                     id="main-feed-title"
                   >
                     Hafızaya eklenenler
                   </h2>
-                  <p className="col-section-head__micro m-0">
-                    Son eklenen maddeler burada akar.
-                  </p>
                 </div>
-                <div className="home-feed-rail__body home-feed-rail__body--faz55 home-rail-body home-rail-body--feed col-list-panel min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain max-md:left-scroll max-md:overscroll-contain md:flex-none md:min-h-0 md:overflow-visible md:overscroll-auto lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-contain">
+                <div className="home-feed-rail__body home-feed-rail__body--faz55 home-rail-body home-rail-body--feed col-list-panel min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain max-md:left-scroll max-md:overscroll-contain md:min-h-0 md:flex-1 md:overflow-y-auto md:overflow-x-hidden md:overscroll-contain lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-contain">
                   {renderMainFeed()}
                 </div>
               </div>
@@ -1954,25 +1897,20 @@ export default function HomePageClient({
                 className="home-explore home-explore--prefooter home-explore--after-main-columns home-explore--faz51"
                 aria-labelledby="home-explore-title"
               >
-                  <header className="col-section-head col-explore-section-head home-explore-head home-explore-head--section-start">
-                    <p className="col-section-head__kicker">KEŞİF</p>
+                  <header className="col-section-head col-explore-section-head home-explore-head home-explore-head--section-start col-head-band--settled home-explore-head--settled">
                     <h2
                       id="home-explore-title"
-                      className="col-section-head__title m-0"
+                      className="col-section-head__title col-section-head__title--explore m-0"
                     >
                       Trabzon&apos;u keşfetmeye devam et
                     </h2>
-                    <p className="home-explore-copy m-0">
-                      61Larus&apos;ta her başlık bir kapı açar; tarihten
-                      mahallelere, gündemden sofraya.
-                    </p>
                   </header>
                   <div className="home-explore-grid">
                     {starterEntries.length > 0 ? (
                       <div className="home-explore-panel home-explore-panel--starter">
                         <header className="col-section-head home-explore-panel-head">
-                          <h3 className="col-section-head__kicker m-0">
-                            TRABZON&apos;U ANLAMAK İÇİN BAŞLA
+                          <h3 className="home-explore-panel-label m-0">
+                            Trabzon&apos;u anlamak için
                           </h3>
                         </header>
                         <ul className="home-explore-list" role="list">
@@ -1993,7 +1931,7 @@ export default function HomePageClient({
                                   <span className="home-explore-item-meta">
                                     {cc > 0
                                       ? `${cc} yorum`
-                                      : "Yeni madde"}
+                                      : "Yeni yazı"}
                                   </span>
                                 </button>
                               </li>
@@ -2005,8 +1943,8 @@ export default function HomePageClient({
                     {waitingEntriesForExplore.length > 0 ? (
                       <div className="home-explore-panel home-explore-panel--waiting">
                         <header className="col-section-head home-explore-panel-head">
-                          <h3 className="col-section-head__kicker m-0">
-                            YAZILMAYI BEKLEYENLER
+                          <h3 className="home-explore-panel-label m-0">
+                            Yazılmayı bekleyenler
                           </h3>
                         </header>
                         <ul className="home-explore-list" role="list">
@@ -2033,8 +1971,8 @@ export default function HomePageClient({
                     {dailyQuestionEntry ? (
                       <div className="home-explore-panel home-explore-panel--question">
                         <header className="col-section-head home-explore-panel-head">
-                          <h3 className="col-section-head__kicker m-0">
-                            GÜNÜN SORUSU
+                          <h3 className="home-explore-panel-label m-0">
+                            Günün sorusu
                           </h3>
                         </header>
                         <button
@@ -2053,10 +1991,10 @@ export default function HomePageClient({
                               dailyQuestionEntry.id
                             ]?.length ?? 0) > 0
                               ? `${commentsByEntryIdLive[dailyQuestionEntry.id]?.length ?? 0} yorum`
-                              : "Yeni madde"}
+                              : "Yeni yazı"}
                           </span>
                           <span className="home-explore-cta">
-                            Maddeyi aç →
+                            Yazıyı aç →
                           </span>
                         </button>
                       </div>
