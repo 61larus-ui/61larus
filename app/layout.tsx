@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     google: "otK0EamJ7liIaIKzHTz4NKpVUbfYfdf9oGDZKBkYvpU",
   },
   icons: {
-    icon: "/favicon.png",
+    icon: "/favicon.png?v=2",
   },
 };
 
