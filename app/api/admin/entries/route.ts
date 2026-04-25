@@ -12,6 +12,10 @@ import {
   resolveVisibleName,
   type DisplayNameModePref,
 } from "@/lib/visible-name";
+import {
+  countPublicLiveEntries,
+  countPublicLiveEntriesSince,
+} from "@/lib/entry-public-live-count";
 
 type EntryListRow = {
   id: string;
@@ -108,22 +112,23 @@ export async function GET() {
     }
   }
 
-  const { count: rowCount, error: countError } = await service
-    .from("entries")
-    .select("id", { head: true, count: "exact" });
-  if (countError) {
-    logEntriesDebugPgErr("admin_entries_total", countError);
-  }
-
   const weekAgoIso = new Date(
     Date.now() - 7 * 24 * 60 * 60 * 1000
   ).toISOString();
-  const { count: recent7RowCount, error: recent7Error } = await service
-    .from("entries")
-    .select("id", { head: true, count: "exact" })
-    .gte("created_at", weekAgoIso);
-  if (recent7Error) {
-    logEntriesDebugPgErr("admin_entries_recent7", recent7Error);
+
+  const liveTotalRes = await countPublicLiveEntries(service);
+  const liveRecentRes = await countPublicLiveEntriesSince(
+    service,
+    weekAgoIso
+  );
+  if (liveTotalRes.error) {
+    logEntriesDebugPgErr("admin_public_live_entry_total", liveTotalRes.error);
+  }
+  if (liveRecentRes.error) {
+    logEntriesDebugPgErr(
+      "admin_public_live_entry_recent7",
+      liveRecentRes.error
+    );
   }
 
   let rows: EntryListRow[] = [];
@@ -219,19 +224,18 @@ export async function GET() {
     }
   }
 
-  const entryTotal =
-    !countError && typeof rowCount === "number" ? rowCount : rows.length;
-  const entryRecent7d =
-    !recent7Error && typeof recent7RowCount === "number"
-      ? recent7RowCount
-      : null;
+  const publicLiveEntryCount =
+    typeof liveTotalRes.count === "number" ? liveTotalRes.count : 0;
+  const publicLiveEntryRecent7d =
+    typeof liveRecentRes.count === "number" ? liveRecentRes.count : null;
 
   return NextResponse.json({
     ok: true,
     entries: rows,
     authorByEntryId,
-    entryTotal,
-    entryRecent7d,
+    publicLiveEntryCount,
+    publicLiveEntryRecent7d,
+    publicLiveCountMode: liveTotalRes.mode,
   });
 }
 

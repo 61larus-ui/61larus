@@ -190,8 +190,12 @@ export default function AdminPage() {
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
 
   const [entries, setEntries] = useState<EntryRow[]>([]);
-  const [entryTotal, setEntryTotal] = useState<number | null>(null);
-  const [entryRecent7d, setEntryRecent7d] = useState<number | null>(null);
+  const [publicLiveEntryCount, setPublicLiveEntryCount] = useState<
+    number | null
+  >(null);
+  const [publicLiveEntryRecent7d, setPublicLiveEntryRecent7d] = useState<
+    number | null
+  >(null);
   const [authorByEntryId, setAuthorByEntryId] = useState<Record<string, string>>(
     {}
   );
@@ -316,31 +320,34 @@ export default function AdminPage() {
         error?: string;
         entries?: EntryRow[];
         authorByEntryId?: Record<string, string>;
-        entryTotal?: number;
-        entryRecent7d?: number | null;
+        publicLiveEntryCount?: number;
+        publicLiveEntryRecent7d?: number | null;
       };
       if (!res.ok) {
         setEntries([]);
-        setEntryTotal(null);
-        setEntryRecent7d(null);
+        setPublicLiveEntryCount(null);
+        setPublicLiveEntryRecent7d(null);
         setAuthorByEntryId({});
         setListBanner(data.error ?? "Entry listesi alınamadı.");
         return;
       }
       setEntries(data.entries ?? []);
-      setEntryTotal(
-        typeof data.entryTotal === "number" && Number.isFinite(data.entryTotal)
-          ? data.entryTotal
-          : (data.entries ?? []).length
-      );
       if (
-        typeof data.entryRecent7d === "number" &&
-        Number.isFinite(data.entryRecent7d)
+        typeof data.publicLiveEntryCount === "number" &&
+        Number.isFinite(data.publicLiveEntryCount)
       ) {
-        setEntryRecent7d(data.entryRecent7d);
+        setPublicLiveEntryCount(data.publicLiveEntryCount);
+      } else {
+        setPublicLiveEntryCount((data.entries ?? []).length);
+      }
+      if (
+        typeof data.publicLiveEntryRecent7d === "number" &&
+        Number.isFinite(data.publicLiveEntryRecent7d)
+      ) {
+        setPublicLiveEntryRecent7d(data.publicLiveEntryRecent7d);
       } else {
         const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        setEntryRecent7d(
+        setPublicLiveEntryRecent7d(
           (data.entries ?? []).filter(
             (e) => new Date(e.created_at).getTime() >= weekAgo
           ).length
@@ -349,8 +356,8 @@ export default function AdminPage() {
       setAuthorByEntryId(data.authorByEntryId ?? {});
     } catch {
       setEntries([]);
-      setEntryTotal(null);
-      setEntryRecent7d(null);
+      setPublicLiveEntryCount(null);
+      setPublicLiveEntryRecent7d(null);
       setAuthorByEntryId({});
       setListBanner("Ağ hatası.");
     } finally {
@@ -609,8 +616,8 @@ export default function AdminPage() {
     await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
     setSessionOk(false);
     setEntries([]);
-    setEntryTotal(null);
-    setEntryRecent7d(null);
+    setPublicLiveEntryCount(null);
+    setPublicLiveEntryRecent7d(null);
     setPlatformMembers([]);
     setMembersError(null);
     setAdminUsername(null);
@@ -962,15 +969,17 @@ export default function AdminPage() {
   }
 
   const stats = useMemo(() => {
-    const n = entryTotal !== null ? entryTotal : entries.length;
+    const n = publicLiveEntryCount !== null ? publicLiveEntryCount : 0;
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const recentFromList = entries.filter(
       (e) => new Date(e.created_at).getTime() >= weekAgo
     ).length;
     const recent =
-      entryRecent7d !== null ? entryRecent7d : recentFromList;
+      publicLiveEntryRecent7d !== null
+        ? publicLiveEntryRecent7d
+        : recentFromList;
     return { n, recent };
-  }, [entries, entryTotal, entryRecent7d]);
+  }, [entries, publicLiveEntryCount, publicLiveEntryRecent7d]);
 
   const justPublishedLiveUrl = useMemo(() => {
     if (!justPublishedEntry) return null;
@@ -1111,7 +1120,7 @@ export default function AdminPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-            <p className="admin-stat-label">Toplam başlık</p>
+            <p className="admin-stat-label">Canlı yayındaki entry</p>
             <p className="admin-stat-value">{stats.n}</p>
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
