@@ -1706,27 +1706,27 @@ export default function HomePageClient({
               </div>
             ) : null}
             <div className="home-page-editorial home-page-editorial--section-stack">
-            <div className="home-manifesto home-manifesto--bridge home-search-bridge">
-              <div className="home-manifesto-inner home-manifesto-inner--bridge home-search-field">
-                <div className="home-manifesto-search">
-                  <label
-                    htmlFor="feed-search-input"
-                    className="sr-only"
-                  >
-                    Arama
-                  </label>
-                  <input
-                    id="feed-search-input"
-                    name="q"
-                    type="search"
-                    className="home-manifesto-input home-manifesto-input--premium"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Başlık ara…"
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </div>
+            <div
+              className="home-manifesto home-manifesto--bridge home-search-bridge home-manifesto-inner--bridge home-search-field"
+            >
+              <div className="home-manifesto-search">
+                <label
+                  htmlFor="feed-search-input"
+                  className="sr-only"
+                >
+                  Arama
+                </label>
+                <input
+                  id="feed-search-input"
+                  name="q"
+                  type="search"
+                  className="home-manifesto-input home-manifesto-input--premium"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Başlık ara…"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
               </div>
             </div>
             {todayDiscoveryEntries.length > 0 ? (

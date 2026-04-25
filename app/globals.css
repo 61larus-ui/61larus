@@ -168,12 +168,15 @@
   --home-container-px: 1rem; /* 16px mobil */
   /* Büyük blok aralıkları: mobil 28 / tablet 32 / masaüstü 48 (px) */
   --home-section-gap: 1.75rem;
+  /* Header alt çizgisinden arama input’a: sıkı üst akış (~18px mob, ~24px desk) */
+  --home-header-below-gap: 1.125rem;
 }
 
 @media (min-width: 768px) {
   :root {
     --home-container-px: 1.25rem; /* 20px tablet */
     --home-section-gap: 2rem;
+    --home-header-below-gap: 1.25rem;
   }
 }
 
@@ -181,6 +184,7 @@
   :root {
     --home-container-px: 1.5rem; /* 24px desktop */
     --home-section-gap: 3rem;
+    --home-header-below-gap: 1.5rem;
   }
 }
 
@@ -827,27 +831,29 @@ h3.col-section-head__kicker {
 
 main > header.site-header .headerBlock.home-page-container {
   padding-top: 1rem;
-  padding-bottom: 0.85rem;
+  /* Alt nefes: site-header padding’i ile çifte kaçırma; çizgi site-header’da */
+  padding-bottom: 0.5rem;
 }
 
 @media (min-width: 768px) {
   main > header.site-header .headerBlock.home-page-container {
     padding-top: 1.1rem;
-    padding-bottom: 1rem;
+    padding-bottom: 0.55rem;
   }
 }
 
 main > header.site-header {
-  margin-bottom: var(--home-section-gap) !important;
-  padding-bottom: 0.85rem !important;
+  margin-bottom: var(--home-header-below-gap) !important;
+  /* headerBlock zaten alt nefes veriyor; çizgi hemen içerik altında */
+  padding-bottom: 0 !important;
   /* Tek, çok soluk çizgi (section üst çizgisi kapatıldı) */
   border-bottom: 1px solid var(--editorial-hairline) !important;
 }
 
 @media (min-width: 768px) {
   main > header.site-header {
-    margin-bottom: var(--home-section-gap) !important;
-    padding-bottom: 1rem !important;
+    margin-bottom: var(--home-header-below-gap) !important;
+    padding-bottom: 0 !important;
   }
 }
 
@@ -934,7 +940,7 @@ main > header .site-header-tagline--manifesto {
   gap: var(--home-section-gap);
 }
 
-/* --- Ana sayfa: manifesto — header ile “Bugün” arasında sessiz geçit --- */
+/* --- Arama dışı manifesto: eski hero padding’i (köprü sınıfı ile sıfırlanır) --- */
 .home-manifesto {
   width: 100%;
   max-width: 100%;
@@ -952,6 +958,14 @@ main > header .site-header-tagline--manifesto {
   padding-right: 0 !important;
 }
 
+/* Sadece arama: hero/manifesto üst boşluğu yok, header’a yapışık */
+.home-page-editorial--section-stack
+  .home-search-bridge.home-manifesto--bridge.home-search-field,
+.home-page-editorial--section-stack
+  .home-search-bridge.home-manifesto--bridge {
+  margin-top: 0;
+}
+
 @media (min-width: 640px) {
   .home-manifesto {
     padding: 1rem 1.35rem 0.42rem;
@@ -964,24 +978,24 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-/* Köprü: arama — alt çizgi yok; blok aralığı .home-page-editorial--section-stack gap */
+/* Köprü: arama — üst padding yok; alt çizgi yok; gap sonraki bloklarda */
 .home-search-bridge.home-manifesto--bridge {
-  padding-top: 0.35rem !important;
-  padding-bottom: 0.4rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0.35rem !important;
   border-bottom: 0;
 }
 
 @media (min-width: 640px) {
   .home-search-bridge.home-manifesto--bridge {
-    padding-top: 0.42rem !important;
-    padding-bottom: 0.5rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 0.4rem !important;
   }
 }
 
 @media (min-width: 1024px) {
   .home-search-bridge.home-manifesto--bridge {
-    padding-top: 0.45rem !important;
-    padding-bottom: 0.55rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 0.45rem !important;
   }
 }
 
