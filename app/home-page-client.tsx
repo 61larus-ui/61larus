@@ -1908,11 +1908,11 @@ export default function HomePageClient({
                 className="home-explore home-explore--prefooter"
                 aria-labelledby="home-explore-title"
               >
-                  <header className="home-explore-head">
-                    <p className="home-explore-kicker">Keşif</p>
+                  <header className="col-section-head col-explore-section-head home-explore-head">
+                    <p className="col-section-head__kicker">KEŞİF</p>
                     <h2
                       id="home-explore-title"
-                      className="home-explore-title m-0"
+                      className="col-section-head__title m-0"
                     >
                       Trabzon&apos;u keşfetmeye devam et
                     </h2>
@@ -1924,9 +1924,11 @@ export default function HomePageClient({
                   <div className="home-explore-grid">
                     {starterEntries.length > 0 ? (
                       <div className="home-explore-panel home-explore-panel--starter">
-                        <h3 className="home-explore-panel-title">
-                          Trabzon&apos;u anlamak için başla
-                        </h3>
+                        <header className="col-section-head home-explore-panel-head">
+                          <h3 className="col-section-head__kicker m-0">
+                            TRABZON&apos;U ANLAMAK İÇİN BAŞLA
+                          </h3>
+                        </header>
                         <ul className="home-explore-list" role="list">
                           {starterEntries.map((entry) => {
                             const cc =
@@ -1956,9 +1958,11 @@ export default function HomePageClient({
                     ) : null}
                     {waitingEntriesForExplore.length > 0 ? (
                       <div className="home-explore-panel home-explore-panel--waiting">
-                        <h3 className="home-explore-panel-title">
-                          Yazılmayı bekleyenler
-                        </h3>
+                        <header className="col-section-head home-explore-panel-head">
+                          <h3 className="col-section-head__kicker m-0">
+                            YAZILMAYI BEKLEYENLER
+                          </h3>
+                        </header>
                         <ul className="home-explore-list" role="list">
                           {waitingEntriesForExplore.map((entry) => (
                             <li key={entry.id}>
@@ -1982,9 +1986,11 @@ export default function HomePageClient({
                     ) : null}
                     {dailyQuestionEntry ? (
                       <div className="home-explore-panel home-explore-panel--question">
-                        <h3 className="home-explore-panel-title">
-                          Günün sorusu
-                        </h3>
+                        <header className="col-section-head home-explore-panel-head">
+                          <h3 className="col-section-head__kicker m-0">
+                            GÜNÜN SORUSU
+                          </h3>
+                        </header>
                         <button
                           type="button"
                           className="home-explore-question"
@@ -2016,7 +2022,7 @@ export default function HomePageClient({
 
             <footer
               id="site-footer"
-              className="site-footer mt-0 px-5 md:px-10"
+              className="site-footer home-page-footer home-page-footer--after-explore px-5 md:px-10"
             >
               <div className="mx-auto flex max-w-[80rem] flex-col gap-7 md:flex-row md:items-baseline md:justify-between md:gap-8">
                 <button
