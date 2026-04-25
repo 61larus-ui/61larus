@@ -109,10 +109,7 @@ export async function GET() {
     }
   }
 
-  const liveTotalRes = await countPublicLiveEntries(service);
-  if (liveTotalRes.error) {
-    logEntriesDebugPgErr("admin_public_live_entry_total", liveTotalRes.error);
-  }
+  const publicLiveEntryCount = await countPublicLiveEntries(service);
 
   let rows: EntryListRow[] = [];
   const withCat = await service
@@ -207,15 +204,11 @@ export async function GET() {
     }
   }
 
-  const publicLiveEntryCount =
-    typeof liveTotalRes.count === "number" ? liveTotalRes.count : 0;
-
   return NextResponse.json({
     ok: true,
     entries: rows,
     authorByEntryId,
     publicLiveEntryCount,
-    publicLiveCountMode: liveTotalRes.mode,
   });
 }
 
