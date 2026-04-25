@@ -1561,7 +1561,7 @@ export default function HomePageClient({
 
   return (
     <main className="relative flex min-h-screen w-full max-w-full flex-col bg-transparent text-[color:var(--text-primary)] antialiased">
-      <header className="site-header relative z-20 mb-7 shrink-0 pb-5 md:mb-8 md:pb-7">
+      <header className="site-header relative z-20 shrink-0">
         <div className="headerBlock">
           <div className="headerBar min-w-0">
             <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(21rem,100%)]">
@@ -1731,14 +1731,14 @@ export default function HomePageClient({
                 üzerinden bize ulaşabilirsin.
               </div>
             ) : null}
-            <div className="home-manifesto">
-              <div className="home-manifesto-inner">
-                <h2 className="home-manifesto-title m-0">61Larus</h2>
-                <p className="home-manifesto-subtitle m-0">
-                  Trabzon&apos;un yaşayan şehir ansiklopedisi
-                </p>
+            <div className="home-page-editorial">
+            <div className="home-manifesto home-manifesto--bridge">
+              <div className="home-manifesto-inner home-manifesto-inner--bridge">
                 <div className="home-manifesto-search">
-                  <label htmlFor="feed-search-input" className="sr-only">
+                  <label
+                    htmlFor="feed-search-input"
+                    className="home-manifesto-utility m-0"
+                  >
                     Yazılarda ara
                   </label>
                   <input
@@ -1753,14 +1753,11 @@ export default function HomePageClient({
                     spellCheck={false}
                   />
                 </div>
-                <p className="home-manifesto-prompt m-0">
-                  Bugün burada ne öğrenebilirim?
-                </p>
               </div>
             </div>
             {todayDiscoveryEntries.length > 0 ? (
               <section
-                className="today-discovery"
+                className="today-discovery today-discovery--vitrin"
                 aria-labelledby="today-discovery-title"
               >
                 <div className="today-discovery-head">
@@ -1810,7 +1807,7 @@ export default function HomePageClient({
                 </div>
               </section>
             ) : null}
-            <div className="home-content-grid home-content-grid--editorial flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(0,2.5fr)_minmax(11rem,0.95fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(11.5rem,0.95fr)_minmax(0,2.5fr)_minmax(11.5rem,0.95fr)]">
+            <div className="home-content-grid home-content-grid--editorial home-content-grid--flow flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(0,2.5fr)_minmax(11rem,0.95fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(11.5rem,0.95fr)_minmax(0,2.5fr)_minmax(11.5rem,0.95fr)]">
             <aside
               className="home-rail home-rail--trending flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-[calc(100dvh-6rem)] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Şu an en çok konuşulanlar"
@@ -1992,7 +1989,7 @@ export default function HomePageClient({
 
             {hasHomeExplore ? (
               <section
-                className="home-explore"
+                className="home-explore home-explore--prefooter"
                 aria-labelledby="home-explore-title"
               >
                   <header className="home-explore-head">
@@ -2099,6 +2096,7 @@ export default function HomePageClient({
                   </div>
               </section>
             ) : null}
+            </div>
 
             <footer
               id="site-footer"
