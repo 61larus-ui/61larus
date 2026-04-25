@@ -1897,7 +1897,7 @@ export default function HomePageClient({
                     Son eklenen maddeler burada akar.
                   </p>
                 </div>
-                <div className="home-feed-rail__body home-rail-body home-rail-body--feed col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 md:min-h-0 md:pb-3">
+                <div className="home-feed-rail__body home-rail-body home-rail-body--feed col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain md:min-h-0">
                   {renderMainFeed()}
                 </div>
               </div>

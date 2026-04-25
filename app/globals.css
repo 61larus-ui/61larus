@@ -1363,10 +1363,14 @@ main > header .site-header-tagline--manifesto {
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    /* FAZ 5.4: yarım satır / kesilen entry azalt */
+    scroll-snap-type: y proximity;
+    scroll-padding-bottom: 1.25rem;
+    overscroll-behavior: contain;
   }
 
   .home-editorial-cols .col-list-panel .home-rail-nav {
-    padding: 0.7rem 0.75rem 1.1rem !important;
+    padding: 0.7rem 0.75rem 1.35rem !important;
   }
 
   .home-editorial-cols
@@ -2009,12 +2013,45 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-/* --- FAZ 5.1: daha sakin yoğunluk, ferah nefes, keşif/footer hizası --- */
+/* --- FAZ 5.1: daha sakin yoğunluk; FAZ 5.4: 2–3 tam entry’lik görünür kaydırma alanı --- */
 
 @media (min-width: 768px) {
   .home-page-editorial .home-editorial-cols {
-    height: min(30rem, 55vh);
-    max-height: min(30rem, 55vh);
+    height: min(39rem, 76vh);
+    max-height: min(39rem, 76vh);
+  }
+}
+
+/* --- FAZ 5.4: entry kesilmesin, kolonlar temiz scroll; mobil doğal akış (md+ kilit) --- */
+@media (min-width: 768px) {
+  .home-editorial-cols
+    .home-rail--faz5-primary
+    .feed-entry-card.feed-entry-card--editorial {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .home-editorial-cols .home-index-row {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .home-editorial-cols
+    .home-rail--feed-main
+    .home-feed-rail__body.col-list-panel {
+    padding-bottom: 1.2rem !important;
+  }
+
+  .home-editorial-cols
+    .home-feed-rail__body
+    nav[aria-label="Hafızaya eklenen maddeler"] {
+    padding-bottom: 0.35rem;
   }
 }
 
