@@ -45,11 +45,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      { url: "/favicon-final.png?v=30", type: "image/png" },
+      { url: "/favicon.ico?v=50" },
+      { url: "/favicon-final.png?v=50", type: "image/png" },
     ],
-    shortcut: "/favicon.ico",
-    apple: "/favicon-final.png?v=30",
+    shortcut: "/favicon.ico?v=50",
+    apple: "/favicon-final.png?v=50",
   },
 };
 
@@ -64,9 +64,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${libreBaskerville.variable} h-full antialiased`}
     >
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" href="/favicon-final.png?v=30" />
-        <link rel="apple-touch-icon" href="/favicon-final.png?v=30" />
+        <link rel="icon" href="/favicon.ico?v=50" sizes="any" />
+        <link rel="icon" type="image/png" href="/favicon-final.png?v=50" />
+        <link rel="apple-touch-icon" href="/favicon-final.png?v=50" />
       </head>
       <body className="flex min-h-full flex-col overflow-x-hidden">
         <div className="app-shell mx-auto flex w-full max-w-[min(88rem,100%)] flex-col px-5 pb-10 pt-5 md:px-10 md:pb-12 md:pt-7 lg:px-14">
