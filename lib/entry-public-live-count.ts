@@ -1,4 +1,8 @@
-export async function countPublicLiveEntries(supabase: any) {
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+export async function countPublicLiveEntries(
+  supabase: SupabaseClient
+) {
   const { count, error } = await supabase
     .from("entries")
     .select("*", { count: "exact", head: true });

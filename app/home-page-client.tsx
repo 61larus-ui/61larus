@@ -1421,8 +1421,8 @@ export default function HomePageClient({
                   61Larus
                 </button>
               </h1>
-              <p className="site-header-tagline m-0">
-                Trabzon’un gündemi, lafı ve hafızası
+              <p className="site-header-tagline m-0 site-header-tagline--manifesto">
+                TRABZON&apos;UN GÜNDEMİ, LAFI VE HAFIZASI
               </p>
             </div>
           <div
@@ -1576,6 +1576,37 @@ export default function HomePageClient({
                 üzerinden bize ulaşabilirsin.
               </div>
             ) : null}
+            <div className="home-manifesto">
+              <h2 className="home-manifesto-title m-0">61Larus</h2>
+              <p className="home-manifesto-subtitle m-0">
+                Trabzon&apos;un yaşayan şehir ansiklopedisi
+              </p>
+              <div className="home-manifesto-copy">
+                <p>
+                  Trabzon hakkında merak edilen her şey burada birikir.
+                </p>
+                <p>Okuyanlar öğrenir, yazanlar iz bırakır.</p>
+              </div>
+              <div className="home-manifesto-search">
+                <label htmlFor="feed-search-input" className="sr-only">
+                  Yazılarda ara
+                </label>
+                <input
+                  id="feed-search-input"
+                  name="q"
+                  type="search"
+                  className="home-manifesto-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Başlık ara…"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+              </div>
+              <p className="home-manifesto-prompt m-0">
+                Bugün burada ne öğrenebilirim?
+              </p>
+            </div>
             <div className="home-content-grid flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(0,2.5fr)_minmax(11rem,0.95fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(11.5rem,0.95fr)_minmax(0,2.5fr)_minmax(11.5rem,0.95fr)]">
             <aside
               className="flex max-h-[36vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--divide-hair)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-[calc(100dvh-6rem)] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--divide-hair)]"
@@ -1648,23 +1679,7 @@ export default function HomePageClient({
               </div>
             </aside>
             <main className="main-column relative min-w-0 w-full bg-transparent md:border-x md:border-[color:var(--divide-hair)]">
-              <div className="layout-feed-inner mx-auto w-full max-w-none px-4 py-5 sm:px-5 sm:py-6 md:px-7 md:py-7 lg:px-9">
-                <div className="feedSearchBar">
-                  <label htmlFor="feed-search-input" className="sr-only">
-                    Yazılarda ara
-                  </label>
-                  <input
-                    id="feed-search-input"
-                    name="q"
-                    type="search"
-                    className="feedSearchInput"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="İstediğin başlığı ara"
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </div>
+              <div className="layout-feed-inner layout-feed-inner--post-manifesto mx-auto w-full max-w-none px-4 py-5 sm:px-5 sm:py-6 md:px-7 md:py-7 lg:px-9">
                 {renderMainFeed()}
               </div>
             </main>

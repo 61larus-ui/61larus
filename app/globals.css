@@ -432,6 +432,186 @@ main > header .site-header-tagline,
   }
 }
 
+/* Üst bant: uzun büyük harf slogan (manifesto fazı) */
+main > header .site-header-tagline--manifesto {
+  max-width: min(100%, 22.5rem);
+  letter-spacing: 0.1em;
+}
+
+/* --- Ana sayfa: manifesto kahraman (görselsiz editoryal giriş) --- */
+.home-manifesto {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 1.75rem 1.25rem 2.5rem;
+  border-bottom: 1px solid var(--editorial-hairline);
+  background: transparent;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .home-manifesto {
+    padding: 2rem 1.75rem 2.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-manifesto {
+    padding: 2.35rem 2.5rem 3rem;
+    max-width: min(48rem, 100%);
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.home-manifesto-title {
+  font-family: var(--font-editorial-display);
+  font-size: clamp(2.35rem, 5.2vw, 3.15rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+  color: var(--wordmark-ink);
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+.home-manifesto-subtitle {
+  margin-top: 0.65rem !important;
+  font-family: var(--font-ui);
+  font-size: clamp(0.9375rem, 1.4vw, 1.0625rem);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--text-secondary) 88%, var(--text-muted) 12%);
+  max-width: 36rem;
+}
+
+@media (min-width: 768px) {
+  .home-manifesto-subtitle {
+    margin-top: 0.75rem !important;
+  }
+}
+
+.home-manifesto-copy {
+  margin-top: 1.35rem;
+  max-width: 32rem;
+}
+
+.home-manifesto-copy p {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-ui);
+  font-size: clamp(0.875rem, 1.12vw, 0.9375rem);
+  font-weight: 400;
+  line-height: 1.64;
+  letter-spacing: 0.012em;
+  color: var(--text-secondary);
+}
+
+.home-manifesto-copy p:last-child {
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .home-manifesto-copy {
+    margin-top: 1.5rem;
+  }
+}
+
+.home-manifesto-search {
+  margin-top: 1.85rem;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .home-manifesto-search {
+    margin-top: 2rem;
+    max-width: min(36rem, 100%);
+  }
+}
+
+.home-manifesto-input {
+  display: block;
+  width: 100%;
+  margin: 0;
+  min-height: 3.1rem;
+  padding: 0.65rem 1.15rem;
+  border: 1px solid var(--editorial-hairline);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 1.0625rem;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  box-shadow: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+@media (min-width: 768px) {
+  .home-manifesto-input {
+    min-height: 3.25rem;
+    font-size: 1.125rem;
+    padding: 0.72rem 1.25rem;
+  }
+}
+
+.home-manifesto-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.65;
+}
+
+.home-manifesto-input:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--divide) 50%,
+    var(--editorial-hairline) 50%
+  );
+}
+
+.home-manifesto-input:focus {
+  outline: none;
+  border-color: color-mix(
+    in srgb,
+    var(--accent-green-line) 35%,
+    var(--divide) 65%
+  );
+  background: var(--bg-secondary);
+  box-shadow: none;
+}
+
+.home-manifesto-prompt {
+  margin-top: 0.9rem !important;
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  max-width: 32rem;
+  opacity: 0.9;
+}
+
+@media (min-width: 768px) {
+  .home-manifesto-prompt {
+    margin-top: 1rem !important;
+  }
+}
+
+.layout-feed-inner--post-manifesto {
+  padding-top: 0.5rem !important;
+}
+
+@media (min-width: 768px) {
+  .layout-feed-inner--post-manifesto {
+    padding-top: 0.65rem !important;
+  }
+}
+
 main > section.border-y {
   /* Header altı ile çift çizgi yok; alt sınır tek saç teli */
   border-top: none !important;
@@ -1273,13 +1453,13 @@ aside[aria-label="Yayın paneli"] nav button.group {
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: var(--font-ui);
-  font-size: clamp(0.71875rem, 0.9vw, 0.8125rem);
+  font-size: clamp(0.65625rem, 0.82vw, 0.75rem);
   font-weight: 400;
   font-style: normal;
-  line-height: 1.4;
-  letter-spacing: 0.014em;
-  color: var(--text-meta);
-  opacity: 0.72;
+  line-height: 1.45;
+  letter-spacing: 0.012em;
+  color: var(--text-muted);
+  opacity: 0.52;
   animation: site-header-editorial-soft-in 1.35s ease-out forwards;
 }
 
@@ -1289,7 +1469,7 @@ aside[aria-label="Yayın paneli"] nav button.group {
     transform: translateY(1px);
   }
   to {
-    opacity: 0.72;
+    opacity: 0.52;
     transform: translateY(0);
   }
 }
@@ -2763,6 +2943,20 @@ aside[aria-label="Yayın paneli"] .right-block {
     font-size: 12px;
     color: rgba(15, 23, 42, 0.58);
     white-space: nowrap;
+  }
+
+  .home-manifesto {
+    padding: 1.2rem 0 1.75rem;
+    max-width: 100%;
+  }
+
+  .home-manifesto-title {
+    font-size: clamp(1.95rem, 6.5vw, 2.45rem);
+  }
+
+  .home-manifesto-input {
+    min-height: 2.9rem;
+    font-size: 1rem;
   }
 
   .home-content-grid,
