@@ -1748,7 +1748,6 @@ export default function HomePageClient({
                   aria-label="Bugün vurgulanan yazılar"
                 >
                   {todayDiscoveryEntries.map((entry, index) => {
-                    const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
                     const num = String(index + 1).padStart(2, "0");
                     return (
                       <button
@@ -1767,9 +1766,6 @@ export default function HomePageClient({
                         </span>
                         <span className="today-discovery-title">
                           {entry.title}
-                        </span>
-                        <span className="today-discovery-meta">
-                          {cc > 0 ? `${cc} yorum` : "Yeni yazı"}
                         </span>
                       </button>
                     );

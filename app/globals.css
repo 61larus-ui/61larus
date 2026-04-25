@@ -928,7 +928,7 @@ main > header .site-header-tagline--manifesto {
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 0.85rem 1.1rem 0.5rem;
+  padding: 0.85rem 1.1rem 0.38rem;
   box-sizing: border-box;
   border: 0;
   background: transparent;
@@ -943,35 +943,35 @@ main > header .site-header-tagline--manifesto {
 
 @media (min-width: 640px) {
   .home-manifesto {
-    padding: 1rem 1.35rem 0.55rem;
+    padding: 1rem 1.35rem 0.42rem;
   }
 }
 
 @media (min-width: 1024px) {
   .home-manifesto {
-    padding: 1.1rem 1.75rem 0.6rem;
+    padding: 1.1rem 1.75rem 0.45rem;
   }
 }
 
 /* Köprü: arama şeridi — geniş, premium; hero değil */
 .home-search-bridge.home-manifesto--bridge {
-  padding-top: 0.4rem !important;
-  padding-bottom: 0.55rem !important;
+  padding-top: 0.35rem !important;
+  padding-bottom: 0.4rem !important;
   border-bottom: 1px solid
     color-mix(in srgb, var(--editorial-hairline) 68%, transparent);
 }
 
 @media (min-width: 640px) {
   .home-search-bridge.home-manifesto--bridge {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.65rem !important;
+    padding-top: 0.42rem !important;
+    padding-bottom: 0.5rem !important;
   }
 }
 
 @media (min-width: 1024px) {
   .home-search-bridge.home-manifesto--bridge {
-    padding-top: 0.55rem !important;
-    padding-bottom: 0.75rem !important;
+    padding-top: 0.45rem !important;
+    padding-bottom: 0.55rem !important;
   }
 }
 
@@ -1260,8 +1260,8 @@ main > header .site-header-tagline--manifesto {
   max-width: 100%;
   position: relative;
   z-index: 0;
-  /* ~32–40px: kolon bantı bitti; keşif ayrı bir bölüm */
-  padding-bottom: 2.25rem;
+  /* Kolon bantı → keşif: kontrollü nefes */
+  padding-bottom: 1.65rem;
   box-sizing: border-box;
   /* Kolon listelerinin taşmasını keşif alanına sızdırmaz (scroll kendi panellerinde) */
   overflow: hidden;
@@ -1269,8 +1269,7 @@ main > header .site-header-tagline--manifesto {
 
 @media (min-width: 768px) {
   .home-main-columns-wrap {
-    /* ~48–64px arası editorial boşluk */
-    padding-bottom: clamp(3rem, 4.5vw, 4rem);
+    padding-bottom: clamp(2.2rem, 3.2vw, 2.85rem);
   }
 }
 
@@ -1888,6 +1887,56 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
+/* Bugün strip — etiketsiz satırlar, alçak hücre, blok aralığı */
+.home-page-editorial .today-strip.today-discovery--faz5 {
+  padding-top: 0.38rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+@media (min-width: 1024px) {
+  .home-page-editorial .today-strip.today-discovery--faz5 {
+    padding-top: 0.42rem !important;
+    padding-bottom: 0.55rem !important;
+  }
+}
+
+.today-strip.today-discovery--settled .today-discovery-head {
+  margin-bottom: 0.35rem;
+}
+
+.today-strip .today-discovery--faz5 .today-discovery-number {
+  margin-bottom: 0.12rem;
+}
+
+.today-strip .today-discovery--faz5 .today-discovery-title {
+  margin-bottom: 0;
+}
+
+.today-strip .today-discovery--faz5 .today-discovery-item {
+  min-height: 0 !important;
+  padding: 0.38rem 0.5rem 0.42rem !important;
+}
+
+@media (min-width: 1024px) {
+  .today-strip .today-discovery--faz5 .today-discovery-item {
+    min-height: 2.65rem !important;
+    padding: 0.36rem 0.4rem 0.38rem !important;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .today-strip .today-discovery--faz5 .today-discovery-item {
+    min-height: 3.1rem !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .today-strip .today-discovery--faz5 .today-discovery-item {
+    min-height: 3rem !important;
+    padding: 0.38rem 0.55rem 0.4rem !important;
+  }
+}
+
 /* --- FAZ 5: üç kolon — sol indeks, orta akış, sağ ana okuma --- */
 .col-head-band--faz52-support .col-section-head__micro {
   display: -webkit-box;
@@ -2319,7 +2368,7 @@ main > header .site-header-tagline--manifesto {
   .home-page-editorial
     .home-main-columns-wrap--faz56
     + .home-explore--prefooter.home-explore {
-    margin-top: clamp(3rem, 3.5vw, 4rem);
+    margin-top: clamp(1.9rem, 2.4vw, 2.5rem);
   }
 }
 
@@ -2332,7 +2381,7 @@ main > header .site-header-tagline--manifesto {
   .home-page-editorial
     .home-main-columns-wrap--faz56
     + .home-explore--prefooter.home-explore {
-    margin-top: clamp(2.75rem, 3.2vw, 3.5rem);
+    margin-top: clamp(1.75rem, 2.2vw, 2.35rem);
   }
 }
 
@@ -2490,19 +2539,19 @@ main > header .site-header-tagline--manifesto {
     var(--editorial-hairline) 72%,
     transparent
   );
-  padding-top: 0.65rem;
-  padding-bottom: 2rem;
+  padding-top: 0.5rem;
+  padding-bottom: 1.75rem;
 }
 
 @media (min-width: 768px) {
   .home-explore--faz51.home-explore {
-    padding: 0.75rem 0 2.35rem;
+    padding: 0.6rem 0 1.9rem;
   }
 }
 
 @media (min-width: 1024px) {
   .home-explore--faz51.home-explore {
-    padding-bottom: 2.65rem;
+    padding-bottom: 2.1rem;
   }
 }
 
@@ -2615,18 +2664,18 @@ main
   border-top: 1px solid
     color-mix(in srgb, var(--editorial-hairline) 88%, transparent);
   /* Üst: hairline + yeni bölüm nefesi (kolonlardan ayrı section hissi) */
-  padding: 0.75rem 0 1.5rem;
+  padding: 0.6rem 0 1.35rem;
 }
 
 @media (min-width: 768px) {
   .home-explore {
-    padding: 0.85rem 0 1.65rem;
+    padding: 0.7rem 0 1.5rem;
   }
 }
 
 @media (min-width: 1024px) {
   .home-explore {
-    padding: 0.9rem 0 1.9rem;
+    padding: 0.75rem 0 1.7rem;
   }
 }
 
