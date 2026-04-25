@@ -21,6 +21,7 @@ import {
 } from "@/lib/admin-role";
 import { SILINMIS_KULLANICI_LABEL } from "@/lib/deleted-user-label";
 import { AdminShareCopyBlock } from "@/components/admin-share-copy-block";
+import { publicSiteEntryUrl } from "@/lib/public-site-entry-url";
 
 type EntryRow = {
   id: string;
@@ -240,6 +241,15 @@ export default function AdminPage() {
     content: string;
     slug: string | null;
   } | null>(null);
+  const [liveLinkJustCopied, setLiveLinkJustCopied] = useState(false);
+  const [liveLinkCopyError, setLiveLinkCopyError] = useState<string | null>(
+    null
+  );
+
+  useEffect(() => {
+    setLiveLinkJustCopied(false);
+    setLiveLinkCopyError(null);
+  }, [justPublishedEntry?.id]);
 
   const [platformMembers, setPlatformMembers] = useState<PlatformMemberRow[]>(
     []
@@ -634,7 +644,7 @@ export default function AdminPage() {
     setDraftContent("");
     setDraftCategory("");
     setIsComposeModalOpen(false);
-    setPublishNotice("Entry yayınlandı");
+    setPublishNotice("Entry yayında");
     void loadEntries();
   }
 
@@ -711,7 +721,7 @@ export default function AdminPage() {
         return;
       }
       setEditRow(null);
-      setPublishNotice("Entry yayınlandı");
+      setPublishNotice("Güncelleme kaydedildi");
       void loadEntries();
     } catch {
       setEditSaving(false);
@@ -884,6 +894,11 @@ export default function AdminPage() {
     ).length;
     return { n, recent };
   }, [entries]);
+
+  const justPublishedLiveUrl = useMemo(() => {
+    if (!justPublishedEntry) return null;
+    return publicSiteEntryUrl(justPublishedEntry.id, justPublishedEntry.slug);
+  }, [justPublishedEntry]);
 
   const applyTemplate = (text: string) => {
     setJustPublishedEntry(null);
@@ -1570,9 +1585,41 @@ export default function AdminPage() {
               kapanır.
             </span>
           </div>
-          {justPublishedEntry ? (
+          {justPublishedEntry && justPublishedLiveUrl ? (
             <div className="mt-6 border-t border-slate-800 pt-6">
-              <p className="admin-label mb-2">Paylaşım (son kayıt)</p>
+              <p className="m-0 text-base font-semibold text-emerald-200/95">
+                Entry yayında
+              </p>
+              <p className="admin-helper mt-3 text-slate-400">Canlı link</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <code className="admin-code max-w-full flex-1 break-all text-sm text-slate-200">
+                  {justPublishedLiveUrl}
+                </code>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setLiveLinkCopyError(null);
+                    try {
+                      await navigator.clipboard.writeText(justPublishedLiveUrl);
+                      setLiveLinkJustCopied(true);
+                      window.setTimeout(() => setLiveLinkJustCopied(false), 2000);
+                    } catch {
+                      setLiveLinkCopyError(
+                        "Kopyalanamadı. Tarayıcı pano iznini kontrol edin."
+                      );
+                    }
+                  }}
+                  className="admin-btn-text shrink-0 rounded-md border border-slate-500 px-3 py-1.5 text-xs text-slate-200 transition-colors hover:border-emerald-500/70 hover:bg-emerald-900/25 hover:text-emerald-100"
+                >
+                  {liveLinkJustCopied ? "Kopyalandı" : "Kopyala"}
+                </button>
+              </div>
+              {liveLinkCopyError ? (
+                <p className="mt-1 text-xs text-amber-200/90">
+                  {liveLinkCopyError}
+                </p>
+              ) : null}
+              <p className="admin-label mb-2 mt-6">Paylaşım (son kayıt)</p>
               <AdminShareCopyBlock
                 title={justPublishedEntry.title}
                 content={justPublishedEntry.content}

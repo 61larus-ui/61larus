@@ -5,6 +5,7 @@ import {
   buildShareCopySuggestions,
   type ShareCopyVariant,
 } from "@/lib/admin-share-copy";
+import { publicSiteEntryUrl } from "@/lib/public-site-entry-url";
 
 type Props = {
   title: string;
@@ -18,13 +19,7 @@ function publicEntryUrl(
   entryId: string,
   entrySlug: string | null | undefined
 ): string {
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "";
-  const s = typeof entrySlug === "string" ? entrySlug.trim() : "";
-  if (s.length > 0) {
-    return `${origin}/${encodeURI(s)}`;
-  }
-  return `${origin}/?entry=${encodeURIComponent(entryId)}`;
+  return publicSiteEntryUrl(entryId, entrySlug);
 }
 
 function buildFinalText(
