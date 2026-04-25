@@ -1732,12 +1732,12 @@ export default function HomePageClient({
               </div>
             ) : null}
             <div className="home-page-editorial">
-            <div className="home-manifesto home-manifesto--bridge">
-              <div className="home-manifesto-inner home-manifesto-inner--bridge">
+            <div className="home-manifesto home-manifesto--bridge home-search-bridge">
+              <div className="home-manifesto-inner home-manifesto-inner--bridge home-search-field">
                 <div className="home-manifesto-search">
                   <label
                     htmlFor="feed-search-input"
-                    className="home-manifesto-utility m-0"
+                    className="home-manifesto-utility home-manifesto-utility--search m-0"
                   >
                     Yazılarda ara
                   </label>
@@ -1745,7 +1745,7 @@ export default function HomePageClient({
                     id="feed-search-input"
                     name="q"
                     type="search"
-                    className="home-manifesto-input"
+                    className="home-manifesto-input home-manifesto-input--premium"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Başlık ara…"
