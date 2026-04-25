@@ -10,19 +10,40 @@ type Props = {
   title: string;
   content: string;
   entryId: string | null;
+  /** Path segment; yoksa `/?entry=` */
+  entrySlug?: string | null;
 };
 
-function buildFinalText(suggestionText: string, entryId: string): string {
+function publicEntryUrl(
+  entryId: string,
+  entrySlug: string | null | undefined
+): string {
   const origin =
     typeof window !== "undefined" ? window.location.origin : "";
-  const url = `${origin}/?entry=${entryId}`;
+  const s = typeof entrySlug === "string" ? entrySlug.trim() : "";
+  if (s.length > 0) {
+    return `${origin}/${encodeURI(s)}`;
+  }
+  return `${origin}/?entry=${encodeURIComponent(entryId)}`;
+}
+
+function buildFinalText(
+  suggestionText: string,
+  entryId: string,
+  entrySlug: string | null | undefined
+): string {
+  const url = publicEntryUrl(entryId, entrySlug);
   return suggestionText.replace(/{LINK}/g, url);
 }
 
-function displayLine(raw: string, entryId: string | null): string {
+function displayLine(
+  raw: string,
+  entryId: string | null,
+  entrySlug: string | null | undefined
+): string {
   if (!entryId) return raw;
   if (typeof window === "undefined") return raw;
-  const url = `${window.location.origin}/?entry=${entryId}`;
+  const url = publicEntryUrl(entryId, entrySlug);
   return raw.replace(/{LINK}/g, url);
 }
 
@@ -33,7 +54,12 @@ const btnDisabled =
 const btnEnabled =
   "cursor-pointer border-slate-500 text-slate-200 hover:border-emerald-500/70 hover:bg-emerald-900/25 hover:text-emerald-100";
 
-export function AdminShareCopyBlock({ title, content, entryId }: Props) {
+export function AdminShareCopyBlock({
+  title,
+  content,
+  entryId,
+  entrySlug,
+}: Props) {
   const items = useMemo(
     () => buildShareCopySuggestions(title, content),
     [title, content]
@@ -45,24 +71,24 @@ export function AdminShareCopyBlock({ title, content, entryId }: Props) {
     (key: ShareCopyVariant, text: string) => {
       if (!entryId) return;
       setOpeningKey(`${key}-x`);
-      const finalText = buildFinalText(text, entryId);
+      const finalText = buildFinalText(text, entryId, entrySlug);
       const u = `https://x.com/intent/tweet?text=${encodeURIComponent(finalText)}`;
       window.open(u, "_blank", "noopener,noreferrer");
       window.setTimeout(() => setOpeningKey(null), 2000);
     },
-    [entryId]
+    [entryId, entrySlug]
   );
 
   const onSendWhatsApp = useCallback(
     (key: ShareCopyVariant, text: string) => {
       if (!entryId) return;
       setOpeningKey(`${key}-wa`);
-      const finalText = buildFinalText(text, entryId);
+      const finalText = buildFinalText(text, entryId, entrySlug);
       const u = `https://api.whatsapp.com/send?text=${encodeURIComponent(finalText)}`;
       window.open(u, "_blank", "noopener,noreferrer");
       window.setTimeout(() => setOpeningKey(null), 2000);
     },
-    [entryId]
+    [entryId, entrySlug]
   );
 
   return (
@@ -123,7 +149,7 @@ export function AdminShareCopyBlock({ title, content, entryId }: Props) {
               </div>
             </div>
             <p className="admin-td-mono mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-200">
-              {displayLine(item.text, entryId)}
+              {displayLine(item.text, entryId, entrySlug)}
             </p>
           </li>
         ))}

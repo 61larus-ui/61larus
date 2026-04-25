@@ -14,23 +14,39 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const supabase = await createSupabaseServerClient();
   const client = createSupabaseServiceClient() ?? supabase;
-  const { data, error } = await client
+  const withSlug = await client
     .from("entries")
-    .select("id, created_at")
+    .select("id, created_at, slug")
     .order("created_at", { ascending: false });
+  const res =
+    withSlug.error &&
+    /slug|column|schema|not exist/i.test(withSlug.error.message ?? "")
+      ? await client
+          .from("entries")
+          .select("id, created_at")
+          .order("created_at", { ascending: false })
+      : withSlug;
+  const { data, error } = res;
 
   if (error || !data?.length) {
     return [home];
   }
 
   const entryUrls: MetadataRoute.Sitemap = data.map(
-    (entry: { id: string; created_at: string | null }) => {
+    (entry: { id: string; created_at: string | null; slug?: string | null }) => {
       const last =
         entry.created_at != null && entry.created_at.length > 0
           ? new Date(entry.created_at)
           : new Date();
+      const slug =
+        typeof entry.slug === "string" && entry.slug.trim().length > 0
+          ? entry.slug.trim()
+          : null;
+      const pathUrl = slug
+        ? `${BASE}/${encodeURI(slug)}`
+        : `${BASE}/?entry=${entry.id}`;
       return {
-        url: `${BASE}/?entry=${entry.id}`,
+        url: pathUrl,
         lastModified: last,
       };
     }

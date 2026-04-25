@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { ensureUniqueEntrySlug, slugifyEntryTitle } from "@/lib/entry-slug";
 import { requireAdminSession } from "@/lib/admin-api-auth";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { normalizeEntryCategory } from "@/lib/entry-category";
@@ -17,6 +19,7 @@ type EntryListRow = {
   content: string;
   created_at: string;
   category: string | null;
+  slug: string | null;
 };
 
 function logEntriesDebugPgErr(step: string, err: PostgrestError | null) {
@@ -108,11 +111,27 @@ export async function GET() {
   let rows: EntryListRow[] = [];
   const withCat = await service
     .from("entries")
-    .select("id, title, content, created_at, category")
+    .select("id, title, content, created_at, category, slug")
     .order("created_at", { ascending: false })
     .limit(80);
 
-  if (withCat.error) {
+  if (withCat.error && /slug|column|schema|not exist/i.test(withCat.error.message)) {
+    const noSlug = await service
+      .from("entries")
+      .select("id, title, content, created_at, category")
+      .order("created_at", { ascending: false })
+      .limit(80);
+    if (noSlug.error) {
+      return NextResponse.json(
+        { error: noSlug.error.message || "Liste alınamadı." },
+        { status: 500 }
+      );
+    }
+    rows = (noSlug.data ?? []).map((r) => ({
+      ...(r as Omit<EntryListRow, "slug">),
+      slug: null,
+    })) as EntryListRow[];
+  } else if (withCat.error) {
     const plain = await service
       .from("entries")
       .select("id, title, content, created_at")
@@ -125,11 +144,18 @@ export async function GET() {
       );
     }
     rows = (plain.data ?? []).map((r) => ({
-      ...(r as Omit<EntryListRow, "category">),
+      ...(r as Omit<EntryListRow, "category" | "slug">),
       category: null,
-    }));
+      slug: null,
+    })) as EntryListRow[];
   } else {
-    rows = (withCat.data ?? []) as EntryListRow[];
+    rows = (withCat.data ?? []).map((r) => {
+      const row = r as Record<string, unknown>;
+      return {
+        ...r,
+        slug: typeof row.slug === "string" && row.slug.trim() ? row.slug.trim() : null,
+      } as EntryListRow;
+    });
   }
 
   const ids = rows.map((r) => r.id);
@@ -222,18 +248,36 @@ export async function POST(req: Request) {
     );
   }
 
-  const insertPayload: Record<string, string> = { title, content };
-  if (category) insertPayload.category = category;
+  const newId = randomUUID();
+  const baseSlug = slugifyEntryTitle(title, newId);
+  const slug = await ensureUniqueEntrySlug(service, baseSlug);
+
+  const baseInsert = { id: newId, title, content, slug };
+  const withCategory = category
+    ? { ...baseInsert, category }
+    : baseInsert;
 
   let ins = await service
     .from("entries")
-    .insert([insertPayload])
-    .select("id, title, content, category, created_at");
+    .insert([withCategory])
+    .select("id, title, content, category, created_at, slug");
   if (ins.error && /category/i.test(ins.error.message)) {
     ins = await service
       .from("entries")
-      .insert([{ title, content }])
+      .insert([baseInsert])
+      .select("id, title, content, category, created_at, slug");
+  }
+  if (ins.error && /slug|column|schema|not exist/i.test(ins.error.message)) {
+    ins = await service
+      .from("entries")
+      .insert([category ? { id: newId, title, content, category } : { id: newId, title, content }])
       .select("id, title, content, category, created_at");
+  }
+  if (ins.error && /category/i.test(ins.error.message)) {
+    ins = await service
+      .from("entries")
+      .insert([{ id: newId, title, content }])
+      .select("id, title, content, created_at");
   }
 
   if (ins.error) {
@@ -243,7 +287,16 @@ export async function POST(req: Request) {
     );
   }
 
-  const created = ins.data?.[0];
+  const created = ins.data?.[0] as
+    | {
+        id: string;
+        title: string;
+        content: string;
+        category?: string | null;
+        created_at: string;
+        slug?: string | null;
+      }
+    | undefined;
   if (created) {
     console.log("[admin/entries POST] created", {
       id: created.id,
@@ -254,8 +307,16 @@ export async function POST(req: Request) {
           : created.content,
       category: created.category ?? null,
       created_at: created.created_at,
+      slug: created.slug ?? null,
     });
   }
 
-  return NextResponse.json({ ok: true, id: created?.id ?? null });
+  return NextResponse.json({
+    ok: true,
+    id: created?.id ?? null,
+    slug:
+      typeof created?.slug === "string" && created.slug.trim().length > 0
+        ? created.slug.trim()
+        : null,
+  });
 }

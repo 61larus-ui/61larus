@@ -1,0 +1,116 @@
+import type { Metadata } from "next";
+import { notFound, permanentRedirect } from "next/navigation";
+import { Suspense } from "react";
+import HomePageClient from "../home-page-client";
+import {
+  buildEntryMetaDescription,
+} from "@/lib/seo-entry-description";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@/lib/supabase-service";
+import { getHomeClientProps } from "@/lib/home-client-props";
+
+export const dynamic = "force-dynamic";
+
+const SITE = "https://61larus.com";
+const SITE_LABEL = "61LARUS";
+
+type PageProps = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { slug: raw } = await params;
+  const segment = decodeURIComponent(raw).trim();
+  if (!segment) {
+    return { robots: { index: false, follow: true } };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const client = createSupabaseServiceClient() ?? supabase;
+  const { data, error } = await client
+    .from("entries")
+    .select("id, title, content, slug")
+    .eq("slug", segment)
+    .maybeSingle();
+
+  if (error || !data) {
+    return { robots: { index: false, follow: true } };
+  }
+
+  const titleRaw = typeof data.title === "string" ? data.title : "";
+  const contentRaw = typeof data.content === "string" ? data.content : "";
+  const entryTitle = titleRaw.trim();
+  const description = buildEntryMetaDescription(entryTitle, contentRaw);
+  const pageTitle =
+    entryTitle.length > 0 ? `${entryTitle} | ${SITE_LABEL}` : SITE_LABEL;
+  const canonicalSlug =
+    typeof (data as { slug?: string | null }).slug === "string" &&
+    (data as { slug: string }).slug.trim().length > 0
+      ? (data as { slug: string }).slug.trim()
+      : segment;
+  const canonical = `${SITE}/${canonicalSlug}`;
+
+  return {
+    title: pageTitle,
+    description: description.length > 0 ? description : undefined,
+    openGraph: {
+      title: pageTitle,
+      description: description.length > 0 ? description : undefined,
+      url: canonical,
+    },
+    twitter: {
+      card: "summary",
+      title: pageTitle,
+      description: description.length > 0 ? description : undefined,
+    },
+    robots: { index: true, follow: true },
+    alternates: { canonical },
+  };
+}
+
+export default async function EntrySlugPage({ params }: PageProps) {
+  const { slug: raw } = await params;
+  const segment = decodeURIComponent(raw).trim();
+  if (!segment) {
+    notFound();
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const client = createSupabaseServiceClient() ?? supabase;
+  const { data: entry, error } = await client
+    .from("entries")
+    .select("id, slug")
+    .eq("slug", segment)
+    .maybeSingle();
+
+  if (error || !entry) {
+    notFound();
+  }
+
+  const id = (entry as { id: string }).id;
+  const rowSlug = (entry as { slug?: string | null }).slug;
+  if (typeof rowSlug === "string" && rowSlug.trim() && rowSlug.trim() !== segment) {
+    permanentRedirect(`/${rowSlug.trim()}`);
+  }
+
+  const result = await getHomeClientProps();
+  if (!result.ok) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center py-12">
+        <p className="max-w-md text-center text-sm leading-6 text-[#667085]">
+          Hata: {result.message}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <HomePageClient
+        {...result.props}
+        initialOpenEntryIdFromPath={id}
+        pathCanonicalSlug={segment}
+      />
+    </Suspense>
+  );
+}

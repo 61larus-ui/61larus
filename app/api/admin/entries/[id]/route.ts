@@ -4,6 +4,7 @@ export const runtime = "nodejs";
 import { requireAdminSession, requireSuperAdminSession } from "@/lib/admin-api-auth";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { normalizeEntryCategory } from "@/lib/entry-category";
+import { ensureUniqueEntrySlug, slugifyEntryTitle } from "@/lib/entry-slug";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -51,12 +52,62 @@ export async function PATCH(req: Request, ctx: Ctx) {
     );
   }
 
-  let upd = await service
+  const cur = await service
     .from("entries")
-    .update({ title, content, category })
-    .eq("id", id);
+    .select("slug")
+    .eq("id", id)
+    .maybeSingle();
+
+  let existingSlug: string | null = null;
+  if (!cur.error && cur.data) {
+    const s = (cur.data as { slug?: string | null }).slug;
+    if (typeof s === "string" && s.trim().length > 0) {
+      existingSlug = s.trim();
+    }
+  }
+  const slugColumnMissing =
+    cur.error && /slug|column|schema|not exist/i.test(cur.error.message ?? "");
+
+  const newSlugValue =
+    !slugColumnMissing && !existingSlug
+      ? await ensureUniqueEntrySlug(service, slugifyEntryTitle(title, id), {
+          excludeEntryId: id,
+        })
+      : null;
+
+  const basePatch: {
+    title: string;
+    content: string;
+    category: string | null;
+    slug?: string;
+  } = {
+    title,
+    content,
+    category: category ?? null,
+  };
+  if (newSlugValue) {
+    basePatch.slug = newSlugValue;
+  }
+
+  let upd = await service.from("entries").update(basePatch).eq("id", id);
+
+  if (upd.error && /slug|column|schema|not exist/i.test(upd.error.message)) {
+    const { slug: _omit, ...noSlug } = basePatch;
+    void _omit;
+    upd = await service.from("entries").update(noSlug).eq("id", id);
+  }
 
   if (upd.error && /category/i.test(upd.error.message)) {
+    upd = await service
+      .from("entries")
+      .update(
+        newSlugValue
+          ? { title, content, slug: newSlugValue }
+          : { title, content }
+      )
+      .eq("id", id);
+  }
+  if (upd.error && /slug|column|schema|not exist/i.test(upd.error.message)) {
     upd = await service
       .from("entries")
       .update({ title, content })

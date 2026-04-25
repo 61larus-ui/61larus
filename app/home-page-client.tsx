@@ -79,11 +79,13 @@ function clearPendingReturn() {
   localStorage.removeItem(LS_PENDING_ACTION);
 }
 
-type EntryItem = {
+export type EntryItem = {
   id: string;
   title: string;
   content: string;
   created_at: string;
+  /** SEO path segment when set (public.entries.slug) */
+  slug?: string | null;
   category?: string | null;
   authorName?: string | null;
   bio61?: string | null;
@@ -117,7 +119,7 @@ function entriesCanonicalById<T extends { id: string }>(
   return [...entries].sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
 }
 
-type CommentItem = {
+export type CommentItem = {
   id: string;
   entry_id: string;
   user_id: string;
@@ -134,7 +136,7 @@ export type CenterMode = "feed" | "entry" | "auth" | "agreement";
 
 type FooterInfoId = "about" | "rules" | "privacy" | "contact";
 
-type Props = {
+export type HomePageClientProps = {
   leftEntries: EntryItem[];
   centerEntries: EntryItem[];
   rightEntries: EntryItem[];
@@ -157,7 +159,13 @@ type Props = {
   profileNickname: string | null;
   /** `users.display_name_mode` */
   profileDisplayMode: "nickname" | "real_name" | null;
+  /** `app/[slug]`: açılacak entry id (path ile eşleşen). */
+  initialOpenEntryIdFromPath?: string | null;
+  /** `app/[slug]`: bu segment canonical URL; kapatınca `/` */
+  pathCanonicalSlug?: string | null;
 };
+
+type Props = HomePageClientProps;
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -175,9 +183,14 @@ function formatEntryDetailDate(value: string) {
   });
 }
 
-function entryPublicUrl(entryId: string): string {
+function entryPublicUrl(entryId: string, slug?: string | null): string {
   if (typeof window === "undefined") return "";
-  return `${window.location.origin}/?entry=${encodeURIComponent(entryId)}`;
+  const origin = window.location.origin;
+  const s = typeof slug === "string" ? slug.trim() : "";
+  if (s.length > 0) {
+    return `${origin}/${encodeURI(s)}`;
+  }
+  return `${origin}/?entry=${encodeURIComponent(entryId)}`;
 }
 
 /** Yalnızca public.users satırı; RSC / stale prop fallback yok. */
@@ -204,6 +217,8 @@ export default function HomePageClient({
   profileFullName,
   profileNickname,
   profileDisplayMode,
+  initialOpenEntryIdFromPath = null,
+  pathCanonicalSlug = null,
 }: Props) {
   const headerDisplayName = useMemo(
     () =>
@@ -225,6 +240,12 @@ export default function HomePageClient({
   const routerRef = useRef(router);
   routerRef.current = router;
   const searchParams = useSearchParams();
+  const entriesByIdRef = useRef<EntryItem[]>([]);
+  entriesByIdRef.current = [
+    ...centerEntries,
+    ...leftEntries,
+    ...rightEntries,
+  ];
 
   const stripEntryQueryFromUrl = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -423,7 +444,22 @@ export default function HomePageClient({
     // auth redirect, router.refresh, and re-renders until successful open clears it.
     writePendingReturn(id, "comment");
     setSelectedEntryId(id);
-    void routerRef.current.replace(`/?entry=${id}`, { scroll: false });
+    const item = entriesByIdRef.current.find((e) => e.id === id);
+    const slug = item?.slug?.trim() ?? "";
+    const nextPath =
+      slug.length > 0
+        ? `/${encodeURI(slug)}`
+        : `/?entry=${encodeURIComponent(id)}`;
+    if (typeof window !== "undefined") {
+      const nextUrl = new URL(nextPath, window.location.origin);
+      const cur = `${window.location.pathname}${window.location.search}`;
+      const n = `${nextUrl.pathname}${nextUrl.search}`;
+      if (cur !== n) {
+        void routerRef.current.replace(nextPath, { scroll: false });
+      }
+    } else {
+      void routerRef.current.replace(nextPath, { scroll: false });
+    }
     if (!isAuthenticatedRef.current) {
       setCenterMode("auth");
       return;
@@ -449,8 +485,12 @@ export default function HomePageClient({
     clearPendingReturn();
     setSelectedEntryId(null);
     setCenterMode("feed");
-    stripEntryQueryFromUrl();
-  }, [stripEntryQueryFromUrl]);
+    if (pathCanonicalSlug) {
+      void routerRef.current.replace("/", { scroll: false });
+    } else {
+      stripEntryQueryFromUrl();
+    }
+  }, [pathCanonicalSlug, stripEntryQueryFromUrl]);
 
   /** Tam yazı akışı: arama kapalı, detay kapalı, feed modu. */
   const resetToWritingsFeed = useCallback(() => {
@@ -495,8 +535,10 @@ export default function HomePageClient({
         : null;
     if (urlEntryId) {
       writePendingReturn(urlEntryId, "comment");
+    } else if (pathCanonicalSlug && initialOpenEntryIdFromPath) {
+      writePendingReturn(initialOpenEntryIdFromPath, "comment");
     }
-  }, [searchParams]);
+  }, [searchParams, pathCanonicalSlug, initialOpenEntryIdFromPath]);
 
   useEffect(() => {
     if (!isAuthenticated || !agreementDone || platformAccessSuspended) return;
@@ -506,8 +548,12 @@ export default function HomePageClient({
       raw && isRealUuid(decodeURIComponent(raw.trim()))
         ? decodeURIComponent(raw.trim())
         : null;
+    const pathEntryId =
+      pathCanonicalSlug && initialOpenEntryIdFromPath
+        ? initialOpenEntryIdFromPath
+        : null;
     const { entryId: storedId } = readPendingFromStorage();
-    const entryId = urlEntryId ?? storedId;
+    const entryId = urlEntryId ?? pathEntryId ?? storedId;
     if (!entryId) return;
 
     const combined = [...centerEntries, ...leftEntries, ...rightEntries];
@@ -535,6 +581,8 @@ export default function HomePageClient({
     selectEntry,
     searchParams,
     stripEntryQueryFromUrl,
+    pathCanonicalSlug,
+    initialOpenEntryIdFromPath,
   ]);
 
   useEffect(() => {
@@ -795,19 +843,19 @@ export default function HomePageClient({
 
   const feedHasMore = feedVisibleCount < feedEntriesSearchFiltered.length;
 
-  const copyEntryLink = (entryId: string, title: string) => {
-    const url = entryPublicUrl(entryId);
+  const copyEntryLink = (entryId: string, title: string, slug?: string | null) => {
+    const url = entryPublicUrl(entryId, slug);
     void navigator.clipboard.writeText(`${title}\n${url}`);
   };
 
-  const shareWhatsApp = (entryId: string, title: string) => {
-    const link = entryPublicUrl(entryId);
+  const shareWhatsApp = (entryId: string, title: string, slug?: string | null) => {
+    const link = entryPublicUrl(entryId, slug);
     const text = encodeURIComponent(`${title} ${link}`);
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   };
 
-  const shareX = (entryId: string, title: string) => {
-    const link = entryPublicUrl(entryId);
+  const shareX = (entryId: string, title: string, slug?: string | null) => {
+    const link = entryPublicUrl(entryId, slug);
     const text = encodeURIComponent(title);
     const url = encodeURIComponent(link);
     window.open(
@@ -989,7 +1037,11 @@ export default function HomePageClient({
           <button
             type="button"
             onClick={() =>
-              copyEntryLink(selectedEntry.id, selectedEntry.title)
+              copyEntryLink(
+                selectedEntry.id,
+                selectedEntry.title,
+                selectedEntry.slug
+              )
             }
             className="entry-share-btn"
           >
@@ -1011,7 +1063,11 @@ export default function HomePageClient({
           <button
             type="button"
             onClick={() =>
-              shareWhatsApp(selectedEntry.id, selectedEntry.title)
+              shareWhatsApp(
+                selectedEntry.id,
+                selectedEntry.title,
+                selectedEntry.slug
+              )
             }
             className="entry-share-btn"
           >
@@ -1031,7 +1087,13 @@ export default function HomePageClient({
           </button>
           <button
             type="button"
-            onClick={() => shareX(selectedEntry.id, selectedEntry.title)}
+            onClick={() =>
+              shareX(
+                selectedEntry.id,
+                selectedEntry.title,
+                selectedEntry.slug
+              )
+            }
             className="entry-share-btn"
           >
             <svg

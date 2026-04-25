@@ -28,6 +28,7 @@ type EntryRow = {
   content: string;
   created_at: string;
   category: string | null;
+  slug: string | null;
 };
 
 type AdminUserRow = {
@@ -237,6 +238,7 @@ export default function AdminPage() {
     id: string;
     title: string;
     content: string;
+    slug: string | null;
   } | null>(null);
 
   const [platformMembers, setPlatformMembers] = useState<PlatformMemberRow[]>(
@@ -606,6 +608,7 @@ export default function AdminPage() {
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
         id?: string;
+        slug?: string | null;
       };
       setSubmitting(false);
       if (!res.ok) {
@@ -613,7 +616,11 @@ export default function AdminPage() {
         return;
       }
       if (typeof data.id === "string" && data.id.length > 0) {
-        setJustPublishedEntry({ id: data.id, title, content });
+        const sl =
+          typeof data.slug === "string" && data.slug.trim().length > 0
+            ? data.slug.trim()
+            : null;
+        setJustPublishedEntry({ id: data.id, title, content, slug: sl });
       } else {
         setJustPublishedEntry(null);
       }
@@ -1570,6 +1577,7 @@ export default function AdminPage() {
                 title={justPublishedEntry.title}
                 content={justPublishedEntry.content}
                 entryId={justPublishedEntry.id}
+                entrySlug={justPublishedEntry.slug}
               />
             </div>
           ) : null}
@@ -1805,6 +1813,7 @@ export default function AdminPage() {
                   justPublishedEntry ? justPublishedEntry.content : draftContent
                 }
                 entryId={justPublishedEntry?.id ?? null}
+                entrySlug={justPublishedEntry?.slug ?? null}
               />
               <div className="flex justify-end gap-2 pt-1">
                 <button
@@ -1891,6 +1900,7 @@ export default function AdminPage() {
               title={editTitle}
               content={editContent}
               entryId={editRow.id}
+              entrySlug={editRow.slug}
             />
             <div className="mt-4 flex justify-end gap-2">
               <button
