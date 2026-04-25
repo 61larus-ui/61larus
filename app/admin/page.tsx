@@ -245,11 +245,17 @@ export default function AdminPage() {
   const [liveLinkCopyError, setLiveLinkCopyError] = useState<string | null>(
     null
   );
+  const [liveCheck, setLiveCheck] = useState<
+    "idle" | "checking" | "ok" | "wait" | "unready"
+  >("idle");
 
   useEffect(() => {
+    if (!justPublishedEntry) {
+      setLiveCheck("idle");
+    }
     setLiveLinkJustCopied(false);
     setLiveLinkCopyError(null);
-  }, [justPublishedEntry?.id]);
+  }, [justPublishedEntry]);
 
   const [platformMembers, setPlatformMembers] = useState<PlatformMemberRow[]>(
     []
@@ -584,6 +590,44 @@ export default function AdminPage() {
     setAdminUsers([]);
   }
 
+  const runLiveCheck = useCallback(async (entryId: string, slug: string | null) => {
+    if (!entryId) {
+      setLiveCheck("wait");
+      return;
+    }
+    const q = new URLSearchParams({ id: entryId });
+    if (typeof slug === "string" && slug.length > 0) {
+      q.set("slug", slug);
+    }
+    try {
+      const res = await fetch(`/api/admin/verify-live?${q.toString()}`, {
+        credentials: "include",
+      });
+      const j = (await res.json().catch(() => ({}))) as {
+        outcome?: "ok" | "not_ready" | "pending";
+      };
+      if (res.status === 401) {
+        setLiveCheck("wait");
+        return;
+      }
+      if (res.ok && j.outcome === "ok") {
+        setLiveCheck("ok");
+        return;
+      }
+      if (res.ok && j.outcome === "not_ready") {
+        setLiveCheck("unready");
+        return;
+      }
+      if (res.ok && j.outcome === "pending") {
+        setLiveCheck("wait");
+        return;
+      }
+      setLiveCheck("wait");
+    } catch {
+      setLiveCheck("wait");
+    }
+  }, []);
+
   async function onSubmitNew(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitError(null);
@@ -631,8 +675,11 @@ export default function AdminPage() {
             ? data.slug.trim()
             : null;
         setJustPublishedEntry({ id: data.id, title, content, slug: sl });
+        setLiveCheck("checking");
+        void runLiveCheck(data.id, sl);
       } else {
         setJustPublishedEntry(null);
+        setLiveCheck("idle");
       }
     } catch {
       setSubmitting(false);
@@ -1617,6 +1664,24 @@ export default function AdminPage() {
               {liveLinkCopyError ? (
                 <p className="mt-1 text-xs text-amber-200/90">
                   {liveLinkCopyError}
+                </p>
+              ) : null}
+              {liveCheck !== "idle" ? (
+                <p
+                  className={`mt-2 text-xs ${
+                    liveCheck === "ok"
+                      ? "text-emerald-400/90"
+                      : "text-slate-500"
+                  }`}
+                  role="status"
+                >
+                  {liveCheck === "checking"
+                    ? "Kontrol ediliyor…"
+                    : liveCheck === "ok"
+                      ? "Canlı kontrol başarılı"
+                      : liveCheck === "unready"
+                        ? "Canlı link henüz hazır değil"
+                        : "Canlı kontrol bekleniyor"}
                 </p>
               ) : null}
               <p className="admin-label mb-2 mt-6">Paylaşım (son kayıt)</p>
