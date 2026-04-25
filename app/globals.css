@@ -1356,7 +1356,9 @@ main > header .site-header-tagline--manifesto {
     line-clamp: 2;
   }
 
-  .home-editorial-cols .col-list-panel {
+  /* FAZ 5.5: sağ “Hafızaya” paneli ayrı; yalnız sol/orta snap + scroll */
+  .home-editorial-cols
+    .col-list-panel:not(.home-rail-body--feed) {
     flex: 1 1 0%;
     min-height: 0;
     min-width: 0;
@@ -2013,16 +2015,17 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-/* --- FAZ 5.1: daha sakin yoğunluk; FAZ 5.4: 2–3 tam entry’lik görünür kaydırma alanı --- */
+/* --- FAZ 5.1 / FAZ 5.5: satır yüksekliği sağ “3 entry” omurgasına; sabit 39rem kalktı --- */
 
 @media (min-width: 768px) {
   .home-page-editorial .home-editorial-cols {
-    height: min(39rem, 76vh);
-    max-height: min(39rem, 76vh);
+    height: auto;
+    max-height: none;
+    min-height: 0;
   }
 }
 
-/* --- FAZ 5.4: entry kesilmesin, kolonlar temiz scroll; mobil doğal akış (md+ kilit) --- */
+/* --- FAZ 5.4: sol/orta indeks satırı — snap + scroll; sağ: FAZ 5.5 --- */
 @media (min-width: 768px) {
   .home-editorial-cols
     .home-rail--faz5-primary
@@ -2034,6 +2037,12 @@ main > header .site-header-tagline--manifesto {
     page-break-inside: avoid;
   }
 
+  .home-page-editorial
+    .home-rail--faz5-primary
+    .feed-entry-card.feed-entry-card--editorial {
+    scroll-snap-align: none;
+  }
+
   .home-editorial-cols .home-index-row {
     flex-shrink: 0;
     scroll-snap-align: start;
@@ -2041,17 +2050,67 @@ main > header .site-header-tagline--manifesto {
     break-inside: avoid;
     page-break-inside: avoid;
   }
+}
 
-  .home-editorial-cols
-    .home-rail--feed-main
-    .home-feed-rail__body.col-list-panel {
-    padding-bottom: 1.2rem !important;
+/* --- FAZ 5.5: Hafızaya eklenenler — iç scroll yok, en fazla 3 entry, omurga yükseklik --- */
+@media (min-width: 768px) {
+  .home-page-editorial .home-editorial-cols > aside.home-rail--editorial-col {
+    min-height: 0;
+    align-self: stretch;
+    overflow: hidden;
   }
 
-  .home-editorial-cols
-    .home-feed-rail__body
+  .home-page-editorial
+    .home-editorial-cols
+    > .home-rail--feed-main.home-rail--editorial-col {
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    align-self: start;
+  }
+
+  .home-page-editorial .home-rail--feed-main .home-feed-rail--faz55 {
+    height: auto !important;
+    min-height: 0;
+    max-height: none;
+    flex: 0 1 auto;
+  }
+
+  .home-page-editorial
+    .home-rail--feed-main
+    .home-feed-rail__body--faz55.home-rail-body--feed {
+    overflow: visible !important;
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: none;
+    scroll-snap-type: none;
+    scroll-padding-bottom: 0;
+    overscroll-behavior: auto;
+    -webkit-overflow-scrolling: auto;
+  }
+
+  .home-page-editorial
+    .home-feed-rail__body--faz55
     nav[aria-label="Hafızaya eklenen maddeler"] {
-    padding-bottom: 0.35rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .home-page-editorial
+    .home-rail--faz5-primary
+    .home-feed-rail__body--faz55
+    .feed-entry-card.feed-entry-card--editorial {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .feed-load-more--faz55 {
+    margin-top: 0.65rem;
+    min-height: 0;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+    font-size: calc(var(--type-scale-meta) * 0.95);
+    letter-spacing: 0.04em;
+    opacity: 0.9;
   }
 }
 
@@ -2062,6 +2121,10 @@ main > header .site-header-tagline--manifesto {
 @media (min-width: 768px) {
   .home-main-columns-wrap--faz51 {
     padding-bottom: clamp(1.85rem, 2.5vw, 2.35rem);
+  }
+
+  .home-page-editorial .home-main-columns-wrap--faz51 {
+    padding-bottom: clamp(2.1rem, 2.7vw, 2.6rem);
   }
 }
 

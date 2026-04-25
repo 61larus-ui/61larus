@@ -49,6 +49,9 @@ const LS_PENDING_ACTION = "pendingAction";
 /** Center feed pagination (initial + each “Daha fazla yükle” batch). */
 const FEED_PAGE_SIZE = 12;
 
+/** 3-kolon masaüstünde “Hafızaya eklenenler”: aynı anda en fazla bu kadar entry (iç scroll yok). */
+const HOME_RIGHT_COL_MAX = 3;
+
 /** Header orta alan — tek satır, yavaş dönen Atatürk sözleri. */
 const HEADER_ATATURK_QUOTES = [
   "Ne mutlu Türküm diyene!",
@@ -279,6 +282,10 @@ export default function HomePageClient({
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
+  /** Masaüstü grid: gösterilecek 3’lük pencere ofseti (0, 3, 6, …). */
+  const [rightColWindowStart, setRightColWindowStart] = useState(0);
+  /** md+ grid: yan/orta scroll kalır, sağ sütun 3 entry ile kilitlenir. */
+  const [homeGridDesktop, setHomeGridDesktop] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -673,8 +680,18 @@ export default function HomePageClient({
     };
   }, [isUserMenuOpen]);
 
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const sync = () => setHomeGridDesktop(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   useEffect(() => {
     setFeedVisibleCount(FEED_PAGE_SIZE);
+    setRightColWindowStart(0);
   }, [searchQuery]);
 
   useEffect(() => {
@@ -1002,12 +1019,35 @@ export default function HomePageClient({
     return list;
   }, [shuffledMainFeedEntries, searchQuery]);
 
-  const centerFeedEntries = useMemo(
-    () => feedEntriesSearchFiltered.slice(0, feedVisibleCount),
-    [feedEntriesSearchFiltered, feedVisibleCount]
-  );
+  const mainColumnDisplayEntries = useMemo(() => {
+    const list = feedEntriesSearchFiltered;
+    if (homeGridDesktop) {
+      return list.slice(
+        rightColWindowStart,
+        rightColWindowStart + HOME_RIGHT_COL_MAX
+      );
+    }
+    return list.slice(0, feedVisibleCount);
+  }, [
+    feedEntriesSearchFiltered,
+    homeGridDesktop,
+    rightColWindowStart,
+    feedVisibleCount,
+  ]);
 
-  const feedHasMore = feedVisibleCount < feedEntriesSearchFiltered.length;
+  const feedHasMore = useMemo(
+    () =>
+      homeGridDesktop
+        ? rightColWindowStart + HOME_RIGHT_COL_MAX <
+          feedEntriesSearchFiltered.length
+        : feedVisibleCount < feedEntriesSearchFiltered.length,
+    [
+      homeGridDesktop,
+      rightColWindowStart,
+      feedVisibleCount,
+      feedEntriesSearchFiltered.length,
+    ]
+  );
 
   const copyEntryLink = (entryId: string, title: string, slug?: string | null) => {
     const url = entryPublicUrl(entryId, slug);
@@ -1136,7 +1176,7 @@ export default function HomePageClient({
     return (
       <div className="relative z-0 pb-5 md:pb-8">
         <nav className="flex flex-col" aria-label="Hafızaya eklenen maddeler">
-          {centerFeedEntries.map((entry) => {
+          {mainColumnDisplayEntries.map((entry) => {
             const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
             const isActive = entry.id === effectiveEntryId;
             return (
@@ -1157,10 +1197,14 @@ export default function HomePageClient({
         {feedHasMore ? (
           <button
             type="button"
-            onClick={() =>
-              setFeedVisibleCount((c) => c + FEED_PAGE_SIZE)
-            }
-            className="feed-load-more mt-6 w-full min-h-[3rem] border-0 bg-transparent py-3 text-center underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-primary)] hover:decoration-[color:var(--border-subtle)] md:mt-8 md:min-h-0 md:py-4"
+            onClick={() => {
+              if (homeGridDesktop) {
+                setRightColWindowStart((s) => s + HOME_RIGHT_COL_MAX);
+              } else {
+                setFeedVisibleCount((c) => c + FEED_PAGE_SIZE);
+              }
+            }}
+            className="feed-load-more feed-load-more--faz55 mt-6 w-full min-h-[3rem] border-0 bg-transparent py-3 text-center underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-primary)] hover:decoration-[color:var(--border-subtle)] md:mt-8 md:min-h-0 md:py-4"
           >
             Daha fazla yazı yükle ↓
           </button>
@@ -1883,8 +1927,8 @@ export default function HomePageClient({
                 </nav>
               </div>
             </aside>
-            <main className="main-column home-rail--center home-rail--faz5-primary home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-full md:border-l md:border-[color:var(--editorial-hairline)]">
-              <div className="home-feed-rail layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-0 py-5 sm:py-6 md:h-full md:min-h-0 md:py-0">
+            <main className="main-column home-rail--center home-rail--faz5-primary home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-auto md:min-h-0 md:max-h-none md:overflow-visible md:border-l md:border-[color:var(--editorial-hairline)]">
+              <div className="home-feed-rail home-feed-rail--faz55 layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-0 py-5 sm:py-6 md:h-auto md:min-h-0 md:flex-none md:py-0">
                 <div className="col-section-head col-head-band col-head-band--feed col-head-band--faz5-primary home-feed-rail__head home-rail-header--col shrink-0">
                   <p className="col-section-head__kicker">YENİ EKLENENLER</p>
                   <h2
@@ -1897,7 +1941,7 @@ export default function HomePageClient({
                     Son eklenen maddeler burada akar.
                   </p>
                 </div>
-                <div className="home-feed-rail__body home-rail-body home-rail-body--feed col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain md:min-h-0">
+                <div className="home-feed-rail__body home-feed-rail__body--faz55 home-rail-body home-rail-body--feed col-list-panel min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain max-md:left-scroll max-md:overscroll-contain md:flex-none md:min-h-0 md:overflow-visible md:overscroll-auto">
                   {renderMainFeed()}
                 </div>
               </div>
