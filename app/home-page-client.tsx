@@ -1876,7 +1876,7 @@ export default function HomePageClient({
             </aside>
             <main className="main-column home-rail--center home-rail--faz5-primary home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-auto md:min-h-0 md:max-h-none md:overflow-visible md:border-l md:border-[color:var(--editorial-hairline)] lg:min-h-0 lg:max-h-full lg:h-full lg:overflow-hidden">
               <div className="home-feed-rail home-feed-rail--faz55 layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-0 py-5 sm:py-6 md:h-auto md:min-h-0 md:flex-none md:py-0 lg:min-h-0 lg:max-h-full lg:h-full lg:flex-1">
-                <div className="col-section-head col-head-band col-head-band--feed col-head-band--faz5-primary col-head-band--settled col-head-band--hafiza home-feed-rail__head home-rail-header--col shrink-0">
+                <div className="col-section-head col-head-band col-head-band--feed col-head-band--faz5-primary col-head-band--settled home-feed-rail__head home-rail-header--col shrink-0">
                   <h2
                     className="col-section-head__title col-section-head__title--rail m-0"
                     id="main-feed-title"
