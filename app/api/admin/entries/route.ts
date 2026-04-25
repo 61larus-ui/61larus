@@ -108,19 +108,26 @@ export async function GET() {
     }
   }
 
+  const { count: rowCount, error: countError } = await service
+    .from("entries")
+    .select("id", { head: true, count: "exact" });
+  if (countError) {
+    logEntriesDebugPgErr("admin_entries_total", countError);
+  }
+
   let rows: EntryListRow[] = [];
   const withCat = await service
     .from("entries")
     .select("id, title, content, created_at, category, slug")
     .order("created_at", { ascending: false })
-    .limit(80);
+    .limit(500);
 
   if (withCat.error && /slug|column|schema|not exist/i.test(withCat.error.message)) {
     const noSlug = await service
       .from("entries")
       .select("id, title, content, created_at, category")
       .order("created_at", { ascending: false })
-      .limit(80);
+      .limit(500);
     if (noSlug.error) {
       return NextResponse.json(
         { error: noSlug.error.message || "Liste alınamadı." },
@@ -136,7 +143,7 @@ export async function GET() {
       .from("entries")
       .select("id, title, content, created_at")
       .order("created_at", { ascending: false })
-      .limit(80);
+      .limit(500);
     if (plain.error) {
       return NextResponse.json(
         { error: plain.error.message || "Liste alınamadı." },
@@ -201,10 +208,14 @@ export async function GET() {
     }
   }
 
+  const entryTotal =
+    !countError && typeof rowCount === "number" ? rowCount : rows.length;
+
   return NextResponse.json({
     ok: true,
     entries: rows,
     authorByEntryId,
+    entryTotal,
   });
 }
 

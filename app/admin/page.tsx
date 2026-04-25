@@ -190,6 +190,7 @@ export default function AdminPage() {
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
 
   const [entries, setEntries] = useState<EntryRow[]>([]);
+  const [entryTotal, setEntryTotal] = useState<number | null>(null);
   const [authorByEntryId, setAuthorByEntryId] = useState<Record<string, string>>(
     {}
   );
@@ -314,17 +315,25 @@ export default function AdminPage() {
         error?: string;
         entries?: EntryRow[];
         authorByEntryId?: Record<string, string>;
+        entryTotal?: number;
       };
       if (!res.ok) {
         setEntries([]);
+        setEntryTotal(null);
         setAuthorByEntryId({});
         setListBanner(data.error ?? "Entry listesi alınamadı.");
         return;
       }
       setEntries(data.entries ?? []);
+      setEntryTotal(
+        typeof data.entryTotal === "number" && Number.isFinite(data.entryTotal)
+          ? data.entryTotal
+          : (data.entries ?? []).length
+      );
       setAuthorByEntryId(data.authorByEntryId ?? {});
     } catch {
       setEntries([]);
+      setEntryTotal(null);
       setAuthorByEntryId({});
       setListBanner("Ağ hatası.");
     } finally {
@@ -583,6 +592,7 @@ export default function AdminPage() {
     await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
     setSessionOk(false);
     setEntries([]);
+    setEntryTotal(null);
     setPlatformMembers([]);
     setMembersError(null);
     setAdminUsername(null);
@@ -934,13 +944,13 @@ export default function AdminPage() {
   }
 
   const stats = useMemo(() => {
-    const n = entries.length;
+    const n = entryTotal !== null ? entryTotal : entries.length;
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const recent = entries.filter(
       (e) => new Date(e.created_at).getTime() >= weekAgo
     ).length;
     return { n, recent };
-  }, [entries]);
+  }, [entries, entryTotal]);
 
   const justPublishedLiveUrl = useMemo(() => {
     if (!justPublishedEntry) return null;
