@@ -102,32 +102,11 @@ export type EntryItem = {
   bio61?: string | null;
 };
 
-/** Orta akış: mount başına sabit seed; önce id ile kanonik sıra, sonra Fisher–Yates (yenilemede aynı küme → aynı permütasyon). */
-function mulberry32(initial: number) {
-  let a = initial >>> 0;
-  return function next() {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function deterministicShuffle<T>(items: readonly T[], seed: number): T[] {
-  const a = [...items];
-  const rnd = mulberry32(seed);
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function entriesCanonicalById<T extends { id: string }>(
-  entries: readonly T[]
-): T[] {
-  return [...entries].sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+function compareEntriesByNewest(a: EntryItem, b: EntryItem): number {
+  const ta = new Date(a.created_at).getTime();
+  const tb = new Date(b.created_at).getTime();
+  if (tb !== ta) return tb - ta;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
 export type CommentItem = {
@@ -276,9 +255,6 @@ export default function HomePageClient({
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
-  const [mainFeedShuffleSeed] = useState(
-    () => (Math.floor(Math.random() * 0x7fff_ffff) | 0) >>> 0
-  );
   const [searchQuery, setSearchQuery] = useState("");
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -850,10 +826,10 @@ export default function HomePageClient({
     return ranked.slice(0, 10).map((row) => row.entry);
   }, [centerEntries, commentsByEntryIdLive]);
 
-  const shuffledMainFeedEntries = useMemo(() => {
-    const canon = entriesCanonicalById(centerEntries);
-    return deterministicShuffle(canon, mainFeedShuffleSeed);
-  }, [centerEntries, mainFeedShuffleSeed]);
+  const shuffledMainFeedEntries = useMemo(
+    () => [...centerEntries].sort(compareEntriesByNewest),
+    [centerEntries]
+  );
 
   const rightRailAwaitingFirstComment = useMemo(() => {
     const withCounts = centerEntries.map((entry) => ({

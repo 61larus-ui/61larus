@@ -11,6 +11,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { getHomeClientProps } from "@/lib/home-client-props";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const SITE = "https://61larus.com";
 const SITE_LABEL = "61LARUS";
