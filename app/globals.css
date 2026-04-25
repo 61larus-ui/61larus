@@ -705,61 +705,32 @@ main > header .site-header-tagline--manifesto {
   letter-spacing: 0.1em;
 }
 
-/* --- Ana sayfa: manifesto / hero (sakin bulanık arka plan) --- */
-.home-manifesto.home-manifesto--hero {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.home-hero-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image: url("/hero-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  filter: blur(12px) scale(1.08);
-  opacity: 0.38;
-}
-
-.home-hero-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.92),
-    rgba(255, 255, 255, 0.96)
-  );
-}
-
-.home-hero-content {
-  position: relative;
-  z-index: 10;
-}
-
+/* --- Ana sayfa: manifesto — görselsiz editorial, sayfaya yumuşak oturur --- */
 .home-manifesto {
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 120px 1.25rem 100px;
-  border-bottom: 1px solid var(--editorial-hairline);
-  background: transparent;
+  padding: 2.85rem 1.35rem 3.1rem;
   box-sizing: border-box;
+  border-bottom: 1px solid var(--editorial-hairline);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-tertiary) 45%, var(--bg-primary) 55%) 0%,
+    var(--bg-primary) 42%,
+    var(--bg-primary) 100%
+  );
+  box-shadow: none;
 }
 
 @media (min-width: 640px) {
   .home-manifesto {
-    padding: 120px 1.75rem 100px;
+    padding: 3.1rem 1.6rem 3.35rem;
   }
 }
 
 @media (min-width: 1024px) {
   .home-manifesto {
-    padding: 120px 2.5rem 100px;
+    padding: 3.35rem 2.5rem 3.5rem;
     max-width: min(48rem, 100%);
     margin-left: auto;
     margin-right: auto;
@@ -837,40 +808,56 @@ main > header .site-header-tagline--manifesto {
   display: block;
   width: 100%;
   margin: 0;
-  min-height: 3.1rem;
-  padding: 0.65rem 1.15rem;
-  border: 1px solid var(--editorial-hairline);
-  border-radius: var(--radius-sm);
-  background: var(--bg-secondary);
+  min-height: 2.95rem;
+  padding: 0.6rem 1.05rem;
+  border: 1px solid color-mix(
+    in srgb,
+    var(--editorial-hairline) 80%,
+    var(--divide-hair) 20%
+  );
+  border-radius: var(--radius-md);
+  background: color-mix(
+    in srgb,
+    var(--bg-secondary) 55%,
+    var(--bg-primary) 45%
+  );
   color: var(--text-primary);
   font-family: var(--font-ui);
-  font-size: 1.0625rem;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
-  box-shadow: none;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  font-size: 1rem;
+  line-height: 1.45;
+  letter-spacing: 0.012em;
+  box-shadow: var(--surface-inset-highlight);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
   -webkit-appearance: none;
   appearance: none;
 }
 
 @media (min-width: 768px) {
   .home-manifesto-input {
-    min-height: 3.25rem;
-    font-size: 1.125rem;
-    padding: 0.72rem 1.25rem;
+    min-height: 3.05rem;
+    font-size: 1.03125rem;
+    padding: 0.65rem 1.15rem;
   }
 }
 
 .home-manifesto-input::placeholder {
   color: var(--text-muted);
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
 .home-manifesto-input:hover {
   border-color: color-mix(
     in srgb,
-    var(--divide) 50%,
-    var(--editorial-hairline) 50%
+    var(--divide) 40%,
+    var(--editorial-hairline) 60%
+  );
+  background: color-mix(
+    in srgb,
+    var(--bg-secondary) 65%,
+    var(--bg-primary) 35%
   );
 }
 
@@ -878,11 +865,18 @@ main > header .site-header-tagline--manifesto {
   outline: none;
   border-color: color-mix(
     in srgb,
-    var(--accent-green-line) 35%,
-    var(--divide) 65%
+    var(--accent-green-line) 22%,
+    var(--divide) 78%
   );
-  background: var(--bg-secondary);
-  box-shadow: none;
+  background: color-mix(
+    in srgb,
+    var(--bg-secondary) 70%,
+    var(--bg-primary) 30%
+  );
+  box-shadow:
+    var(--surface-inset-highlight),
+    0 0 0 1px
+      color-mix(in srgb, var(--accent-green-glow) 50%, transparent);
 }
 
 .home-manifesto-prompt {
@@ -3876,7 +3870,7 @@ aside[aria-label="Yayın paneli"] .right-block {
   }
 
   .home-manifesto {
-    padding: 3.5rem 1.25rem 2.75rem;
+    padding: 2.5rem 1.2rem 2.85rem;
     max-width: 100%;
   }
 
