@@ -1783,11 +1783,12 @@ export default function HomePageClient({
               className="home-rail home-rail--awaiting home-rail--editorial-col home-rail--column await-col flex max-h-[42vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Yazılmayı bekleyenler"
             >
-              <div className="home-rail-header home-rail-header--col col-head-band shrink-0 px-3.5 md:px-4">
-                <p className="trending-rail-eyebrow home-rail-eyebrow col-head-band__eyebrow mb-0">
+              <div className="col-section-head col-head-band home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
+                <p className="col-section-head__kicker">BEKLEYEN BAŞLIKLAR</p>
+                <h2 className="col-section-head__title m-0">
                   Yazılmayı bekleyenler
-                </p>
-                <p className="col-head-band__subline home-rail-subline m-0 mt-1 text-[0.65rem] font-normal leading-snug text-[color:var(--text-muted)] md:mt-1.5 md:text-[0.68rem]">
+                </h2>
+                <p className="col-section-head__micro m-0">
                   Henüz yorum yok; ilk notu bırak.
                 </p>
               </div>
@@ -1832,9 +1833,13 @@ export default function HomePageClient({
               className="home-rail home-rail--trending home-rail--editorial-col home-rail--column flex max-h-[40vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Şu an en çok konuşulanlar"
             >
-              <div className="home-rail-header home-rail-header--col col-head-band col-head-band--trending shrink-0 px-3.5 md:px-4">
-                <p className="trending-rail-eyebrow home-rail-eyebrow col-head-band__eyebrow mb-0">
+              <div className="col-section-head col-head-band col-head-band--trending home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
+                <p className="col-section-head__kicker">GÜNDEMİN NABZI</p>
+                <h2 className="col-section-head__title m-0">
                   Şu an en çok konuşulanlar
+                </h2>
+                <p className="col-section-head__micro m-0">
+                  Yorum alan başlıklar öne çıkar.
                 </p>
               </div>
               <div className="home-rail-body home-rail-body--trending col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -1879,13 +1884,17 @@ export default function HomePageClient({
             </aside>
             <main className="main-column home-rail--center home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-full md:border-l md:border-[color:var(--editorial-hairline)]">
               <div className="home-feed-rail layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-4 py-5 sm:px-5 sm:py-6 md:h-full md:min-h-0 md:px-7 md:py-0 lg:px-9">
-                <div className="home-feed-rail__head home-rail-header--col col-head-band col-head-band--feed shrink-0">
+                <div className="col-section-head col-head-band col-head-band--feed home-feed-rail__head home-rail-header--col shrink-0">
+                  <p className="col-section-head__kicker">YENİ EKLENENLER</p>
                   <h2
-                    className="home-feed-column-title col-head-feed-title m-0"
+                    className="col-section-head__title m-0"
                     id="main-feed-title"
                   >
                     Hafızaya eklenenler
                   </h2>
+                  <p className="col-section-head__micro m-0">
+                    Son eklenen maddeler burada akar.
+                  </p>
                 </div>
                 <div className="home-feed-rail__body home-rail-body home-rail-body--feed col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 md:min-h-0 md:pb-3">
                   {renderMainFeed()}

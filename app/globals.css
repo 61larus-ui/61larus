@@ -421,24 +421,84 @@ body {
   }
 }
 
-.home-feed-column-title {
-  font-family: var(--font-editorial-display);
-  font-size: 1.25rem;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+/* FAZ 3.3: 3 kolon bölüm başlığı — kicker + title + micro (tek aile, sağ aşırı büyük değil) */
+.col-section-head {
+  background: transparent;
+}
+
+.col-section-head__kicker {
+  margin: 0 0 0.18rem;
+  font-family: var(--font-ui);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
   line-height: 1.2;
+  color: var(--text-tertiary);
+  opacity: 0.82;
+  text-rendering: optimizeLegibility;
+}
+
+.col-section-head__title {
+  margin: 0 0 0.2rem;
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.22;
   color: var(--wordmark-ink);
-  margin-bottom: 0.5rem;
-  margin-top: 0.15rem;
-  padding-bottom: 0.55rem;
-  border-bottom: 1px solid var(--editorial-hairline);
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+}
+
+.col-section-head__micro {
+  margin: 0;
+  max-width: 22rem;
+  font-family: var(--font-ui);
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: var(--text-muted);
+  text-rendering: optimizeLegibility;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/* Eski sınıf — başka sayfalarda kalmadıysa no-op; varsa aynı optik */
+.home-feed-column-title {
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.22;
+  color: var(--wordmark-ink);
+  margin: 0 0 0.2rem;
+  padding: 0;
+  border: 0;
   text-rendering: optimizeLegibility;
 }
 
 @media (min-width: 768px) {
+  .col-section-head__kicker {
+    font-size: 0.65625rem;
+    letter-spacing: 0.17em;
+    margin-bottom: 0.22rem;
+  }
+
+  .col-section-head__title {
+    font-size: 0.96875rem;
+    margin-bottom: 0.22rem;
+  }
+
+  .col-section-head__micro {
+    font-size: 0.65625rem;
+  }
+
   .home-feed-column-title {
-    font-size: 1.3rem;
-    margin-bottom: 0.6rem;
+    font-size: 0.96875rem;
   }
 }
 
@@ -1111,11 +1171,16 @@ main > header .site-header-tagline--manifesto {
     align-items: stretch;
     justify-content: flex-start;
     width: 100%;
-    height: 5.25rem;
-    max-height: 5.25rem;
-    padding-top: 0.3rem;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid var(--editorial-hairline);
+    min-height: 6.25rem;
+    height: 6.25rem;
+    max-height: 6.25rem;
+    padding-top: 0.38rem;
+    padding-bottom: 0.42rem;
+    border-bottom: 1px solid color-mix(
+      in srgb,
+      var(--editorial-hairline) 92%,
+      transparent
+    );
   }
 
   .home-editorial-cols .col-head-band--feed {
@@ -1124,26 +1189,9 @@ main > header .site-header-tagline--manifesto {
     align-items: flex-start;
   }
 
-  .home-editorial-cols .col-head-band__eyebrow {
-    margin-top: 0.1rem;
-  }
-
-  .home-editorial-cols .col-head-band__subline {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
+  .home-editorial-cols .col-section-head__micro {
     -webkit-line-clamp: 2;
-    overflow: hidden;
-    line-height: 1.4;
-  }
-
-  .home-editorial-cols .col-head-feed-title.home-feed-column-title,
-  .home-editorial-cols .col-head-feed-title {
-    font-size: 1.15rem;
-    line-height: 1.2;
-    margin: 0 !important;
-    margin-top: 0.12rem !important;
-    padding-bottom: 0 !important;
-    border-bottom: 0 !important;
+    line-clamp: 2;
   }
 
   .home-editorial-cols .col-list-panel {
@@ -1178,15 +1226,34 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-/* Mobil: bant alt çizgisi; yükseklik kilidi yok */
+/* Mobil: bant alt çizgisi; yükseklik kilidi yok; kompakt başlık */
 @media (max-width: 767.98px) {
   .home-editorial-cols .col-head-band {
-    border-bottom: 1px solid var(--editorial-hairline);
+    border-bottom: 1px solid color-mix(
+      in srgb,
+      var(--editorial-hairline) 92%,
+      transparent
+    );
   }
 
-  .home-editorial-cols .col-head-feed-title.home-feed-column-title,
-  .home-editorial-cols .col-head-feed-title {
-    margin-top: 0.15rem !important;
+  .home-editorial-cols .col-section-head__kicker {
+    font-size: 0.5625rem;
+    letter-spacing: 0.13em;
+    margin-bottom: 0.1rem;
+    opacity: 0.78;
+  }
+
+  .home-editorial-cols .col-section-head__title {
+    font-size: 0.875rem;
+    margin-bottom: 0.12rem;
+  }
+
+  .home-editorial-cols .col-section-head__micro {
+    font-size: 0.6rem;
+    letter-spacing: 0.015em;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    line-height: 1.35;
   }
 }
 
