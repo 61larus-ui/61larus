@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import HomePageClient from "../home-page-client";
-import {
-  buildEntryMetaDescription,
-} from "@/lib/seo-entry-description";
+import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { getHomeClientProps } from "@/lib/home-client-props";
@@ -12,7 +10,6 @@ import { getHomeClientProps } from "@/lib/home-client-props";
 export const dynamic = "force-dynamic";
 
 const SITE = "https://61larus.com";
-const SITE_LABEL = "61LARUS";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -40,9 +37,8 @@ export async function generateMetadata({
   const titleRaw = typeof data.title === "string" ? data.title : "";
   const contentRaw = typeof data.content === "string" ? data.content : "";
   const entryTitle = titleRaw.trim();
-  const description = buildEntryMetaDescription(entryTitle, contentRaw);
   const pageTitle =
-    entryTitle.length > 0 ? `${entryTitle} | ${SITE_LABEL}` : SITE_LABEL;
+    entryTitle.length > 0 ? `${entryTitle} | ${SITE_BRAND}` : SITE_BRAND;
   const canonicalSlug =
     typeof (data as { slug?: string | null }).slug === "string" &&
     (data as { slug: string }).slug.trim().length > 0
@@ -50,22 +46,12 @@ export async function generateMetadata({
       : segment;
   const canonical = `${SITE}/${canonicalSlug}`;
 
-  return {
-    title: pageTitle,
-    description: description.length > 0 ? description : undefined,
-    openGraph: {
-      title: pageTitle,
-      description: description.length > 0 ? description : undefined,
-      url: canonical,
-    },
-    twitter: {
-      card: "summary",
-      title: pageTitle,
-      description: description.length > 0 ? description : undefined,
-    },
-    robots: { index: true, follow: true },
-    alternates: { canonical },
-  };
+  return buildEntrySeoMetadata({
+    pageTitle,
+    contentRaw,
+    entryTitle,
+    canonical,
+  });
 }
 
 export default async function EntrySlugPage({ params }: PageProps) {

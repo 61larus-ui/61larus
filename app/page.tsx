@@ -2,10 +2,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { permanentRedirect } from "next/navigation";
 import HomePageClient from "./home-page-client";
-import {
-  buildEntryMetaDescription,
-  isRfc4122Uuid,
-} from "@/lib/seo-entry-description";
+import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
+import { isRfc4122Uuid } from "@/lib/seo-entry-description";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { getHomeClientProps } from "@/lib/home-client-props";
@@ -14,7 +12,27 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const SITE = "https://61larus.com";
-const SITE_LABEL = "61LARUS";
+const DEFAULT_HOME_DESCRIPTION = "Trabzon'un gündemi, lafı ve hafızası";
+
+const defaultHomeMetadata = (): Metadata => ({
+  title: SITE_BRAND,
+  description: DEFAULT_HOME_DESCRIPTION,
+  openGraph: {
+    title: SITE_BRAND,
+    description: DEFAULT_HOME_DESCRIPTION,
+    url: SITE,
+    type: "website",
+    siteName: SITE_BRAND,
+    locale: "tr_TR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_BRAND,
+    description: DEFAULT_HOME_DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
+  alternates: { canonical: SITE },
+});
 
 type HomePageSearchParams = Promise<{
   entry?: string | string[];
@@ -29,12 +47,13 @@ export async function generateMetadata({
   const raw = params.entry;
   const entryParam = Array.isArray(raw) ? raw[0] : raw;
   if (entryParam == null || typeof entryParam !== "string") {
-    return {};
+    return defaultHomeMetadata();
   }
 
   const id = decodeURIComponent(entryParam.trim());
   if (!isRfc4122Uuid(id)) {
     return {
+      ...defaultHomeMetadata(),
       robots: { index: false, follow: true },
     };
   }
@@ -72,6 +91,7 @@ export async function generateMetadata({
 
   if (!data) {
     return {
+      ...defaultHomeMetadata(),
       robots: { index: false, follow: true },
     };
   }
@@ -79,9 +99,8 @@ export async function generateMetadata({
   const titleRaw = typeof data.title === "string" ? data.title : "";
   const contentRaw = typeof data.content === "string" ? data.content : "";
   const entryTitle = titleRaw.trim();
-  const description = buildEntryMetaDescription(entryTitle, contentRaw);
   const pageTitle =
-    entryTitle.length > 0 ? `${entryTitle} | ${SITE_LABEL}` : SITE_LABEL;
+    entryTitle.length > 0 ? `${entryTitle} | ${SITE_BRAND}` : SITE_BRAND;
   const slugFromRow =
     typeof data.slug === "string" && data.slug.trim().length > 0
       ? data.slug.trim()
@@ -90,24 +109,12 @@ export async function generateMetadata({
     ? `${SITE}/${slugFromRow}`
     : `${SITE}/?entry=${id}`;
 
-  return {
-    title: pageTitle,
-    description: description.length > 0 ? description : undefined,
-    openGraph: {
-      title: pageTitle,
-      description: description.length > 0 ? description : undefined,
-      url: canonical,
-    },
-    twitter: {
-      card: "summary",
-      title: pageTitle,
-      description: description.length > 0 ? description : undefined,
-    },
-    robots: { index: true, follow: true },
-    alternates: {
-      canonical,
-    },
-  };
+  return buildEntrySeoMetadata({
+    pageTitle,
+    contentRaw,
+    entryTitle,
+    canonical,
+  });
 }
 
 export default async function Home({

@@ -16,6 +16,18 @@ export function normalizeMetaWhitespace(text: string): string {
 
 const DEFAULT_META_DESCRIPTION_MAX = 155;
 
+/** Entry OG/meta: gövde metninin ilk ~140–160 karakteri (kelime sınırı tercihli). */
+export const ENTRY_META_BODY_SNIPPET_MAX = 150;
+
+export function entryBodySnippetForMeta(
+  content: string,
+  maxLen: number = ENTRY_META_BODY_SNIPPET_MAX
+): string {
+  const c = normalizeMetaWhitespace(content);
+  if (c.length === 0) return "";
+  return trimMetaDescription(c, maxLen);
+}
+
 /**
  * Trims to a typical meta description length, preferring a word boundary
  * when a long token would otherwise be cut mid-word.
