@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import HomePageClient from "../home-page-client";
+import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
@@ -65,7 +66,7 @@ export default async function EntrySlugPage({ params }: PageProps) {
   const client = createSupabaseServiceClient() ?? supabase;
   const { data: entry, error } = await client
     .from("entries")
-    .select("id, slug")
+    .select("id, slug, title, content, created_at")
     .eq("slug", segment)
     .maybeSingle();
 
@@ -73,10 +74,20 @@ export default async function EntrySlugPage({ params }: PageProps) {
     notFound();
   }
 
-  const id = (entry as { id: string }).id;
-  const rowSlug = (entry as { slug?: string | null }).slug;
-  if (typeof rowSlug === "string" && rowSlug.trim() && rowSlug.trim() !== segment) {
-    permanentRedirect(`/${rowSlug.trim()}`);
+  const row = entry as {
+    id: string;
+    title: string | null;
+    content: string | null;
+    created_at: string | null;
+    slug?: string | null;
+  };
+  const id = row.id;
+  if (
+    typeof row.slug === "string" &&
+    row.slug.trim() &&
+    row.slug.trim() !== segment
+  ) {
+    permanentRedirect(`/${row.slug.trim()}`);
   }
 
   const result = await getHomeClientProps();
@@ -91,12 +102,21 @@ export default async function EntrySlugPage({ params }: PageProps) {
   }
 
   return (
-    <Suspense fallback={null}>
-      <HomePageClient
-        {...result.props}
-        initialOpenEntryIdFromPath={id}
-        pathCanonicalSlug={segment}
+    <>
+      <EntryArticleJsonLd
+        title={row.title}
+        content={row.content}
+        createdAt={
+          row.created_at != null ? String(row.created_at) : null
+        }
       />
-    </Suspense>
+      <Suspense fallback={null}>
+        <HomePageClient
+          {...result.props}
+          initialOpenEntryIdFromPath={id}
+          pathCanonicalSlug={segment}
+        />
+      </Suspense>
+    </>
   );
 }

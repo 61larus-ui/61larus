@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { permanentRedirect } from "next/navigation";
+import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
 import HomePageClient from "./home-page-client";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { isRfc4122Uuid } from "@/lib/seo-entry-description";
@@ -125,21 +126,62 @@ export default async function Home({
   const params = await searchParams;
   const raw = params.entry;
   const entryParam = Array.isArray(raw) ? raw[0] : raw;
+  let entryArticleJsonLd: ReactNode = null;
   if (entryParam != null && typeof entryParam === "string") {
     const id = decodeURIComponent(entryParam.trim());
     if (isRfc4122Uuid(id)) {
       const supabase = await createSupabaseServerClient();
       const entriesClient = createSupabaseServiceClient() ?? supabase;
-      const r = await entriesClient
+      const full = await entriesClient
         .from("entries")
-        .select("slug")
+        .select("slug, title, content, created_at")
         .eq("id", id)
         .maybeSingle();
-      if (!r.error && r.data) {
-        const s = (r.data as { slug?: string | null }).slug;
+
+      type QueryRow = {
+        slug?: string | null;
+        title: string | null;
+        content: string | null;
+        created_at: string | null;
+      };
+      let row: QueryRow | null = null;
+      if (full.data && !full.error) {
+        row = full.data as QueryRow;
+      } else if (
+        full.error &&
+        /slug|column|schema|not exist/i.test(full.error.message ?? "")
+      ) {
+        const fb = await entriesClient
+          .from("entries")
+          .select("title, content, created_at")
+          .eq("id", id)
+          .maybeSingle();
+        if (fb.data && !fb.error) {
+          const r = fb.data as {
+            title: string | null;
+            content: string | null;
+            created_at: string | null;
+          };
+          row = { ...r, slug: null };
+        }
+      } else {
+        row = (full.data as QueryRow) ?? null;
+      }
+
+      if (row) {
+        const s = row.slug;
         if (typeof s === "string" && s.trim().length > 0) {
           permanentRedirect(`/${s.trim()}`);
         }
+        entryArticleJsonLd = (
+          <EntryArticleJsonLd
+            title={row.title}
+            content={row.content}
+            createdAt={
+              row.created_at != null ? String(row.created_at) : null
+            }
+          />
+        );
       }
     }
   }
@@ -155,8 +197,11 @@ export default async function Home({
     );
   }
   return (
-    <Suspense fallback={null}>
-      <HomePageClient {...result.props} />
-    </Suspense>
+    <>
+      {entryArticleJsonLd}
+      <Suspense fallback={null}>
+        <HomePageClient {...result.props} />
+      </Suspense>
+    </>
   );
 }

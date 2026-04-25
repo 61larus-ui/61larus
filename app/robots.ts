@@ -1,9 +1,13 @@
-export default function robots() {
+import type { MetadataRoute } from "next";
+
+export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: "/admin",
     },
     sitemap: "https://61larus.com/sitemap.xml",
+    host: "https://61larus.com",
   };
 }
