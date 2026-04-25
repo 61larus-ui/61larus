@@ -10,6 +10,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const home: MetadataRoute.Sitemap[0] = {
     url: BASE,
     lastModified: new Date(),
+    changeFrequency: "hourly",
+    priority: 1,
   };
 
   const supabase = await createSupabaseServerClient();
@@ -32,25 +34,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return [home];
   }
 
-  const entryUrls: MetadataRoute.Sitemap = data.map(
-    (entry: { id: string; created_at: string | null; slug?: string | null }) => {
-      const last =
-        entry.created_at != null && entry.created_at.length > 0
-          ? new Date(entry.created_at)
-          : new Date();
-      const slug =
-        typeof entry.slug === "string" && entry.slug.trim().length > 0
-          ? entry.slug.trim()
-          : null;
-      const pathUrl = slug
-        ? `${BASE}/${encodeURI(slug)}`
-        : `${BASE}/?entry=${entry.id}`;
-      return {
-        url: pathUrl,
-        lastModified: last,
-      };
-    }
-  );
+  const entryUrls: MetadataRoute.Sitemap = data
+    .map(
+      (entry: { id: string; created_at: string | null; slug?: string | null }) => {
+        const last =
+          entry.created_at != null && entry.created_at.length > 0
+            ? new Date(entry.created_at)
+            : new Date();
+        const slug =
+          typeof entry.slug === "string" && entry.slug.trim().length > 0
+            ? entry.slug.trim()
+            : null;
+        if (!slug) return null;
+        return {
+          url: `${BASE}/${encodeURI(slug)}`,
+          lastModified: last,
+          changeFrequency: "daily" as const,
+          priority: 0.8,
+        };
+      }
+    )
+    .filter(
+      (row): row is NonNullable<typeof row> => row != null
+    );
 
   return [home, ...entryUrls];
 }
