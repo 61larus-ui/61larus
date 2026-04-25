@@ -653,14 +653,24 @@ export default function HomePageClient({
       setAccountDeleteError(null);
       return;
     }
-    function onPointerDown(e: MouseEvent) {
+    const onDown = (e: MouseEvent) => {
       const el = accountMenuRef.current;
       if (el && !el.contains(e.target as Node)) {
         setAccountMenuOpen(false);
       }
-    }
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
+    };
+    const t = window.setTimeout(() => {
+      document.addEventListener("mousedown", onDown, true);
+    }, 0);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAccountMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      window.clearTimeout(t);
+      document.removeEventListener("mousedown", onDown, true);
+      document.removeEventListener("keydown", onKey, true);
+    };
   }, [accountMenuOpen]);
 
   useEffect(() => {
@@ -1417,7 +1427,7 @@ export default function HomePageClient({
 
   return (
     <main className="relative flex min-h-screen w-full max-w-full flex-col bg-transparent text-[color:var(--text-primary)] antialiased">
-      <header className="site-header relative mb-7 shrink-0 pb-5 md:mb-8 md:pb-7">
+      <header className="site-header relative z-20 mb-7 shrink-0 pb-5 md:mb-8 md:pb-7">
         <div className="headerBlock">
           <div className="headerBar min-w-0">
             <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(21rem,100%)]">
@@ -1459,18 +1469,24 @@ export default function HomePageClient({
                 </Link>
             ) : null}
             {isAuthenticated ? (
-                <div className="relative min-w-0 shrink-0" ref={accountMenuRef}>
+                <div
+                  className="relative z-30 min-w-0 shrink-0"
+                  ref={accountMenuRef}
+                >
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setAccountMenuOpen((o) => !o);
                   }}
-                  className="max-w-full border-0 bg-transparent p-0"
+                  className="account-menu-name-trigger max-w-full cursor-pointer border-0 bg-transparent p-0"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
                   aria-expanded={accountMenuOpen}
                   aria-haspopup="menu"
+                  aria-label="Hesap menüsü"
                 >
                   <div
-                    className="account-menu-trigger-inner flex h-[28px] max-w-full min-w-0 cursor-pointer items-center justify-end px-0.5 text-[color:var(--text-tertiary)] transition-colors duration-150 hover:text-[color:var(--text-secondary)]"
+                    className="account-menu-trigger-inner flex min-h-9 min-w-0 max-w-full items-center justify-end rounded-md px-0.5 py-0.5 text-[color:var(--text-tertiary)] transition-colors duration-150 hover:text-[color:var(--text-secondary)]"
                     style={{ transition: "var(--transition)" }}
                   >
                     <span className="account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right">
@@ -1499,7 +1515,7 @@ export default function HomePageClient({
                         onClick={() => setAccountDeleteStep("confirm")}
                         className="account-menu-item account-menu-item--destructive"
                       >
-                        Hesabımı sil
+                        Google hesabımı sil
                       </button>
                     ) : (
                       <div className="account-menu-delete-block">

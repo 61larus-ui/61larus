@@ -1525,7 +1525,7 @@ aside[aria-label="Yayın paneli"] nav button.group {
 .account-menu-panel {
   position: absolute;
   right: 0;
-  z-index: 50;
+  z-index: 60;
   margin-top: 0.32rem;
   width: min(calc(100vw - 1.25rem), 12.65rem);
   padding: 0.48rem 0 0.42rem;
@@ -3399,6 +3399,8 @@ aside[aria-label="Yayın paneli"] .right-block {
 }
 
 .headerBar > .headerUserName {
+  position: relative;
+  z-index: 20;
   justify-self: end;
   align-self: center;
   display: flex;
@@ -3474,6 +3476,7 @@ aside[aria-label="Yayın paneli"] .right-block {
 
   .headerBlock .headerBar > .headerUserName {
     position: absolute;
+    z-index: 30;
     right: 16px;
     top: 24px;
     width: auto;
