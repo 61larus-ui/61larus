@@ -958,6 +958,13 @@ export default function AdminPage() {
     return publicSiteEntryUrl(justPublishedEntry.id, justPublishedEntry.slug);
   }, [justPublishedEntry]);
 
+  /** WhatsApp / X: başlık + canlı link + 61larus.com (çift satır sonu ile) */
+  const justPublishedShareText = useMemo(() => {
+    if (!justPublishedEntry || !justPublishedLiveUrl) return null;
+    const title = (justPublishedEntry.title ?? "").trim();
+    return `${title}\n\n${justPublishedLiveUrl}\n\n61larus.com`;
+  }, [justPublishedEntry, justPublishedLiveUrl]);
+
   const applyTemplate = (text: string) => {
     setJustPublishedEntry(null);
     setDraftContent((prev) => (prev.trim() ? `${prev}\n\n${text}` : text));
@@ -1670,6 +1677,26 @@ export default function AdminPage() {
                 >
                   {liveLinkJustCopied ? "Kopyalandı" : "Kopyala"}
                 </button>
+                {justPublishedShareText ? (
+                  <>
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(justPublishedShareText)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="admin-btn-text inline-flex shrink-0 items-center rounded-md border border-slate-500 px-3 py-1.5 text-xs text-slate-200 transition-colors hover:border-emerald-500/70 hover:bg-emerald-900/25 hover:text-emerald-100"
+                    >
+                      WhatsApp ile paylaş
+                    </a>
+                    <a
+                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(justPublishedShareText)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="admin-btn-text inline-flex shrink-0 items-center rounded-md border border-slate-500 px-3 py-1.5 text-xs text-slate-200 transition-colors hover:border-emerald-500/70 hover:bg-emerald-900/25 hover:text-emerald-100"
+                    >
+                      {"X'te paylaş"}
+                    </a>
+                  </>
+                ) : null}
               </div>
               {liveLinkCopyError ? (
                 <p className="mt-1 text-xs text-amber-200/90">
