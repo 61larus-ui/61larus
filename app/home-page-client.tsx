@@ -1999,7 +1999,6 @@ export default function HomePageClient({
                 className="home-explore"
                 aria-labelledby="home-explore-title"
               >
-                <div className="home-explore-inner">
                   <header className="home-explore-head">
                     <p className="home-explore-kicker">Keşif</p>
                     <h2
@@ -2102,7 +2101,6 @@ export default function HomePageClient({
                       </div>
                     ) : null}
                   </div>
-                </div>
               </section>
             ) : null}
 
