@@ -281,7 +281,7 @@ export default function HomePageClient({
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
-  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [accountDeleteStep, setAccountDeleteStep] = useState<"idle" | "confirm">(
     "idle"
   );
@@ -648,30 +648,30 @@ export default function HomePageClient({
   }, [router]);
 
   useEffect(() => {
-    if (!accountMenuOpen) {
+    if (!isUserMenuOpen) {
       setAccountDeleteStep("idle");
       setAccountDeleteError(null);
       return;
     }
-    const onDown = (e: MouseEvent) => {
+    const onDocClick = (e: MouseEvent) => {
       const el = accountMenuRef.current;
       if (el && !el.contains(e.target as Node)) {
-        setAccountMenuOpen(false);
+        setIsUserMenuOpen(false);
       }
     };
-    const t = window.setTimeout(() => {
-      document.addEventListener("mousedown", onDown, true);
-    }, 0);
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setAccountMenuOpen(false);
+      if (e.key === "Escape") setIsUserMenuOpen(false);
     };
+    const t = window.setTimeout(() => {
+      document.addEventListener("click", onDocClick, false);
+    }, 100);
     document.addEventListener("keydown", onKey, true);
     return () => {
       window.clearTimeout(t);
-      document.removeEventListener("mousedown", onDown, true);
+      document.removeEventListener("click", onDocClick, false);
       document.removeEventListener("keydown", onKey, true);
     };
-  }, [accountMenuOpen]);
+  }, [isUserMenuOpen]);
 
   useEffect(() => {
     setFeedVisibleCount(FEED_PAGE_SIZE);
@@ -980,8 +980,11 @@ export default function HomePageClient({
   }
 
   async function handleLogout() {
-    setAccountMenuOpen(false);
+    setIsUserMenuOpen(false);
     await resetSessionToGuest();
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
   }
 
   async function handleConfirmAccountDeletion() {
@@ -993,7 +996,7 @@ export default function HomePageClient({
         setAccountDeleteError(delError);
         return;
       }
-      setAccountMenuOpen(false);
+      setIsUserMenuOpen(false);
       await resetSessionToGuest();
     } finally {
       setAccountDeleteLoading(false);
@@ -1476,12 +1479,13 @@ export default function HomePageClient({
                 <button
                   type="button"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
-                    setAccountMenuOpen((o) => !o);
+                    setIsUserMenuOpen((o) => !o);
                   }}
                   className="account-menu-name-trigger max-w-full cursor-pointer border-0 bg-transparent p-0"
                   style={{ WebkitTapHighlightColor: "transparent" }}
-                  aria-expanded={accountMenuOpen}
+                  aria-expanded={isUserMenuOpen}
                   aria-haspopup="menu"
                   aria-label="Hesap menüsü"
                 >
@@ -1494,8 +1498,12 @@ export default function HomePageClient({
                     </span>
                   </div>
                 </button>
-                {accountMenuOpen ? (
-                  <div className="account-menu-panel" role="menu">
+                {isUserMenuOpen ? (
+                  <div
+                    className="account-menu-panel user-menu"
+                    role="menu"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <p className="account-menu-meta m-0">
                       Google ile giriş yapıldı
                     </p>

@@ -3410,7 +3410,8 @@ aside[aria-label="Yayın paneli"] .right-block {
   gap: 0.75rem;
   min-width: 0;
   max-width: 160px;
-  overflow: hidden;
+  /* overflow: hidden dropdown’u keser ve tıklamaları yutar — menü + isim tıklaması için gerekli */
+  overflow: visible;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: right;
