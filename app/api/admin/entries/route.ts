@@ -12,10 +12,7 @@ import {
   resolveVisibleName,
   type DisplayNameModePref,
 } from "@/lib/visible-name";
-import {
-  countPublicLiveEntries,
-  countPublicLiveEntriesSince,
-} from "@/lib/entry-public-live-count";
+import { countPublicLiveEntries } from "@/lib/entry-public-live-count";
 
 type EntryListRow = {
   id: string;
@@ -112,23 +109,9 @@ export async function GET() {
     }
   }
 
-  const weekAgoIso = new Date(
-    Date.now() - 7 * 24 * 60 * 60 * 1000
-  ).toISOString();
-
   const liveTotalRes = await countPublicLiveEntries(service);
-  const liveRecentRes = await countPublicLiveEntriesSince(
-    service,
-    weekAgoIso
-  );
   if (liveTotalRes.error) {
     logEntriesDebugPgErr("admin_public_live_entry_total", liveTotalRes.error);
-  }
-  if (liveRecentRes.error) {
-    logEntriesDebugPgErr(
-      "admin_public_live_entry_recent7",
-      liveRecentRes.error
-    );
   }
 
   let rows: EntryListRow[] = [];
@@ -226,15 +209,12 @@ export async function GET() {
 
   const publicLiveEntryCount =
     typeof liveTotalRes.count === "number" ? liveTotalRes.count : 0;
-  const publicLiveEntryRecent7d =
-    typeof liveRecentRes.count === "number" ? liveRecentRes.count : null;
 
   return NextResponse.json({
     ok: true,
     entries: rows,
     authorByEntryId,
     publicLiveEntryCount,
-    publicLiveEntryRecent7d,
     publicLiveCountMode: liveTotalRes.mode,
   });
 }

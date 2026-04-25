@@ -193,9 +193,6 @@ export default function AdminPage() {
   const [publicLiveEntryCount, setPublicLiveEntryCount] = useState<
     number | null
   >(null);
-  const [publicLiveEntryRecent7d, setPublicLiveEntryRecent7d] = useState<
-    number | null
-  >(null);
   const [authorByEntryId, setAuthorByEntryId] = useState<Record<string, string>>(
     {}
   );
@@ -321,12 +318,10 @@ export default function AdminPage() {
         entries?: EntryRow[];
         authorByEntryId?: Record<string, string>;
         publicLiveEntryCount?: number;
-        publicLiveEntryRecent7d?: number | null;
       };
       if (!res.ok) {
         setEntries([]);
         setPublicLiveEntryCount(null);
-        setPublicLiveEntryRecent7d(null);
         setAuthorByEntryId({});
         setListBanner(data.error ?? "Entry listesi alınamadı.");
         return;
@@ -340,24 +335,10 @@ export default function AdminPage() {
       } else {
         setPublicLiveEntryCount((data.entries ?? []).length);
       }
-      if (
-        typeof data.publicLiveEntryRecent7d === "number" &&
-        Number.isFinite(data.publicLiveEntryRecent7d)
-      ) {
-        setPublicLiveEntryRecent7d(data.publicLiveEntryRecent7d);
-      } else {
-        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        setPublicLiveEntryRecent7d(
-          (data.entries ?? []).filter(
-            (e) => new Date(e.created_at).getTime() >= weekAgo
-          ).length
-        );
-      }
       setAuthorByEntryId(data.authorByEntryId ?? {});
     } catch {
       setEntries([]);
       setPublicLiveEntryCount(null);
-      setPublicLiveEntryRecent7d(null);
       setAuthorByEntryId({});
       setListBanner("Ağ hatası.");
     } finally {
@@ -617,7 +598,6 @@ export default function AdminPage() {
     setSessionOk(false);
     setEntries([]);
     setPublicLiveEntryCount(null);
-    setPublicLiveEntryRecent7d(null);
     setPlatformMembers([]);
     setMembersError(null);
     setAdminUsername(null);
@@ -968,18 +948,10 @@ export default function AdminPage() {
     }
   }
 
-  const stats = useMemo(() => {
-    const n = publicLiveEntryCount !== null ? publicLiveEntryCount : 0;
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const recentFromList = entries.filter(
-      (e) => new Date(e.created_at).getTime() >= weekAgo
-    ).length;
-    const recent =
-      publicLiveEntryRecent7d !== null
-        ? publicLiveEntryRecent7d
-        : recentFromList;
-    return { n, recent };
-  }, [entries, publicLiveEntryCount, publicLiveEntryRecent7d]);
+  const liveEntryStat = useMemo(
+    () => (publicLiveEntryCount !== null ? publicLiveEntryCount : 0),
+    [publicLiveEntryCount]
+  );
 
   const justPublishedLiveUrl = useMemo(() => {
     if (!justPublishedEntry) return null;
@@ -1118,14 +1090,13 @@ export default function AdminPage() {
           </div>
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="max-w-md">
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-            <p className="admin-stat-label">Canlı yayındaki entry</p>
-            <p className="admin-stat-value">{stats.n}</p>
-          </div>
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-            <p className="admin-stat-label">Son 7 gün</p>
-            <p className="admin-stat-value">{stats.recent}</p>
+            <p className="admin-stat-label">YAYINDAKİ ENTRY</p>
+            <p className="admin-stat-value">{liveEntryStat}</p>
+            <p className="admin-helper mt-2 text-xs text-slate-500">
+              Sitede şu an yayında olan entry sayısı.
+            </p>
           </div>
         </div>
 
