@@ -390,7 +390,7 @@ body {
 
 /* Ana grid: 3 sütun (FAZ3: bekleyen | en çok | hafıza) */
 @media (min-width: 768px) {
-  .home-content-grid--editorial {
+  .home-content-grid--editorial:not(.home-editorial-cols) {
     align-items: start;
   }
 
@@ -1069,6 +1069,70 @@ main > header .site-header-tagline--manifesto {
   width: 100%;
   margin-left: 0;
   margin-right: 0;
+}
+
+/* --- FAZ 3.1: 3 kolon yükseklik — stretch, sabit başlık, kaydırılan liste (md+) --- */
+@media (min-width: 768px) {
+  .home-editorial-cols {
+    align-items: stretch;
+    min-height: min(44rem, 72vh);
+  }
+
+  .home-editorial-cols > .home-rail--editorial-col,
+  .home-editorial-cols > .home-rail--feed-main {
+    position: static;
+    z-index: auto;
+    min-height: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: none;
+  }
+
+  .home-editorial-cols .home-rail-header--col {
+    flex-shrink: 0;
+    padding-top: 1.1rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .home-editorial-cols .home-feed-rail.layout-feed-inner--post-manifesto {
+    min-height: 0;
+    padding-top: 0.65rem !important;
+  }
+
+  .home-feed-rail__head {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .home-rail-body--awaiting,
+  .home-rail-body--trending,
+  .home-rail-body--feed {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-rail-body--awaiting {
+    max-height: 35rem;
+  }
+
+  .home-rail-body--trending {
+    max-height: 40.625rem;
+  }
+
+  .home-rail-body--feed {
+    max-height: min(42.5rem, 58vh);
+  }
+
+  .home-rail-body.home-rail-body--awaiting::-webkit-scrollbar,
+  .home-rail-body.home-rail-body--trending::-webkit-scrollbar,
+  .home-rail-body.home-rail-body--feed::-webkit-scrollbar {
+    width: 4px;
+  }
 }
 
 /* --- Bugün 61Larus’ta — editorial vitrin (kart pano değil) --- */

@@ -1778,12 +1778,12 @@ export default function HomePageClient({
                 </div>
               </section>
             ) : null}
-            <div className="home-content-grid home-content-grid--editorial home-content-grid--flow home-content-grid--faz3 flex w-full min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(12rem,1fr)_minmax(0,2.5fr)] md:items-stretch md:gap-0 lg:grid-cols-[minmax(11.5rem,1fr)_minmax(12.5rem,1.05fr)_minmax(0,2.6fr)]">
+            <div className="home-editorial-cols home-content-grid home-content-grid--editorial home-content-grid--flow home-content-grid--faz3 flex w-full min-h-0 min-w-0 flex-col gap-0 md:grid md:grid-cols-[minmax(11rem,0.95fr)_minmax(12rem,1fr)_minmax(0,2.5fr)] md:items-stretch md:gap-0 md:min-h-0 lg:grid-cols-[minmax(11.5rem,1fr)_minmax(12.5rem,1.05fr)_minmax(0,2.6fr)]">
             <aside
-              className="home-rail home-rail--awaiting home-rail--column await-col flex max-h-[42vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:sticky md:top-4 md:z-[5] md:max-h-[min(32rem,calc(100dvh-6rem))] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
+              className="home-rail home-rail--awaiting home-rail--editorial-col home-rail--column await-col flex max-h-[42vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Yazılmayı bekleyenler"
             >
-              <div className="home-rail-header shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-3 md:pt-4">
+              <div className="home-rail-header home-rail-header--col shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-3 md:pt-4">
                 <p className="trending-rail-eyebrow home-rail-eyebrow mb-0">
                   Yazılmayı bekleyenler
                 </p>
@@ -1791,13 +1791,7 @@ export default function HomePageClient({
                   Henüz yorum yok; ilk notu bırak.
                 </p>
               </div>
-              <div
-                className="left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
-                style={{
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "var(--scrollbar-thumb) transparent",
-                }}
-              >
+              <div className="home-rail-body home-rail-body--awaiting left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <nav
                   className="home-rail-nav home-rail-nav--awaiting flex flex-col px-2.5 pb-4 pt-2.5 md:px-3.5 md:pb-5 md:pt-3"
                   aria-label="Henüz yorum almamış başlıklar"
@@ -1835,21 +1829,15 @@ export default function HomePageClient({
               </div>
             </aside>
             <aside
-              className="home-rail home-rail--trending home-rail--column flex max-h-[40vh] w-full min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:sticky md:top-4 md:z-[4] md:max-h-[min(32rem,calc(100dvh-6rem))] md:w-full md:max-w-none md:overflow-hidden md:self-start md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
+              className="home-rail home-rail--trending home-rail--editorial-col home-rail--column flex max-h-[40vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0 md:border-r md:border-[color:var(--editorial-hairline)]"
               aria-label="Şu an en çok konuşulanlar"
             >
-              <div className="home-rail-header shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-3.5 md:pt-5">
+              <div className="home-rail-header home-rail-header--col shrink-0 border-b border-[color:var(--editorial-hairline)] px-3.5 pb-3.5 pt-4 md:px-4 md:pb-3.5 md:pt-5">
                 <p className="trending-rail-eyebrow home-rail-eyebrow mb-0">
                   Şu an en çok konuşulanlar
                 </p>
               </div>
-              <div
-                className="left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
-                style={{
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "var(--scrollbar-thumb) transparent",
-                }}
-              >
+              <div className="home-rail-body home-rail-body--trending left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <nav
                   className="home-rail-nav flex flex-col px-2.5 pb-4 pt-2.5 md:px-3.5 md:pb-5 md:pt-3"
                   aria-label="En çok yorumlananlar"
@@ -1889,15 +1877,19 @@ export default function HomePageClient({
                 </nav>
               </div>
             </aside>
-            <main className="main-column home-rail--center home-rail--column feed-col min-w-0 w-full bg-transparent md:border-l md:border-[color:var(--editorial-hairline)]">
-              <div className="layout-feed-inner layout-feed-inner--post-manifesto mx-auto w-full max-w-none px-4 py-5 sm:px-5 sm:py-6 md:px-7 md:py-6 lg:px-9">
-                <h2
-                  className="home-feed-column-title m-0"
-                  id="main-feed-title"
-                >
-                  Hafızaya eklenenler
-                </h2>
-                {renderMainFeed()}
+            <main className="main-column home-rail--center home-rail--editorial-col home-rail--feed-main feed-col flex min-h-0 min-w-0 w-full flex-col bg-transparent md:h-full md:border-l md:border-[color:var(--editorial-hairline)]">
+              <div className="home-feed-rail layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-4 py-5 sm:px-5 sm:py-6 md:h-full md:min-h-0 md:px-7 md:py-5 md:pt-5 lg:px-9">
+                <div className="home-feed-rail__head home-rail-header--col shrink-0">
+                  <h2
+                    className="home-feed-column-title m-0"
+                    id="main-feed-title"
+                  >
+                    Hafızaya eklenenler
+                  </h2>
+                </div>
+                <div className="home-feed-rail__body home-rail-body home-rail-body--feed left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 md:min-h-0 md:pb-4">
+                  {renderMainFeed()}
+                </div>
               </div>
             </main>
             </div>
