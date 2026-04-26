@@ -16,6 +16,7 @@ import { anonymizeCurrentUserAccount } from "@/lib/anonymize-account";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { resolveVisibleName } from "@/lib/visible-name";
 import { normalizeEntryCategory } from "@/lib/entry-category";
+import { normalizeAdminEntryPublishSection } from "@/lib/admin-entry-publish-section";
 import { normalizeEntrySlug } from "@/lib/slug";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 
@@ -30,6 +31,16 @@ function isStarterEncyclopediaEntry(entry: EntryItem): boolean {
   const n = normalizeEntryCategory(entry.category);
   return n != null && STARTER_ENCYCLOPEDIA_CATEGORY_IDS.has(n);
 }
+
+/** Admin yayın alanı slug’ı; yoksa legacy (eski kategori) kayıt. */
+function entryPublishSlug(entry: EntryItem) {
+  return normalizeAdminEntryPublishSection(entry.category);
+}
+
+function isLegacyHomeBlockEntry(entry: EntryItem): boolean {
+  return entryPublishSlug(entry) === null;
+}
+
 import { FeedEntryCard } from "./feed-entry-card";
 
 function entryMatchesSearch(entry: EntryItem, rawQuery: string): boolean {
@@ -554,31 +565,93 @@ export default function HomePageClient({
   }, [centerEntries]);
 
   const mostCommentedEntries = useMemo(() => {
-    const ranked = centerEntries.map((entry) => ({
+    const withCounts = centerEntries.map((entry) => ({
       entry,
       commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
     }));
-    ranked.sort((a, b) => b.commentCount - a.commentCount);
-    return ranked.slice(0, 10).map((row) => row.entry);
+    const sortByComments = (
+      a: (typeof withCounts)[0],
+      b: (typeof withCounts)[0]
+    ) => {
+      if (b.commentCount !== a.commentCount) {
+        return b.commentCount - a.commentCount;
+      }
+      return compareEntriesByNewest(a.entry, b.entry);
+    };
+
+    const trendingTagged = withCounts
+      .filter((w) => entryPublishSlug(w.entry) === "trending")
+      .sort(sortByComments);
+    const picked: EntryItem[] = [];
+    const used = new Set<string>();
+    for (const row of trendingTagged) {
+      if (picked.length >= 10) break;
+      picked.push(row.entry);
+      used.add(row.entry.id);
+    }
+    if (picked.length < 10) {
+      const legacyRanked = withCounts
+        .filter((w) => isLegacyHomeBlockEntry(w.entry))
+        .sort(sortByComments);
+      for (const row of legacyRanked) {
+        if (picked.length >= 10) break;
+        if (!used.has(row.entry.id)) {
+          picked.push(row.entry);
+          used.add(row.entry.id);
+        }
+      }
+    }
+    return picked;
   }, [centerEntries, commentsByEntryIdLive]);
 
-  const shuffledMainFeedEntries = useMemo(
-    () => [...centerEntries].sort(compareEntriesByNewest),
-    [centerEntries]
-  );
+  const shuffledMainFeedEntries = useMemo(() => {
+    const memoryTagged = centerEntries.filter(
+      (e) => entryPublishSlug(e) === "memory"
+    );
+    const legacy = centerEntries.filter((e) => isLegacyHomeBlockEntry(e));
+    const byId = new Map<string, EntryItem>();
+    for (const e of memoryTagged) byId.set(e.id, e);
+    for (const e of legacy) {
+      if (!byId.has(e.id)) byId.set(e.id, e);
+    }
+    return [...byId.values()].sort(compareEntriesByNewest);
+  }, [centerEntries]);
 
   const rightRailAwaitingFirstComment = useMemo(() => {
     const withCounts = centerEntries.map((entry) => ({
       entry,
       commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
     }));
-    const zeros = withCounts.filter((r) => r.commentCount === 0);
-    zeros.sort((a, b) => {
-      const ta = new Date(a.entry.created_at).getTime();
-      const tb = new Date(b.entry.created_at).getTime();
-      return tb - ta;
-    });
-    return zeros.slice(0, 12).map((r) => r.entry);
+    const pendingTagged = withCounts
+      .filter((w) => entryPublishSlug(w.entry) === "pending")
+      .sort((a, b) => compareEntriesByNewest(a.entry, b.entry));
+    const picked: EntryItem[] = [];
+    const used = new Set<string>();
+    for (const row of pendingTagged) {
+      if (picked.length >= 12) break;
+      picked.push(row.entry);
+      used.add(row.entry.id);
+    }
+    if (picked.length < 12) {
+      const zeros = withCounts
+        .filter(
+          (r) =>
+            isLegacyHomeBlockEntry(r.entry) && r.commentCount === 0
+        )
+        .sort((a, b) => {
+          const ta = new Date(a.entry.created_at).getTime();
+          const tb = new Date(b.entry.created_at).getTime();
+          return tb - ta;
+        });
+      for (const row of zeros) {
+        if (picked.length >= 12) break;
+        if (!used.has(row.entry.id)) {
+          picked.push(row.entry);
+          used.add(row.entry.id);
+        }
+      }
+    }
+    return picked;
   }, [centerEntries, commentsByEntryIdLive]);
 
   const waitingEntriesForExplore = useMemo(
@@ -600,11 +673,22 @@ export default function HomePageClient({
       }
       return compareEntriesByNewest(a.entry, b.entry);
     };
-    const encyclopedic = withMeta
-      .filter((w) => isStarterEncyclopediaEntry(w.entry))
+    const understandTagged = withMeta
+      .filter((w) => entryPublishSlug(w.entry) === "understand_trabzon")
       .sort(sortByEngagement);
     const picked: EntryItem[] = [];
     const used = new Set<string>();
+    for (const w of understandTagged) {
+      if (picked.length >= 4) break;
+      picked.push(w.entry);
+      used.add(w.entry.id);
+    }
+    const encyclopedic = withMeta
+      .filter(
+        (w) =>
+          !used.has(w.entry.id) && isStarterEncyclopediaEntry(w.entry)
+      )
+      .sort(sortByEngagement);
     for (const w of encyclopedic) {
       if (picked.length >= 4) break;
       picked.push(w.entry);
@@ -612,7 +696,9 @@ export default function HomePageClient({
     }
     if (picked.length < 4) {
       const rest = withMeta
-        .filter((w) => !used.has(w.entry.id))
+        .filter(
+          (w) => !used.has(w.entry.id) && isLegacyHomeBlockEntry(w.entry)
+        )
         .sort(sortByEngagement);
       for (const w of rest) {
         if (picked.length >= 4) break;
@@ -637,19 +723,30 @@ export default function HomePageClient({
       }
       return compareEntriesByNewest(a.entry, b.entry);
     };
-    const withQuestionMark = withMeta.filter((w) =>
+    const questionTagged = withMeta
+      .filter((w) => entryPublishSlug(w.entry) === "question_of_day")
+      .sort(sortByEngagement);
+    if (questionTagged.length > 0) {
+      return questionTagged[0].entry;
+    }
+    const legacyPool = withMeta.filter((w) => isLegacyHomeBlockEntry(w.entry));
+    const withQuestionMark = legacyPool.filter((w) =>
       w.entry.title.includes("?")
     );
     if (withQuestionMark.length > 0) {
       withQuestionMark.sort(sortByEngagement);
       return withQuestionMark[0].entry;
     }
-    const gundem = withMeta.filter(
+    const gundem = legacyPool.filter(
       (w) => normalizeEntryCategory(w.entry.category) === "gundem"
     );
     if (gundem.length > 0) {
       gundem.sort(sortByEngagement);
       return gundem[0].entry;
+    }
+    if (legacyPool.length > 0) {
+      const sorted = [...legacyPool].sort(sortByEngagement);
+      return sorted[0].entry;
     }
     const sorted = [...withMeta].sort(sortByEngagement);
     return sorted[0].entry;
@@ -660,19 +757,44 @@ export default function HomePageClient({
     waitingEntriesForExplore.length > 0 ||
     dailyQuestionEntry !== null;
 
-  /** Manifesto / ana grid arası: en çok yorum → eşitlikte yeni; en fazla 4. */
+  /** Manifesto / ana grid arası: `today` yayın alanı + legacy doldurma; en fazla 4. */
   const todayDiscoveryEntries = useMemo(() => {
     const ranked = centerEntries.map((entry) => ({
       entry,
       commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
     }));
-    ranked.sort((a, b) => {
+    const sortRanked = (
+      a: (typeof ranked)[0],
+      b: (typeof ranked)[0]
+    ) => {
       if (b.commentCount !== a.commentCount) {
         return b.commentCount - a.commentCount;
       }
       return compareEntriesByNewest(a.entry, b.entry);
-    });
-    return ranked.slice(0, 4).map((r) => r.entry);
+    };
+    const todayTagged = ranked
+      .filter((r) => entryPublishSlug(r.entry) === "today")
+      .sort(sortRanked);
+    const picked: EntryItem[] = [];
+    const used = new Set<string>();
+    for (const row of todayTagged) {
+      if (picked.length >= 4) break;
+      picked.push(row.entry);
+      used.add(row.entry.id);
+    }
+    if (picked.length < 4) {
+      const legacyRanked = ranked
+        .filter((r) => isLegacyHomeBlockEntry(r.entry))
+        .sort(sortRanked);
+      for (const row of legacyRanked) {
+        if (picked.length >= 4) break;
+        if (!used.has(row.entry.id)) {
+          picked.push(row.entry);
+          used.add(row.entry.id);
+        }
+      }
+    }
+    return picked;
   }, [centerEntries, commentsByEntryIdLive]);
 
   const feedEntriesSearchFiltered = useMemo(() => {
