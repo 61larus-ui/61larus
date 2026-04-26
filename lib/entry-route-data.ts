@@ -9,7 +9,6 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { normalizeEntryCategory } from "@/lib/entry-category";
 import { normalizeEntrySlug } from "@/lib/slug";
-import { isRfc4122Uuid } from "@/lib/seo-entry-description";
 import type { CommentItem, EntryItem } from "@/app/home-page-client";
 
 function authorLabelFromUserRow(row: {
@@ -61,24 +60,6 @@ type EntryRow = {
   slug?: string | null;
 };
 
-async function loadEntryRowBySlug(
-  client: Exclude<
-    ReturnType<typeof createSupabaseServiceClient> | Awaited<
-      ReturnType<typeof createSupabaseServerClient>
-    >,
-    null
-  >,
-  segment: string
-): Promise<EntryRow | null> {
-  const { data, error } = await client
-    .from("entries")
-    .select("id, title, content, created_at, category, user_id, slug")
-    .eq("slug", segment)
-    .maybeSingle();
-  if (error || !data) return null;
-  return data as EntryRow;
-}
-
 async function loadEntryRowById(
   client: Exclude<
     ReturnType<typeof createSupabaseServiceClient> | Awaited<
@@ -95,75 +76,6 @@ async function loadEntryRowById(
     .maybeSingle();
   if (error || !data) return null;
   return data as EntryRow;
-}
-
-/** URL segment for slug lookup (raw path + safe decode, deduped). */
-function segmentLookupKeys(segment: string): string[] {
-  const t = segment.trim();
-  if (!t) return [];
-  const out = new Set<string>([t]);
-  try {
-    out.add(decodeURIComponent(t));
-  } catch {
-    /* keep single variant */
-  }
-  return [...out].filter((s) => s.length > 0);
-}
-
-const TITLE_SLUG_SCAN_PAGE = 500;
-const TITLE_SLUG_SCAN_MAX_ROWS = 200_000;
-
-function rowMatchesNormalizedTarget(
-  row: { title?: unknown; slug?: unknown },
-  targetSlug: string
-): boolean {
-  if (!targetSlug) return false;
-  const title = row.title;
-  const normTitle = normalizeEntrySlug(
-    (typeof title === "string" ? title : "").trim()
-  );
-  if (normTitle.length > 0 && normTitle === targetSlug) return true;
-  const rawSlug = row.slug;
-  if (typeof rawSlug !== "string" || rawSlug.trim().length === 0) {
-    return false;
-  }
-  return normalizeEntrySlug(rawSlug.trim()) === targetSlug;
-}
-
-async function loadEntryRowByNormalizedTitle(
-  client: Exclude<
-    ReturnType<typeof createSupabaseServiceClient> | Awaited<
-      ReturnType<typeof createSupabaseServerClient>
-    >,
-    null
-  >,
-  targetSlug: string
-): Promise<EntryRow | null> {
-  const target = targetSlug.trim();
-  if (!target) return null;
-
-  let from = 0;
-  for (;;) {
-    if (from >= TITLE_SLUG_SCAN_MAX_ROWS) return null;
-    const to = from + TITLE_SLUG_SCAN_PAGE - 1;
-    const { data, error } = await client
-      .from("entries")
-      .select("id, title, content, created_at, category, user_id, slug")
-      .order("created_at", { ascending: false })
-      .range(from, to);
-    if (error) {
-      console.warn("[entry-route] title-slug scan", error.message);
-      return null;
-    }
-    if (!data?.length) return null;
-    for (const row of data) {
-      if (rowMatchesNormalizedTarget(row, target)) {
-        return row as EntryRow;
-      }
-    }
-    if (data.length < TITLE_SLUG_SCAN_PAGE) return null;
-    from += TITLE_SLUG_SCAN_PAGE;
-  }
 }
 
 export type EntryRouteDetail = {
@@ -321,6 +233,27 @@ function decodeSlugSegment(segment: string): string {
   }
 }
 
+function entryRowMatchesSlugResolution(
+  row: EntryRow,
+  targetSlug: string,
+  decodedSlug: string
+): boolean {
+  if (row.id === decodedSlug) return true;
+  if (
+    targetSlug.length > 0 &&
+    normalizeEntrySlug(row.slug ?? "") === targetSlug
+  ) {
+    return true;
+  }
+  if (
+    targetSlug.length > 0 &&
+    normalizeEntrySlug(row.title ?? "") === targetSlug
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export async function getEntryDetailBySlug(
   segment: string
 ): Promise<EntryRouteDetail | null> {
@@ -330,32 +263,30 @@ export async function getEntryDetailBySlug(
     typeof supabase,
     null
   >;
+
   const decodedSlug = decodeSlugSegment(segment);
   if (!decodedSlug) return null;
 
   const targetSlug = normalizeEntrySlug(decodedSlug);
-  const slugLookupCandidates = [
-    ...new Set(
-      [decodedSlug, targetSlug].filter((s) => typeof s === "string" && s.length > 0)
-    ),
-  ];
-  for (const c of slugLookupCandidates) {
-    const row = await loadEntryRowBySlug(client, c);
-    if (row) return buildDetailFromRow(supabase, row);
+
+  const { data, error } = await client
+    .from("entries")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (error) {
+    console.warn("[entry-route] getEntryDetailBySlug", error.message);
+    return null;
   }
 
-  const keys = segmentLookupKeys(segment);
-  for (const k of keys) {
-    if (isRfc4122Uuid(k)) {
-      const row = await loadEntryRowById(client, k);
-      if (row) return buildDetailFromRow(supabase, row);
+  for (const raw of data ?? []) {
+    const row = raw as EntryRow;
+    if (entryRowMatchesSlugResolution(row, targetSlug, decodedSlug)) {
+      return buildDetailFromRow(supabase, row);
     }
   }
 
-  if (targetSlug.length > 0) {
-    const titleRow = await loadEntryRowByNormalizedTitle(client, targetSlug);
-    if (titleRow) return buildDetailFromRow(supabase, titleRow);
-  }
   return null;
 }
 
