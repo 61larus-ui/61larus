@@ -267,7 +267,6 @@ export default function HomePageClient({
   const pendingFocusAfterEntrySelectRef = useRef(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  const [, setPendingEntryRouteId] = useState<string | null>(null);
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
@@ -487,17 +486,11 @@ export default function HomePageClient({
     }
   }, []);
 
-  const closeEntryModal = useCallback(() => {
-    setSelectedEntryId(null);
-    setPendingEntryRouteId(null);
-    void router.replace("/", { scroll: false });
-  }, [router]);
-
-  /** Tam yazı akışı: arama kapalı, detay kapalı, feed modu. */
+  /** Tam yazı akışı: arama kapalı, ana sayfaya dön. */
   const resetToWritingsFeed = useCallback(() => {
     setSearchQuery("");
-    closeEntryModal();
-  }, [closeEntryModal]);
+    void router.push("/");
+  }, [router]);
 
   /** Wordmark: kimlik dönüşü + sayfa başına kaydır. */
   const goToBrandHome = useCallback(() => {
@@ -557,8 +550,7 @@ export default function HomePageClient({
   }, [searchParams]);
 
   /**
-   * ?entry= veya [slug] ile açılış: yalnızca selectEntry; closeEntryModal burada yok
-   * (kapanma sadece kullanıcı/overlay/ESC/akışa dön).
+   * ?entry= veya [slug] ile açılış: yalnızca selectEntry. Ana sayfaya dönüş href="/" link ile.
    */
   useEffect(() => {
     if (isOAuthReturnQuery(searchParams)) return;
@@ -715,21 +707,6 @@ export default function HomePageClient({
       combinedEntries.find((entry) => entry.id === selectedEntryId) ?? null
     );
   }, [selectedEntryId, combinedEntries]);
-
-  useEffect(() => {
-    if (!selectedEntryId) {
-      return;
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        closeEntryModal();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [selectedEntryId, closeEntryModal]);
 
   async function submitComment() {
     const trimmed = commentText.trim();
@@ -1152,21 +1129,9 @@ export default function HomePageClient({
     return (
       <div className="relative z-0 max-w-none">
         <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
-          <button
-            type="button"
-            className="entry-detail-back"
-            onMouseDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-            }}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              closeEntryModal();
-            }}
-          >
+          <Link href="/" className="entry-detail-back">
             ← akışa dön
-          </button>
+          </Link>
         </div>
 
         <article className="entry-detail-article m-0 border-0 p-0">
@@ -1330,6 +1295,49 @@ export default function HomePageClient({
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderEntryDetailPage() {
+    if (!selectedEntry && combinedEntries.length === 0) {
+      return (
+        <div className="entry-detail-page">
+          <div className="entry-detail-page-inner">
+            <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
+              <Link href="/" className="entry-detail-back">
+                ← akışa dön
+              </Link>
+            </div>
+            <div className="entry-detail-loading">yazı yükleniyor…</div>
+          </div>
+        </div>
+      );
+    }
+    if (!selectedEntry) {
+      return (
+        <div className="entry-detail-page">
+          <div className="entry-detail-page-inner">
+            <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
+              <Link href="/" className="entry-detail-back">
+                ← akışa dön
+              </Link>
+            </div>
+            <p
+              className="m-0 mt-3 text-center text-sm"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              yazı bulunamadı
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="entry-detail-page">
+        <div className="entry-detail-page-inner">
+          {renderEntryDetailContent(selectedEntry)}
         </div>
       </div>
     );
@@ -1675,6 +1683,9 @@ export default function HomePageClient({
                 üzerinden bize ulaşabilirsin.
               </div>
             ) : null}
+            {selectedEntryId ? (
+              renderEntryDetailPage()
+            ) : (
             <div className="home-page-editorial home-page-editorial--section-stack">
             <div
               className="home-manifesto home-manifesto--bridge home-search-bridge home-manifesto-inner--bridge home-search-field min-w-0 w-full max-w-full"
@@ -1969,6 +1980,7 @@ export default function HomePageClient({
               </section>
             ) : null}
             </div>
+            )}
 
             <footer
               id="site-footer"
@@ -2040,79 +2052,6 @@ export default function HomePageClient({
           </>
         )}
       </section>
-
-      {selectedEntryId ? (
-        <div className="entry-detail-shell">
-          <div className="entry-detail-backdrop">
-            <article
-              className="entry-detail-card"
-              role="dialog"
-              aria-modal="true"
-              aria-label={
-                selectedEntry ? undefined : "Yazı ayrıntıları"
-              }
-              aria-labelledby={selectedEntry ? "entry-detail-title" : undefined}
-              onMouseDown={(event) => {
-                event.stopPropagation();
-              }}
-              onClick={(event) => {
-                event.stopPropagation();
-              }}
-            >
-              {!selectedEntry && combinedEntries.length === 0 ? (
-                <div>
-                  <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
-                    <button
-                      type="button"
-                      className="entry-detail-back"
-                      onMouseDown={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                      }}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        closeEntryModal();
-                      }}
-                    >
-                      ← akışa dön
-                    </button>
-                  </div>
-                  <div className="entry-detail-loading">yazı yükleniyor…</div>
-                </div>
-              ) : !selectedEntry ? (
-                <div>
-                  <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
-                    <button
-                      type="button"
-                      className="entry-detail-back"
-                      onMouseDown={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                      }}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        closeEntryModal();
-                      }}
-                    >
-                      ← akışa dön
-                    </button>
-                  </div>
-                  <p
-                    className="m-0 mt-3 text-center text-sm"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    yazı bulunamadı
-                  </p>
-                </div>
-              ) : (
-                renderEntryDetailContent(selectedEntry)
-              )}
-            </article>
-          </div>
-        </div>
-      ) : null}
 
       {renderFooterInfoPanel()}
 
