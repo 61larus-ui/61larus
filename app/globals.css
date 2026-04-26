@@ -2054,8 +2054,9 @@ main > section
     border-color 0.2s ease;
 }
 
+/* Alt ticker: üst ile aynı dış boşluk (ayrı margin override yok) */
 .home-ticker--lower {
-  margin-top: 8px;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 
@@ -2969,18 +2970,18 @@ main
 }
 
 .home-page-editorial .home-explore--prefooter.home-explore {
-  padding-top: 0.3rem;
+  padding-top: 0.25rem;
 }
 
 @media (min-width: 768px) {
   .home-page-editorial .home-explore--prefooter.home-explore {
-    padding-top: 0.35rem;
+    padding-top: 0.3rem;
   }
 }
 
 @media (min-width: 1024px) {
   .home-page-editorial .home-explore--prefooter.home-explore {
-    padding-top: 0.4rem;
+    padding-top: 0.35rem;
   }
 }
 
