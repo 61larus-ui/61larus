@@ -412,8 +412,8 @@ body {
 .feed-entry-card--editorial {
   margin-bottom: 0;
   margin-top: 0;
-  padding: 1rem 0.2rem 1rem 0.2rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.038);
+  padding: 0.9rem 0.2rem 0.9rem 0.2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.034);
   transform: none;
   transition: background-color 0.22s ease, border-color 0.22s ease;
 }
@@ -1530,7 +1530,7 @@ main > section
   }
 
   .home-editorial-cols .col-list-panel .home-rail-nav {
-    padding: 0.75rem 0.75rem 1.5rem !important;
+    padding: 0.75rem 0.75rem 1.25rem !important;
   }
 
   .home-editorial-cols .col-head-band.col-head-band--settled {
@@ -1720,7 +1720,7 @@ main > section
 .today-discovery-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   text-align: left;
   width: 100%;
   min-width: 0;
@@ -1809,7 +1809,9 @@ main > section
   -webkit-line-clamp: 2;
   overflow: hidden;
   max-width: 100%;
-  margin: 0 0 auto;
+  margin: 0;
+  flex: 1 1 auto;
+  min-height: 0;
   font-family: var(--font-editorial-display);
   font-size: var(--type-scale-title);
   font-weight: 500;
@@ -1821,6 +1823,41 @@ main > section
     var(--text-secondary) 6%
   );
   text-rendering: optimizeLegibility;
+}
+
+.today-discovery-item-foot {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.45rem;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 0.4rem;
+  flex-shrink: 0;
+}
+
+.today-discovery-item-stat {
+  font-family: var(--font-sans);
+  font-size: calc(var(--type-scale-meta) * 0.92);
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0.018em;
+  color: var(--text-meta);
+  opacity: 0.94;
+  font-variant-numeric: tabular-nums;
+}
+
+.today-discovery-item-open {
+  font-family: var(--font-sans);
+  font-size: calc(var(--type-scale-meta) * 0.92);
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-meta);
+  flex-shrink: 0;
+  opacity: 0.92;
 }
 
 .today-discovery-meta {
@@ -1876,6 +1913,20 @@ main > section
   line-height: 1.36;
   font-weight: 500;
   -webkit-line-clamp: 2;
+}
+
+.today-strip .today-discovery-item {
+  height: 100%;
+}
+
+.today-strip .today-discovery--faz5 .today-discovery-item-foot {
+  padding-top: 0.32rem;
+}
+
+.today-strip .today-discovery--faz5 .today-discovery-item-stat,
+.today-strip .today-discovery--faz5 .today-discovery-item-open {
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
 }
 
 .today-discovery--faz5 .today-discovery-number {
@@ -1989,6 +2040,7 @@ main > section
   border-top: 0;
   border-bottom: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
 }
 
 @media (min-width: 1024px) {
@@ -2004,7 +2056,7 @@ main > section
   }
 
   .today-strip .today-discovery--faz5 .today-discovery-item {
-    min-height: 3.5rem;
+    min-height: 4.35rem;
     border-bottom: 0;
     border-right: 1px solid rgba(0, 0, 0, 0.035);
   }
@@ -2066,26 +2118,26 @@ main > section
 }
 
 .today-strip .today-discovery--faz5 .today-discovery-item {
-  min-height: 0 !important;
-  padding: 0.38rem 0.5rem 0.42rem !important;
+  min-height: 4rem !important;
+  padding: 0.4rem 0.5rem 0.42rem !important;
 }
 
 @media (min-width: 1024px) {
   .today-strip .today-discovery--faz5 .today-discovery-item {
-    min-height: 2.65rem !important;
-    padding: 0.36rem 0.4rem 0.38rem !important;
+    min-height: 4.35rem !important;
+    padding: 0.38rem 0.45rem 0.4rem !important;
   }
 }
 
 @media (max-width: 1023.98px) {
   .today-strip .today-discovery--faz5 .today-discovery-item {
-    min-height: 3.1rem !important;
+    min-height: 3.85rem !important;
   }
 }
 
 @media (max-width: 767.98px) {
   .today-strip .today-discovery--faz5 .today-discovery-item {
-    min-height: 3rem !important;
+    min-height: 3.75rem !important;
     padding: 0.38rem 0.55rem 0.4rem !important;
   }
 }
@@ -2188,6 +2240,13 @@ main > section
   );
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+}
+
+/* Hafızaya başlığı: bir kademe daha sakin (sol/orta ile denge) */
+.col-head-band--faz5-primary .col-section-head__title--rail {
+  font-size: 1.0625rem;
+  letter-spacing: -0.019em;
+  line-height: 1.34;
 }
 
 /* Alt keşif ana başlığı — “Trabzon’u keşfetmeye devam et” */
@@ -2672,19 +2731,19 @@ main > section
 
 .home-explore--faz51.home-explore {
   border-top: 0;
-  padding-top: 0.5rem;
-  padding-bottom: 1.5rem;
+  padding-top: 0.25rem;
+  padding-bottom: 1.35rem;
 }
 
 @media (min-width: 768px) {
   .home-explore--faz51.home-explore {
-    padding: 0.75rem 0 2rem;
+    padding: 0.45rem 0 1.75rem;
   }
 }
 
 @media (min-width: 1024px) {
   .home-explore--faz51.home-explore {
-    padding: 1rem 0 2rem;
+    padding: 0.5rem 0 1.85rem;
   }
 }
 
@@ -2697,17 +2756,17 @@ main > section
 .home-explore--faz51 .home-explore-panel-label {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: calc(var(--type-scale-meta) * 1.02);
+  font-size: 0.8125rem;
   font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0.03em;
+  line-height: 1.38;
+  letter-spacing: 0.028em;
   text-transform: none;
   color: color-mix(
     in srgb,
-    var(--text-secondary) 60%,
-    var(--text-muted) 40%
+    var(--text-secondary) 58%,
+    var(--text-meta) 42%
   );
-  opacity: 0.9;
+  opacity: 0.92;
 }
 
 .home-explore--faz51 .home-explore-copy {
@@ -2718,12 +2777,13 @@ main > section
 }
 
 .home-explore--faz51 .home-explore-item-title {
-  font-size: clamp(0.8rem, 0.76rem + 0.12vw, 0.875rem) !important;
-  line-height: 1.3 !important;
+  font-size: clamp(0.8125rem, 0.78rem + 0.12vw, 0.90625rem);
+  line-height: 1.36;
 }
 
 .home-explore--faz51 .home-explore-question .home-explore-item-title {
-  font-size: clamp(0.82rem, 0.78rem + 0.12vw, 0.9rem) !important;
+  font-size: clamp(0.8125rem, 0.78rem + 0.12vw, 0.90625rem);
+  line-height: 1.36;
 }
 
 .home-explore--faz51 .home-explore-panel-head .col-section-head__kicker,
@@ -2791,9 +2851,9 @@ main
 /* KEŞİF başlığı: kendi bölümü, kolon ızgarasından görsel bağımsız */
 .home-explore--after-main-columns {
   position: relative;
-  z-index: 1;
+  z-index: 0;
   clear: both;
-  isolation: isolate;
+  isolation: auto;
 }
 
 .home-explore-head--section-start {
@@ -2825,6 +2885,41 @@ main
 
 .home-explore--faz51 .home-explore-head--settled {
   margin-bottom: 1.5rem;
+}
+
+/* Başlık metni yok: yalnızca üst tel + kompakt geçiş (≈40px) */
+.home-explore-head.home-explore-head--transition {
+  margin: 0;
+  padding: 18px 0;
+  min-height: 0;
+  max-height: 40px;
+  box-sizing: border-box;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: none;
+  background: transparent;
+}
+
+.home-explore--faz51
+  .home-explore-head.home-explore-head--transition.home-explore-head--settled {
+  margin-bottom: 0.625rem;
+}
+
+.home-explore-head.home-explore-head--transition.home-explore-head--section-start {
+  padding-top: 18px;
+}
+
+@media (min-width: 768px) {
+  .home-explore-head.home-explore-head--transition.home-explore-head--section-start {
+    padding-top: 18px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .home-explore--prefooter .home-explore-head.home-explore-head--transition {
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 
 .col-explore-section-head .col-section-head__kicker,
@@ -2870,11 +2965,11 @@ main
 /* Alt keşif — panel mini başlıklar (kicker ritmi) */
 .home-explore-panel-head {
   flex-shrink: 0;
-  margin: 0 0 0.5rem;
-  padding: 0 0 0.4rem;
+  margin: 0 0 0.4rem;
+  padding: 0 0 0.32rem;
   box-sizing: border-box;
   border: 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.035);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.034);
   background: transparent;
 }
 
@@ -2999,7 +3094,7 @@ main
   display: flex;
   flex-direction: column;
   /* FAZ 3: satır-satır border yerine hafif aralık — tablo değil liste */
-  gap: 0.35rem;
+  gap: 0.28rem;
 }
 
 .home-explore-list > li {
@@ -3009,12 +3104,12 @@ main
 .home-explore-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   text-align: left;
   width: 100%;
   min-width: 0;
   margin: 0;
-  padding: 0.75rem 0 0.75rem;
+  padding: 0.62rem 0 0.62rem;
   box-sizing: border-box;
   border: 0;
   background: transparent;
@@ -3068,10 +3163,48 @@ main
   opacity: 0.96;
 }
 
+.home-explore-item-foot {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.45rem;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 0.32rem;
+  flex-shrink: 0;
+}
+
+.home-explore-item-foot .home-explore-item-meta {
+  margin-top: 0;
+}
+
+.home-explore-item .home-explore-item-title {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.home-explore-item-foot .home-explore-cta--row {
+  margin-top: 0;
+  display: inline;
+  border-bottom: 0;
+  padding-bottom: 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.048em;
+  color: var(--text-meta);
+  opacity: 0.94;
+}
+
+.home-explore-item:hover .home-explore-cta--row,
+.home-explore-question:hover .home-explore-cta--row {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
 .home-explore-question {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   text-align: left;
   width: 100%;
   min-width: 0;
@@ -3085,7 +3218,7 @@ main
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background-color 0.2s ease, color 0.2s ease;
-  gap: 0.3rem;
+  gap: 0.2rem;
   border-radius: 0;
 }
 
@@ -3099,7 +3232,7 @@ main
 .home-explore-questions-grid {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
   width: 100%;
   min-width: 0;
   margin: 0;
@@ -3112,34 +3245,37 @@ main
   max-width: 100%;
   align-self: stretch;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
-  padding: 0.65rem 0 0.5rem 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.045);
+  align-items: stretch;
+  gap: 0.2rem;
+  padding: 0.55rem 0 0.45rem 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.034);
 }
 
 .home-explore-questions-grid .home-explore-question--stack:first-child {
   border-top: 0;
-  padding-top: 0.25rem;
+  padding-top: 0.2rem;
 }
 
 .home-explore-questions-grid .home-explore-question--stack .home-explore-cta {
-  margin-top: 0.15rem;
+  margin-top: 0;
 }
 
 .home-explore-questions-grid .home-explore-question--stack .home-explore-item-meta {
-  margin-top: 0.2rem;
+  margin-top: 0;
+}
+
+.home-explore-questions-grid .home-explore-question--stack .home-explore-item-foot {
+  padding-top: 0.28rem;
 }
 
 .home-explore-questions-grid .home-explore-questions-grid__title,
 .home-explore-questions-grid .home-explore-question .home-explore-questions-grid__title {
-  display: block;
-  overflow: visible;
-  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
   word-break: break-word;
-  -webkit-box-orient: unset;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
 }
 
 .home-explore-question:hover {
@@ -3154,11 +3290,14 @@ main
 }
 
 .home-explore-question .home-explore-item-title {
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-size: var(--type-scale-title);
-  line-height: var(--type-leading-title);
-  letter-spacing: -0.01em;
+  line-height: 1.36;
+  letter-spacing: -0.009em;
   font-weight: 500;
   font-family: var(--font-editorial-display);
 }

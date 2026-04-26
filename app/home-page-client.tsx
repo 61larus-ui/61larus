@@ -1360,6 +1360,8 @@ export default function HomePageClient({
                 >
                   {todayDiscoveryEntries.map((entry, index) => {
                     const num = String(index + 1).padStart(2, "0");
+                    const cc =
+                      commentsByEntryIdLive[entry.id]?.length ?? 0;
                     return (
                       <button
                         key={entry.id}
@@ -1367,7 +1369,7 @@ export default function HomePageClient({
                         role="listitem"
                         className="today-discovery-item"
                         onClick={() => goToEntry(entry.id)}
-                        aria-label={`Aç: ${entry.title}`}
+                        aria-label={`Aç: ${entry.title}, ${cc} yorum`}
                       >
                         <span
                           className="today-discovery-number"
@@ -1378,6 +1380,17 @@ export default function HomePageClient({
                         <span className="today-discovery-title">
                           {entry.title}
                         </span>
+                        <div
+                          className="today-discovery-item-foot"
+                          aria-hidden
+                        >
+                          <span className="today-discovery-item-stat">
+                            {cc} yorum
+                          </span>
+                          <span className="today-discovery-item-open">
+                            Yazıyı aç →
+                          </span>
+                        </div>
                       </button>
                     );
                   })}
@@ -1502,16 +1515,12 @@ export default function HomePageClient({
             {hasHomeExplore ? (
               <section
                 className="home-explore home-explore--prefooter home-explore--after-main-columns home-explore--faz51"
-                aria-labelledby="home-explore-title"
+                aria-label="Keşif alanı"
               >
-                  <header className="col-section-head col-explore-section-head home-explore-head home-explore-head--section-start col-head-band--settled home-explore-head--settled">
-                    <h2
-                      id="home-explore-title"
-                      className="col-section-head__title col-section-head__title--explore m-0"
-                    >
-                      Trabzon&apos;u keşfetmeye devam et
-                    </h2>
-                  </header>
+                  <header
+                    className="col-section-head col-explore-section-head home-explore-head home-explore-head--section-start col-head-band--settled home-explore-head--settled home-explore-head--transition"
+                    aria-hidden="true"
+                  />
                   <div className="home-explore-grid items-stretch">
                     {starterEntries.length > 0 ? (
                       <div className="home-explore-panel home-explore-panel--starter flex h-full min-h-0 flex-col">
@@ -1536,11 +1545,14 @@ export default function HomePageClient({
                                     <span className="home-explore-item-title">
                                       {entry.title}
                                     </span>
-                                    <span className="home-explore-item-meta">
-                                      {cc > 0
-                                        ? `${cc} yorum`
-                                        : null}
-                                    </span>
+                                    <div className="home-explore-item-foot">
+                                      <span className="home-explore-item-meta">
+                                        {cc} yorum
+                                      </span>
+                                      <span className="home-explore-cta home-explore-cta--row">
+                                        Yazıyı aç →
+                                      </span>
+                                    </div>
                                   </button>
                                 </li>
                               );
@@ -1553,12 +1565,15 @@ export default function HomePageClient({
                       <div className="home-explore-panel home-explore-panel--waiting flex h-full min-h-0 flex-col">
                         <header className="col-section-head home-explore-panel-head shrink-0">
                           <h3 className="home-explore-panel-label m-0">
-                            Yazılmayı bekleyenler
+                            Okunmayı bekleyenler
                           </h3>
                         </header>
                         <div className="home-explore-panel-body flex min-h-0 min-w-0 flex-1 flex-col">
                           <ul className="home-explore-list" role="list">
-                            {waitingEntriesForExplore.map((entry) => (
+                            {waitingEntriesForExplore.map((entry) => {
+                              const wcc =
+                                commentsByEntryIdLive[entry.id]?.length ?? 0;
+                              return (
                               <li key={entry.id}>
                                 <button
                                   type="button"
@@ -1569,12 +1584,18 @@ export default function HomePageClient({
                                   <span className="home-explore-item-title">
                                     {entry.title}
                                   </span>
-                                  <span className="home-explore-item-meta">
-                                    0 yorum
-                                  </span>
+                                  <div className="home-explore-item-foot">
+                                    <span className="home-explore-item-meta">
+                                      {wcc} yorum
+                                    </span>
+                                    <span className="home-explore-cta home-explore-cta--row">
+                                      Yazıyı aç →
+                                    </span>
+                                  </div>
                                 </button>
                               </li>
-                            ))}
+                              );
+                            })}
                           </ul>
                         </div>
                       </div>
@@ -1607,14 +1628,14 @@ export default function HomePageClient({
                                   <span className="home-explore-item-title home-explore-questions-grid__title">
                                     {entry.title}
                                   </span>
-                                  <span className="home-explore-cta">
-                                    Yazıyı aç →
-                                  </span>
-                                  {cc > 0 ? (
+                                  <div className="home-explore-item-foot">
                                     <span className="home-explore-item-meta">
-                                      {`${cc} yorum`}
+                                      {cc} yorum
                                     </span>
-                                  ) : null}
+                                    <span className="home-explore-cta home-explore-cta--row">
+                                      Yazıyı aç →
+                                    </span>
+                                  </div>
                                 </button>
                               );
                             })}
