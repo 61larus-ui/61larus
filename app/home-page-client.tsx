@@ -1538,7 +1538,7 @@ export default function HomePageClient({
       <header className="site-header relative z-20 shrink-0">
         <div className="headerBlock home-page-container">
           <div className="headerBar min-w-0">
-            <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(21rem,100%)]">
+            <div className="flex min-w-0 flex-col gap-2 lg:max-w-[min(21rem,100%)]">
               <h1 className="m-0 p-0">
                 <button
                   type="button"
@@ -1567,7 +1567,7 @@ export default function HomePageClient({
               {HEADER_ATATURK_QUOTES[headerEditorialIdx]}
             </p>
           </div>
-          <div className="headerUserName site-header-aux min-w-0 gap-x-3 sm:gap-x-4 lg:shrink-0 lg:gap-x-5 lg:pr-6">
+          <div className="headerUserName site-header-aux min-w-0 justify-self-end gap-x-3 pl-1 sm:gap-x-4 lg:shrink-0 lg:gap-x-4 lg:pl-2 lg:pr-3">
             {!isAuthenticated ? (
                 <Link
                   href="/auth"
@@ -1707,7 +1707,7 @@ export default function HomePageClient({
             ) : null}
             <div className="home-page-editorial home-page-editorial--section-stack">
             <div
-              className="home-manifesto home-manifesto--bridge home-search-bridge home-manifesto-inner--bridge home-search-field"
+              className="home-manifesto home-manifesto--bridge home-search-bridge home-manifesto-inner--bridge home-search-field min-w-0 w-full max-w-full"
             >
               <div className="home-manifesto-search">
                 <label
