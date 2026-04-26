@@ -868,9 +868,24 @@ main > header.site-header {
   }
 }
 
-/* FAZ 3: site header — çok hafif alt çerçeve, üst alanı kilitler (tamamen yok yok) */
+/* FAZ 3 + FAZ 5.5: site header — alt hairline, omurga (container) genişliğinde; tam-kenar yok */
 main > header.site-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: none;
+}
+
+main > header.site-header::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(100%, var(--home-container-max));
+  max-width: var(--home-container-max);
+  height: 1px;
+  transform: translateX(-50%);
+  /* hairline: border yerine, ~0.03 opak siyah */
+  background: rgba(0, 0, 0, 0.031);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Marka wordmark — entry display’den ayrı: daha açık ağırlık, yumuşak mürekkep */
@@ -5527,7 +5542,7 @@ aside[aria-label="Yayın paneli"] .right-block {
   main > header.site-header {
     margin-bottom: 0 !important;
     padding: 28px 0 18px !important;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
+    border-bottom: none !important;
   }
 
   main > header .site-wordmark,
@@ -5901,12 +5916,16 @@ aside[aria-label="Yayın paneli"] .right-block {
     order: 3 !important;
   }
 
-  /* HEADER alt çizgiyi yumuşat */
+  /* HEADER: legacy kurallar; ana sayfa header çizgisi FAZ 5.5 ::after ile */
   .site-header,
   .top-header,
   header.site-header,
   .header {
     border-bottom: 1px solid rgba(15, 23, 42, 0.04) !important;
+  }
+
+  main > header.site-header {
+    border-bottom: none !important;
   }
 
   /* ANA AKIŞ BLOKLARI ARASI BOŞLUK (editorial: nefes + sıra) */
