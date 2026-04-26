@@ -10,16 +10,6 @@ import {
   type FormEvent,
 } from "react";
 import {
-  FEED_CATEGORY_OPTIONS,
-  normalizeEntryCategory,
-} from "@/lib/entry-category";
-import {
-  ADMIN_ENTRY_PUBLISH_SECTION_OPTIONS,
-  adminEntryPublishSectionLabel,
-  normalizeAdminEntryPublishSection,
-  type AdminEntryPublishSectionSlug,
-} from "@/lib/admin-entry-publish-section";
-import {
   SUPER_ADMIN_USERNAME,
   isSuperAdminRole,
   type AdminRole,
@@ -36,6 +26,26 @@ type EntryRow = {
   category: string | null;
   slug: string | null;
 };
+
+const ADMIN_PUBLISH_SECTIONS = [
+  { value: "today", label: "Bugün 61Larus’ta" },
+  { value: "pending", label: "Yazılmayı bekleyenler" },
+  { value: "trending", label: "Çok konuşulanlar" },
+  { value: "memory", label: "Hafızaya eklenenler" },
+  { value: "understand_trabzon", label: "Trabzon'u anlamak için" },
+  { value: "waiting_to_read", label: "Okunmayı bekleyenler" },
+  { value: "question_of_day", label: "Günün soruları" },
+] as const;
+
+const PUBLISH_SECTION_VALUE_SET = new Set<string>(
+  ADMIN_PUBLISH_SECTIONS.map((item) => item.value)
+);
+
+function getPublishSectionLabel(value?: string | null): string {
+  if (!value) return "—";
+  const found = ADMIN_PUBLISH_SECTIONS.find((item) => item.value === value);
+  return found?.label ?? value;
+}
 
 type AdminUserRow = {
   id: string;
@@ -174,19 +184,6 @@ function platformMemberAgreementLabel(m: PlatformMemberRow): string {
   return "—";
 }
 
-/** Tablo: yeni yayın alanı slug’ları veya eski kategori değerleri. */
-function entryListPublishColumnLabel(raw: string | null): string {
-  if (!raw) return "—";
-  const pub = normalizeAdminEntryPublishSection(raw);
-  if (pub) return adminEntryPublishSectionLabel(pub);
-  const n = normalizeEntryCategory(raw);
-  if (n) {
-    const o = FEED_CATEGORY_OPTIONS.find((x) => x.id === n);
-    return o?.label ?? raw;
-  }
-  return raw;
-}
-
 export default function AdminPage() {
   const [sessionOk, setSessionOk] = useState<boolean | null>(null);
   const [loginUser, setLoginUser] = useState(SUPER_ADMIN_USERNAME);
@@ -217,9 +214,7 @@ export default function AdminPage() {
   const [editRow, setEditRow] = useState<EntryRow | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
-  const [editPublishSection, setEditPublishSection] = useState<
-    AdminEntryPublishSectionSlug | ""
-  >("");
+  const [editPublishSection, setEditPublishSection] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -245,9 +240,7 @@ export default function AdminPage() {
 
   const [draftTitle, setDraftTitle] = useState("");
   const [draftContent, setDraftContent] = useState("");
-  const [draftPublishSection, setDraftPublishSection] = useState<
-    AdminEntryPublishSectionSlug | ""
-  >("");
+  const [draftPublishSection, setDraftPublishSection] = useState("");
   /** Son yayınlanan entry: paylaşım linki ve metin; yeni taslak yazılmaya başlanınca temizlenir. */
   const [justPublishedEntry, setJustPublishedEntry] = useState<{
     id: string;
@@ -361,6 +354,30 @@ export default function AdminPage() {
     if (sessionOk !== true) return;
     void loadEntries();
   }, [sessionOk, loadEntries]);
+
+  const ENTRY_LIST_PAGE_SIZE = 20;
+  const sortedEntryRows = useMemo(() => {
+    return [...entries].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  }, [entries]);
+
+  const entryListTotalPages = Math.max(
+    1,
+    Math.ceil(sortedEntryRows.length / ENTRY_LIST_PAGE_SIZE)
+  );
+
+  const [entryListPage, setEntryListPage] = useState(1);
+
+  useEffect(() => {
+    setEntryListPage((p) => Math.min(p, entryListTotalPages));
+  }, [entryListTotalPages]);
+
+  const paginatedEntryRows = useMemo(() => {
+    const start = (entryListPage - 1) * ENTRY_LIST_PAGE_SIZE;
+    return sortedEntryRows.slice(start, start + ENTRY_LIST_PAGE_SIZE);
+  }, [sortedEntryRows, entryListPage]);
 
   const loadPlatformMembers = useCallback(async () => {
     setMembersLoading(true);
@@ -661,11 +678,12 @@ export default function AdminPage() {
 
     const title = draftTitle.trim();
     const content = draftContent.trim();
-    if (!draftPublishSection) {
+    const section = draftPublishSection.trim();
+    if (!PUBLISH_SECTION_VALUE_SET.has(section)) {
       setSubmitError("Yayın alanı seçin.");
       return;
     }
-    const category = draftPublishSection;
+    const category = section;
 
     if (!title) {
       setSubmitError("Başlık gerekli.");
@@ -758,8 +776,9 @@ export default function AdminPage() {
     setEditRow(row);
     setEditTitle(row.title);
     setEditContent(row.content);
+    const cat = row.category?.trim() ?? "";
     setEditPublishSection(
-      normalizeAdminEntryPublishSection(row.category) ?? ""
+      PUBLISH_SECTION_VALUE_SET.has(cat) ? cat : ""
     );
     setEditError(null);
   }
@@ -776,13 +795,13 @@ export default function AdminPage() {
     setEditSaving(true);
     const title = editTitle.trim();
     const content = editContent.trim();
-    const category = normalizeAdminEntryPublishSection(editPublishSection);
+    const category = editPublishSection.trim();
     if (!title || !content) {
       setEditError("Başlık ve içerik zorunlu.");
       setEditSaving(false);
       return;
     }
-    if (!category) {
+    if (!PUBLISH_SECTION_VALUE_SET.has(category)) {
       setEditError("Yayın alanı seçin.");
       setEditSaving(false);
       return;
@@ -1792,7 +1811,7 @@ export default function AdminPage() {
                       Yükleniyor…
                     </td>
                   </tr>
-                ) : entries.length === 0 ? (
+                ) : sortedEntryRows.length === 0 ? (
                   <tr>
                     <td
                       colSpan={6}
@@ -1802,7 +1821,7 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ) : (
-                  entries.map((row) => (
+                  paginatedEntryRows.map((row) => (
                     <tr
                       key={row.id}
                       className="border-b border-slate-800/80 hover:bg-slate-900/50"
@@ -1811,7 +1830,7 @@ export default function AdminPage() {
                         <span className="line-clamp-2">{row.title}</span>
                       </td>
                       <td className="admin-td whitespace-nowrap px-3 py-2">
-                        {entryListPublishColumnLabel(row.category)}
+                        {getPublishSectionLabel(row.category)}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2">
                         <span className="admin-btn-text rounded-md bg-emerald-500/15 px-2 py-0.5 text-emerald-300">
@@ -1855,6 +1874,35 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+          {sortedEntryRows.length > 0 ? (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
+              <button
+                type="button"
+                className="admin-btn-text rounded-lg border border-slate-600 px-3 py-2 disabled:opacity-40"
+                disabled={entryListPage <= 1}
+                onClick={() =>
+                  setEntryListPage((p) => Math.max(1, p - 1))
+                }
+              >
+                Önceki
+              </button>
+              <span className="text-slate-400">
+                Sayfa {entryListPage} / {entryListTotalPages}
+              </span>
+              <button
+                type="button"
+                className="admin-btn-text rounded-lg border border-slate-600 px-3 py-2 disabled:opacity-40"
+                disabled={entryListPage >= entryListTotalPages}
+                onClick={() =>
+                  setEntryListPage((p) =>
+                    Math.min(entryListTotalPages, p + 1)
+                  )
+                }
+              >
+                Sonraki
+              </button>
+            </div>
+          ) : null}
         </section>
       </div>
 
@@ -1911,16 +1959,13 @@ export default function AdminPage() {
                   value={draftPublishSection}
                   onChange={(e) => {
                     setJustPublishedEntry(null);
-                    setDraftPublishSection(
-                      e.target.value as AdminEntryPublishSectionSlug | ""
-                    );
+                    setDraftPublishSection(e.target.value);
                   }}
                   className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
-                  required
                 >
-                  <option value="">— Seçin —</option>
-                  {ADMIN_ENTRY_PUBLISH_SECTION_OPTIONS.map((o) => (
-                    <option key={o.slug} value={o.slug}>
+                  <option value="">Yayın alanı seç</option>
+                  {ADMIN_PUBLISH_SECTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
                       {o.label}
                     </option>
                   ))}
@@ -2047,17 +2092,12 @@ export default function AdminPage() {
               <span className="admin-label">Yayın alanı</span>
               <select
                 value={editPublishSection}
-                onChange={(e) =>
-                  setEditPublishSection(
-                    e.target.value as AdminEntryPublishSectionSlug | ""
-                  )
-                }
+                onChange={(e) => setEditPublishSection(e.target.value)}
                 className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
-                required
               >
-                <option value="">— Seçin —</option>
-                {ADMIN_ENTRY_PUBLISH_SECTION_OPTIONS.map((o) => (
-                  <option key={o.slug} value={o.slug}>
+                <option value="">Yayın alanı seç</option>
+                {ADMIN_PUBLISH_SECTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
                 ))}

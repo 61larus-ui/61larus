@@ -1,13 +1,13 @@
 /**
  * Admin panel: entry `category` kolonunda saklanan yayın alanı slug’ları.
- * (Ana sayfa veri mantığı bu dosyayı kullanmaz.)
  */
 export const ADMIN_ENTRY_PUBLISH_SECTION_SLUGS = [
+  "today",
   "pending",
   "trending",
   "memory",
-  "today",
   "understand_trabzon",
+  "waiting_to_read",
   "question_of_day",
 ] as const;
 
@@ -18,12 +18,13 @@ export const ADMIN_ENTRY_PUBLISH_SECTION_OPTIONS: readonly {
   readonly slug: AdminEntryPublishSectionSlug;
   readonly label: string;
 }[] = [
-  { slug: "pending", label: "Yazılmayı bekleyenler" },
-  { slug: "trending", label: "Şu an en çok konuşulanlar" },
-  { slug: "memory", label: "Hafızaya eklenenler" },
   { slug: "today", label: "Bugün 61Larus’ta" },
-  { slug: "understand_trabzon", label: "Trabzon’u anlamak için" },
-  { slug: "question_of_day", label: "Günün sorusu" },
+  { slug: "pending", label: "Yazılmayı bekleyenler" },
+  { slug: "trending", label: "Çok konuşulanlar" },
+  { slug: "memory", label: "Hafızaya eklenenler" },
+  { slug: "understand_trabzon", label: "Trabzon'u anlamak için" },
+  { slug: "waiting_to_read", label: "Okunmayı bekleyenler" },
+  { slug: "question_of_day", label: "Günün soruları" },
 ];
 
 const SLUG_SET = new Set<string>(ADMIN_ENTRY_PUBLISH_SECTION_SLUGS);
