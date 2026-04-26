@@ -1515,19 +1515,53 @@ export default function HomePageClient({
                       Trabzon&apos;u keşfetmeye devam et
                     </h2>
                   </header>
-                  <div className="home-explore-grid">
+                  <div className="home-explore-grid items-stretch">
                     {starterEntries.length > 0 ? (
-                      <div className="home-explore-panel home-explore-panel--starter">
-                        <header className="col-section-head home-explore-panel-head">
+                      <div className="home-explore-panel home-explore-panel--starter flex h-full min-h-0 flex-col">
+                        <header className="col-section-head home-explore-panel-head shrink-0">
                           <h3 className="home-explore-panel-label m-0">
                             Trabzon&apos;u anlamak için
                           </h3>
                         </header>
-                        <ul className="home-explore-list" role="list">
-                          {starterEntries.map((entry) => {
-                            const cc =
-                              commentsByEntryIdLive[entry.id]?.length ?? 0;
-                            return (
+                        <div className="home-explore-panel-body flex min-h-0 min-w-0 flex-1 flex-col">
+                          <ul className="home-explore-list" role="list">
+                            {starterEntries.map((entry) => {
+                              const cc =
+                                commentsByEntryIdLive[entry.id]?.length ?? 0;
+                              return (
+                                <li key={entry.id}>
+                                  <button
+                                    type="button"
+                                    className="home-explore-item"
+                                    onClick={() => goToEntry(entry.id)}
+                                    aria-label={`Aç: ${entry.title}`}
+                                  >
+                                    <span className="home-explore-item-title">
+                                      {entry.title}
+                                    </span>
+                                    <span className="home-explore-item-meta">
+                                      {cc > 0
+                                        ? `${cc} yorum`
+                                        : null}
+                                    </span>
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      </div>
+                    ) : null}
+                    {waitingEntriesForExplore.length > 0 ? (
+                      <div className="home-explore-panel home-explore-panel--waiting flex h-full min-h-0 flex-col">
+                        <header className="col-section-head home-explore-panel-head shrink-0">
+                          <h3 className="home-explore-panel-label m-0">
+                            Yazılmayı bekleyenler
+                          </h3>
+                        </header>
+                        <div className="home-explore-panel-body flex min-h-0 min-w-0 flex-1 flex-col">
+                          <ul className="home-explore-list" role="list">
+                            {waitingEntriesForExplore.map((entry) => (
                               <li key={entry.id}>
                                 <button
                                   type="button"
@@ -1539,83 +1573,55 @@ export default function HomePageClient({
                                     {entry.title}
                                   </span>
                                   <span className="home-explore-item-meta">
-                                    {cc > 0
-                                      ? `${cc} yorum`
-                                      : null}
+                                    0 yorum
                                   </span>
                                 </button>
                               </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    ) : null}
-                    {waitingEntriesForExplore.length > 0 ? (
-                      <div className="home-explore-panel home-explore-panel--waiting">
-                        <header className="col-section-head home-explore-panel-head">
-                          <h3 className="home-explore-panel-label m-0">
-                            Yazılmayı bekleyenler
-                          </h3>
-                        </header>
-                        <ul className="home-explore-list" role="list">
-                          {waitingEntriesForExplore.map((entry) => (
-                            <li key={entry.id}>
-                              <button
-                                type="button"
-                                className="home-explore-item"
-                                onClick={() => goToEntry(entry.id)}
-                                aria-label={`Aç: ${entry.title}`}
-                              >
-                                <span className="home-explore-item-title">
-                                  {entry.title}
-                                </span>
-                                <span className="home-explore-item-meta">
-                                  0 yorum
-                                </span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
                     ) : null}
                     {dailyQuestionEntries.length > 0 ? (
-                      <div className="home-explore-panel home-explore-panel--question">
-                        <header className="col-section-head home-explore-panel-head">
+                      <div className="home-explore-panel home-explore-panel--question flex h-full min-h-0 flex-col">
+                        <header className="col-section-head home-explore-panel-head shrink-0">
                           <h3 className="home-explore-panel-label m-0">
                             Günün soruları
                           </h3>
                         </header>
-                        <div
-                          className="home-explore-questions-grid"
-                          role="list"
-                          aria-label="Günün soruları"
-                        >
-                          {dailyQuestionEntries.map((entry) => {
-                            const cc =
-                              commentsByEntryIdLive[entry.id]?.length ?? 0;
-                            return (
-                              <button
-                                key={entry.id}
-                                type="button"
-                                role="listitem"
-                                className="home-explore-question home-explore-question--stack w-full max-w-full text-left"
-                                onClick={() => goToEntry(entry.id)}
-                                aria-label={`Aç: ${entry.title}`}
-                              >
-                                <span className="home-explore-item-title home-explore-questions-grid__title">
-                                  {entry.title}
-                                </span>
-                                <span className="home-explore-cta">
-                                  Yazıyı aç →
-                                </span>
-                                {cc > 0 ? (
-                                  <span className="home-explore-item-meta">
-                                    {`${cc} yorum`}
+                        <div className="home-explore-panel-body flex min-h-0 min-w-0 flex-1 flex-col">
+                          <div
+                            className="home-explore-questions-grid min-h-0 flex-1"
+                            role="list"
+                            aria-label="Günün soruları"
+                          >
+                            {dailyQuestionEntries.map((entry) => {
+                              const cc =
+                                commentsByEntryIdLive[entry.id]?.length ?? 0;
+                              return (
+                                <button
+                                  key={entry.id}
+                                  type="button"
+                                  role="listitem"
+                                  className="home-explore-question home-explore-question--stack w-full max-w-full text-left"
+                                  onClick={() => goToEntry(entry.id)}
+                                  aria-label={`Aç: ${entry.title}`}
+                                >
+                                  <span className="home-explore-item-title home-explore-questions-grid__title">
+                                    {entry.title}
                                   </span>
-                                ) : null}
-                              </button>
-                            );
-                          })}
+                                  <span className="home-explore-cta">
+                                    Yazıyı aç →
+                                  </span>
+                                  {cc > 0 ? (
+                                    <span className="home-explore-item-meta">
+                                      {`${cc} yorum`}
+                                    </span>
+                                  ) : null}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     ) : null}

@@ -2884,6 +2884,7 @@ main
   background: transparent;
   row-gap: 1rem;
   column-gap: 1.5rem;
+  align-items: stretch;
 }
 
 @media (min-width: 768px) and (max-width: 1023.98px) {
@@ -2906,6 +2907,10 @@ main
 
   .home-explore-grid .home-explore-panel--question {
     grid-column: auto;
+  }
+
+  .home-explore--prefooter .home-explore-grid > .home-explore-panel {
+    min-height: 100%;
   }
 }
 
