@@ -2054,10 +2054,10 @@ main > section
     border-color 0.2s ease;
 }
 
-/* Alt ticker: üst ile aynı dış boşluk (ayrı margin override yok) */
+/* Alt ticker: üst/alt dış boşluk simetrik (alt margin çöküşüne karşı net) */
 .home-ticker--lower {
   margin-top: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 10px !important;
 }
 
 .home-ticker:hover {
