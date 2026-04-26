@@ -2892,20 +2892,21 @@ main > section
   letter-spacing: 0.1em;
 }
 
-.home-explore--faz51 .home-explore-panel-label {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
+.home-explore--faz51 .home-explore-panel-head h3.home-explore-panel-label {
+  margin: 0 0 10px;
+  font-family: var(--font-editorial-display);
+  font-size: 1.125rem;
   font-weight: 500;
-  line-height: 1.38;
-  letter-spacing: 0.028em;
+  line-height: 1.32;
+  letter-spacing: -0.021em;
   text-transform: none;
   color: color-mix(
     in srgb,
-    var(--text-secondary) 58%,
-    var(--text-meta) 42%
+    var(--wordmark-ink) 92%,
+    var(--text-secondary) 8%
   );
-  opacity: 0.92;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
 }
 
 .home-explore--faz51 .home-explore-copy {
@@ -7289,9 +7290,8 @@ main .home-explore--faz51 .home-explore-panel-label {
 }
 
 main .home-explore--faz51 .home-explore-panel-label:hover {
-  color: color-mix(in srgb, var(--text-secondary) 45%, var(--text-muted) 55%);
+  color: var(--home-title-ink-hover);
   text-decoration-color: var(--home-line-faint);
-  opacity: 0.95;
 }
 
 /* —— 1) Keşif listesi + günün sorusu: madde başlıkları (buton = odak) —— */
