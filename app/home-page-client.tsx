@@ -1189,7 +1189,7 @@ export default function HomePageClient({
 
     return (
       <div className="relative z-0 max-w-none">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+        <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
           <button
             type="button"
             onClick={() => closeEntryModal()}
@@ -2073,19 +2073,19 @@ export default function HomePageClient({
 
       {selectedEntryId && centerMode === "feed" ? (
         <div
-          className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-[color:var(--overlay-scrim)] px-3 py-5 backdrop-blur-[1px] md:items-center md:py-8"
+          className="entry-detail-modal-scrim fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto px-3 py-4 md:items-center md:py-6"
           role="presentation"
           onClick={() => closeEntryModal()}
         >
           <div
-            className="my-auto w-full max-w-[48rem] border border-[color:var(--divide)] bg-[var(--bg-secondary)] shadow-[var(--shadow-modal)]"
+            className="entry-detail-modal-panel my-auto w-full min-w-0 max-w-[48rem]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="entry-detail-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="left-scroll max-h-[min(92dvh,900px)] overflow-y-auto overscroll-contain">
-              <div className="px-5 py-6 md:px-9 md:py-8">
+            <div className="entry-detail-modal-scroll left-scroll max-h-[min(92dvh,900px)] min-w-0 overflow-y-auto overscroll-contain">
+              <div className="entry-detail-modal-pad">
                 {renderEntryDetailContent()}
               </div>
             </div>
