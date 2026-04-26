@@ -60,8 +60,8 @@
   );
 
   --overlay-scrim: rgba(17, 24, 39, 0.38);
-  --scrollbar-thumb: rgba(17, 24, 39, 0.12);
-  --scrollbar-thumb-hover: rgba(17, 24, 39, 0.2);
+  --scrollbar-thumb: rgba(17, 24, 39, 0.09);
+  --scrollbar-thumb-hover: rgba(17, 24, 39, 0.16);
   --surface-inset-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
 
   --footer-surface: #181b20;
@@ -206,7 +206,7 @@
 }
 
 html {
-  background: #f5f3f0;
+  background: #f0ebe3;
   /* Wordmark + kolon/entry başlıkları: serif; tüm açıklama, meta, etiket, input: sans */
   --font-ui: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI",
     sans-serif;
@@ -222,7 +222,12 @@ body {
   color: var(--text-primary);
   font-family: var(--font-ui);
   min-height: 100vh;
-  background: linear-gradient(to bottom, #f9f8f6 0%, #f5f3f0 100%);
+  background: linear-gradient(
+    160deg,
+    #faf9f6 0%,
+    #f4f0ea 48%,
+    #efeae2 100%
+  );
   background-attachment: fixed;
 }
 
@@ -271,7 +276,7 @@ small {
 }
 
 ::selection {
-  background: rgba(13, 107, 98, 0.18);
+  background: rgba(13, 107, 98, 0.16);
   color: var(--text-primary);
 }
 
@@ -3352,15 +3357,15 @@ aside[aria-label="Yayın paneli"] nav button.group {
   background: var(--footer-surface, #181b20);
   color: var(--footer-text, #f0f1f4);
   /* FAZ 3: açık yüzeyden ayrılan çok ince hat (footer içeriğine dokunmaz) */
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  padding-top: 2.35rem !important;
-  padding-bottom: 2.5rem !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+  padding-top: 2.1rem !important;
+  padding-bottom: 2.25rem !important;
 }
 
 @media (min-width: 768px) {
   .site-footer {
-    padding-top: 2.75rem !important;
-    padding-bottom: 2.85rem !important;
+    padding-top: 2.5rem !important;
+    padding-bottom: 2.6rem !important;
   }
 }
 
@@ -6711,4 +6716,58 @@ main > header.site-header .site-wordmark:focus-visible {
   outline: 1px solid var(--home-focus-hair);
   outline-offset: 3px;
   border-radius: 1px;
+}
+
+/* =============================================================================
+   FAZ 6 — Final editorial polish (sakin yüzey, hafif meta, footer kapanış; gölge yok)
+   ============================================================================= */
+
+/* 1) Ana sayfa: bozulmadan, ikincil metin okunurluğunu çok az açar (FAZ1 ölçek aynı) */
+.home-page-editorial {
+  --text-meta: color-mix(in srgb, #6c717a 90%, #1d2128 10%);
+  --text-muted: color-mix(in srgb, #8b9099 92%, #1d2128 8%);
+  --text-tertiary: color-mix(in srgb, #6a6f7a 91%, #1d2128 9%);
+}
+
+/* 2) Akış / yan yol metaları: ana sayfada “yayın yüzeyi”, kart etiketi yok */
+.home-page-editorial .feed-entry-card--editorial .feed-meta-row--editorial,
+.home-page-editorial
+  .feed-entry-card--editorial
+  .feed-meta-row--editorial
+  .feed-meta-date,
+.home-page-editorial
+  .feed-entry-card--editorial
+  .feed-meta-row--editorial
+  .feed-meta-stat,
+.home-page-editorial
+  .feed-entry-card--editorial
+  .feed-meta-row--editorial
+  .feed-meta-author {
+  color: rgba(0, 0, 0, 0.47);
+}
+
+.home-page-editorial .home-index-meta {
+  color: rgba(0, 0, 0, 0.48);
+}
+
+.home-page-editorial .home-index-num {
+  opacity: 0.6;
+}
+
+.home-page-editorial
+  .home-explore--faz51
+  .home-explore-item-meta {
+  color: rgba(0, 0, 0, 0.47);
+}
+
+/* Footer: ana sayfa kapanışı — dikey hava, hizalama; marka ağırlığını abartmaz */
+footer#site-footer.home-page-footer .home-page-container {
+  column-gap: 2rem;
+  row-gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  footer#site-footer.home-page-footer .home-page-container {
+    row-gap: 2rem;
+  }
 }
