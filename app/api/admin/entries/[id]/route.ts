@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 import { requireAdminSession, requireSuperAdminSession } from "@/lib/admin-api-auth";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
-import { normalizeEntryCategory } from "@/lib/entry-category";
+import { normalizeAdminEntryPublishSection } from "@/lib/admin-entry-publish-section";
 import { ensureUniqueEntrySlug, slugifyEntryTitle } from "@/lib/entry-slug";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -33,13 +33,21 @@ export async function PATCH(req: Request, ctx: Ctx) {
     typeof categoryRaw === "string" && categoryRaw.trim().length > 0
       ? categoryRaw.trim()
       : null;
-  const category = categoryTrim
-    ? normalizeEntryCategory(categoryTrim) ?? null
-    : null;
+  const category = normalizeAdminEntryPublishSection(categoryTrim);
 
   if (!title || !content) {
     return NextResponse.json(
       { error: "Başlık ve içerik zorunludur." },
+      { status: 400 }
+    );
+  }
+
+  if (!category) {
+    return NextResponse.json(
+      {
+        error:
+          "Yayın alanı zorunludur. Geçerli bir değer seçin (pending, trending, …).",
+      },
       { status: 400 }
     );
   }
@@ -78,12 +86,12 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const basePatch: {
     title: string;
     content: string;
-    category: string | null;
+    category: string;
     slug?: string;
   } = {
     title,
     content,
-    category: category ?? null,
+    category,
   };
   if (newSlugValue) {
     basePatch.slug = newSlugValue;

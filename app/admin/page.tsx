@@ -12,8 +12,13 @@ import {
 import {
   FEED_CATEGORY_OPTIONS,
   normalizeEntryCategory,
-  type EntryCategory,
 } from "@/lib/entry-category";
+import {
+  ADMIN_ENTRY_PUBLISH_SECTION_OPTIONS,
+  adminEntryPublishSectionLabel,
+  normalizeAdminEntryPublishSection,
+  type AdminEntryPublishSectionSlug,
+} from "@/lib/admin-entry-publish-section";
 import {
   SUPER_ADMIN_USERNAME,
   isSuperAdminRole,
@@ -169,16 +174,18 @@ function platformMemberAgreementLabel(m: PlatformMemberRow): string {
   return "—";
 }
 
-const categoryLabel = (id: string | null): string => {
-  if (!id) return "—";
-  const n = normalizeEntryCategory(id);
+/** Tablo: yeni yayın alanı slug’ları veya eski kategori değerleri. */
+function entryListPublishColumnLabel(raw: string | null): string {
+  if (!raw) return "—";
+  const pub = normalizeAdminEntryPublishSection(raw);
+  if (pub) return adminEntryPublishSectionLabel(pub);
+  const n = normalizeEntryCategory(raw);
   if (n) {
     const o = FEED_CATEGORY_OPTIONS.find((x) => x.id === n);
-    return o?.label ?? id;
+    return o?.label ?? raw;
   }
-  const o = FEED_CATEGORY_OPTIONS.find((x) => x.id === id);
-  return o?.label ?? id;
-};
+  return raw;
+}
 
 export default function AdminPage() {
   const [sessionOk, setSessionOk] = useState<boolean | null>(null);
@@ -210,7 +217,9 @@ export default function AdminPage() {
   const [editRow, setEditRow] = useState<EntryRow | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
-  const [editCategory, setEditCategory] = useState<string>("");
+  const [editPublishSection, setEditPublishSection] = useState<
+    AdminEntryPublishSectionSlug | ""
+  >("");
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -236,7 +245,9 @@ export default function AdminPage() {
 
   const [draftTitle, setDraftTitle] = useState("");
   const [draftContent, setDraftContent] = useState("");
-  const [draftCategory, setDraftCategory] = useState<EntryCategory | "">("");
+  const [draftPublishSection, setDraftPublishSection] = useState<
+    AdminEntryPublishSectionSlug | ""
+  >("");
   /** Son yayınlanan entry: paylaşım linki ve metin; yeni taslak yazılmaya başlanınca temizlenir. */
   const [justPublishedEntry, setJustPublishedEntry] = useState<{
     id: string;
@@ -650,8 +661,11 @@ export default function AdminPage() {
 
     const title = draftTitle.trim();
     const content = draftContent.trim();
-    const category =
-      draftCategory && draftCategory.length > 0 ? draftCategory : null;
+    if (!draftPublishSection) {
+      setSubmitError("Yayın alanı seçin.");
+      return;
+    }
+    const category = draftPublishSection;
 
     if (!title) {
       setSubmitError("Başlık gerekli.");
@@ -704,7 +718,7 @@ export default function AdminPage() {
 
     setDraftTitle("");
     setDraftContent("");
-    setDraftCategory("");
+    setDraftPublishSection("");
     setIsComposeModalOpen(false);
     setPublishNotice("Entry yayında");
     void loadEntries();
@@ -744,8 +758,8 @@ export default function AdminPage() {
     setEditRow(row);
     setEditTitle(row.title);
     setEditContent(row.content);
-    setEditCategory(
-      normalizeEntryCategory(row.category) ?? row.category ?? ""
+    setEditPublishSection(
+      normalizeAdminEntryPublishSection(row.category) ?? ""
     );
     setEditError(null);
   }
@@ -762,9 +776,14 @@ export default function AdminPage() {
     setEditSaving(true);
     const title = editTitle.trim();
     const content = editContent.trim();
-    const category = editCategory.trim() || null;
+    const category = normalizeAdminEntryPublishSection(editPublishSection);
     if (!title || !content) {
       setEditError("Başlık ve içerik zorunlu.");
+      setEditSaving(false);
+      return;
+    }
+    if (!category) {
+      setEditError("Yayın alanı seçin.");
       setEditSaving(false);
       return;
     }
@@ -1630,7 +1649,8 @@ export default function AdminPage() {
           <p className="admin-helper">
             Kayıt, oturumlu{" "}
             <code className="admin-code">/api/admin/entries</code> uç noktası
-            ile oluşturulur. Kategori kolonu yoksa yalnızca başlık ve içerik
+            ile oluşturulur. Yayın alanı, veritabanındaki{" "}
+            <code className="admin-code">category</code> alanına slug olarak
             yazılır.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -1736,9 +1756,10 @@ export default function AdminPage() {
           <div className="admin-section-head">
             <h2 className="admin-section-title">Entry listesi</h2>
             <p className="admin-helper">
-              Kolonlar: başlık, kategori, durum (şu an tüm kayıtlar canlı
+              Kolonlar: başlık, yayın alanı, durum (şu an tüm kayıtlar canlı
               görünür), tarih, yazar (ilk yorumu yazan). Düzenleme ve silme
-              yalnızca tam yetkili yöneticidedir.
+              yalnızca tam yetkili yöneticidedir. Eski kayıtlarda kategori
+              değeri görünebilir; düzenlerken yeni yayın alanı seçmen gerekir.
             </p>
           </div>
           {listBanner ? (
@@ -1754,7 +1775,7 @@ export default function AdminPage() {
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-900/80">
                   <th className="admin-th px-3 py-3">Başlık</th>
-                  <th className="admin-th px-3 py-3">Kategori</th>
+                  <th className="admin-th px-3 py-3">Yayın alanı</th>
                   <th className="admin-th px-3 py-3">Durum</th>
                   <th className="admin-th px-3 py-3">Tarih</th>
                   <th className="admin-th px-3 py-3">Yazar</th>
@@ -1790,7 +1811,7 @@ export default function AdminPage() {
                         <span className="line-clamp-2">{row.title}</span>
                       </td>
                       <td className="admin-td whitespace-nowrap px-3 py-2">
-                        {categoryLabel(row.category)}
+                        {entryListPublishColumnLabel(row.category)}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2">
                         <span className="admin-btn-text rounded-md bg-emerald-500/15 px-2 py-0.5 text-emerald-300">
@@ -1885,23 +1906,24 @@ export default function AdminPage() {
                 />
               </label>
               <label className="block">
-                <span className="admin-label">Kategori</span>
+                <span className="admin-label">Yayın alanı</span>
                 <select
-                  value={draftCategory}
+                  value={draftPublishSection}
                   onChange={(e) => {
                     setJustPublishedEntry(null);
-                    setDraftCategory(e.target.value as EntryCategory | "");
+                    setDraftPublishSection(
+                      e.target.value as AdminEntryPublishSectionSlug | ""
+                    );
                   }}
                   className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+                  required
                 >
                   <option value="">— Seçin —</option>
-                  {FEED_CATEGORY_OPTIONS.filter((o) => o.id !== "all").map(
-                    (o) => (
-                      <option key={o.id} value={o.id}>
-                        {o.label}
-                      </option>
-                    )
-                  )}
+                  {ADMIN_ENTRY_PUBLISH_SECTION_OPTIONS.map((o) => (
+                    <option key={o.slug} value={o.slug}>
+                      {o.label}
+                    </option>
+                  ))}
                 </select>
               </label>
               <div>
@@ -2022,15 +2044,20 @@ export default function AdminPage() {
               />
             </label>
             <label className="mt-3 block">
-              <span className="admin-label">Kategori</span>
+              <span className="admin-label">Yayın alanı</span>
               <select
-                value={editCategory}
-                onChange={(e) => setEditCategory(e.target.value)}
+                value={editPublishSection}
+                onChange={(e) =>
+                  setEditPublishSection(
+                    e.target.value as AdminEntryPublishSectionSlug | ""
+                  )
+                }
                 className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+                required
               >
-                <option value="">—</option>
-                {FEED_CATEGORY_OPTIONS.filter((o) => o.id !== "all").map((o) => (
-                  <option key={o.id} value={o.id}>
+                <option value="">— Seçin —</option>
+                {ADMIN_ENTRY_PUBLISH_SECTION_OPTIONS.map((o) => (
+                  <option key={o.slug} value={o.slug}>
                     {o.label}
                   </option>
                 ))}
