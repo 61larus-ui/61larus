@@ -7590,3 +7590,183 @@ footer#site-footer.home-page-footer .home-page-container {
     row-gap: 2rem;
   }
 }
+
+/* =============================================================================
+   Mobil (max-width: 768px) — tek kolon akış, sıkı üst blok, ticker kapalı, v2
+   Masaüstü: bu blok dışındaki kurallar aynen kalır.
+   ============================================================================= */
+@media (max-width: 768px) {
+  /* —— Üst blok: daha kompakt giriş —— */
+  main > header.site-header .headerBlock.home-page-container {
+    padding-top: 0.5rem;
+    padding-bottom: 0.3rem;
+  }
+
+  main > header.site-header {
+    margin-bottom: 0.65rem !important;
+  }
+
+  main > header .site-header-tagline {
+    margin-top: 4px !important;
+  }
+
+  .headerBar {
+    row-gap: 0.3rem;
+    column-gap: 0.45rem;
+  }
+
+  .headerBlock .headerCenterText {
+    margin-top: 0;
+  }
+
+  .headerBlock .site-header-editorial-text {
+    margin-top: 1px;
+    line-height: 1.4;
+  }
+
+  /* —— Bölümler arası: tek ritim (rastgele boşluk hissi azalt) —— */
+  .home-page-editorial--section-stack {
+    gap: 1rem;
+  }
+
+  .home-page-editorial .home-search-bridge.home-manifesto--bridge.home-search-field {
+    margin-top: 0;
+    margin-bottom: 0.15rem;
+  }
+
+  .home-page-editorial .today-strip.today-discovery--faz5 {
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.35rem !important;
+    margin-bottom: 0.15rem !important;
+  }
+
+  .today-strip.today-discovery--settled .today-discovery-head {
+    margin-bottom: 0.45rem;
+  }
+
+  .col-head-band--settled .col-section-head__title--rail,
+  .home-feed-rail__head .col-section-head__title--rail,
+  .home-rail-header--col .col-section-head__title--rail {
+    margin-top: 0;
+  }
+
+  .home-rail-header--col,
+  .home-feed-rail__head {
+    padding-top: 0.35rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .home-explore--prefooter {
+    margin-top: 0.2rem;
+  }
+
+  .home-explore-grid {
+    row-gap: 0.875rem;
+  }
+
+  .home-explore-head.col-explore-section-head {
+    margin-bottom: 0.4rem;
+    padding-bottom: 0;
+    min-height: 0;
+  }
+
+  /* —— Ticker: mobilde kaldır (üst + alt) —— */
+  .home-ticker,
+  .home-ticker--divider,
+  .home-ticker--lower,
+  .home-page-editorial--section-stack > .home-ticker,
+  .home-explore-head .home-ticker {
+    display: none !important;
+  }
+
+  /* —— Bugün 61Larus’ta: tek kolon, tam genişlik —— */
+  .today-strip .today-discovery-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .today-strip .today-discovery-grid .today-discovery-item {
+    border-right: none !important;
+    min-height: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .today-strip .today-discovery--faz5 .today-discovery-item {
+    padding: 0.6rem 0.7rem 0.65rem !important;
+  }
+
+  .today-strip .today-discovery--faz5 .today-discovery-item-foot {
+    margin-top: 0.35rem;
+    gap: 0.35rem;
+  }
+
+  /* —— Ana akış + yan satırlar: okunur başlık, kompakt meta —— */
+  .feed-entry-title--editorial {
+    font-size: clamp(1.125rem, 1.04rem + 0.4vw, 1.25rem);
+    line-height: 1.44;
+  }
+
+  .feed-entry-card--editorial {
+    padding: 0.6rem 0.15rem 0.65rem;
+  }
+
+  .feed-entry-card--editorial .feed-meta-row--editorial {
+    font-size: 0.6875rem;
+    line-height: 1.32;
+    letter-spacing: 0.03em;
+  }
+
+  .feed-entry-bottom {
+    margin-top: 0.45rem !important;
+    gap: 0.3rem !important;
+  }
+
+  .feed-entry-cta {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    color: color-mix(
+      in srgb,
+      var(--accent-green) 35%,
+      var(--text-secondary) 65%
+    );
+  }
+
+  .home-rail--faz5-left .home-index-row,
+  .home-rail--faz5-mid .home-index-row {
+    padding-top: 0.45rem !important;
+    padding-bottom: 0.45rem !important;
+  }
+
+  .home-rail--faz5-left .home-index-title,
+  .home-rail--faz5-mid .home-index-title {
+    font-size: 1.0625rem;
+    line-height: 1.38;
+  }
+
+  .home-rail--faz5-left .home-index-meta,
+  .home-rail--faz5-mid .home-index-meta {
+    font-size: 0.7rem;
+    line-height: 1.3;
+  }
+
+  /* “Yazıyı aç →” / keşif CTA: daha belirgin */
+  .today-discovery-item-open,
+  .home-explore-item .home-explore-cta--row,
+  .home-explore-question .home-explore-cta--row {
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: color-mix(
+      in srgb,
+      var(--accent-green) 40%,
+      var(--text-primary) 60%
+    );
+  }
+
+  .feed-load-more {
+    margin-top: 0.85rem !important;
+    min-height: 2.5rem !important;
+  }
+}
