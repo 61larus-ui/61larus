@@ -1016,8 +1016,8 @@ main > header .site-header-tagline--manifesto {
   gap: var(--home-section-gap);
 }
 
-/* Ticker: flex gap ile birleşince dış boşluk her zaman 10px/10px */
-.home-page-editorial--section-stack .home-ticker {
+/* Üst ticker (doğrudan stack çocuğu): gap ile birleşen dış boşluk sabit 10px */
+.home-page-editorial--section-stack > .home-ticker {
   margin-top: 10px !important;
   margin-bottom: 10px !important;
 }
@@ -2028,15 +2028,12 @@ main > section
   }
 }
 
-/* TICKER — ince editorial kutu (üst + alt tek kaynak; margin stack’te !important) */
+/* TICKER — ince editorial kutu */
 .home-ticker,
 .home-ticker--divider,
 .home-ticker--lower {
   width: 100%;
   min-height: 2.5rem;
-  padding: 8px 14px;
-  margin-top: 10px;
-  margin-bottom: 10px;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -2052,6 +2049,13 @@ main > section
     border-color 0.2s ease;
 }
 
+.home-ticker {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 8px 14px;
+}
+
+.home-ticker--divider,
 .home-ticker--lower {
   margin-top: 10px;
   margin-bottom: 10px;
@@ -2062,14 +2066,21 @@ main > section
   border-color: rgba(0, 0, 0, 0.06);
 }
 
-/* TRACK */
+/* TRACK — yön süreleri divider / lower’da */
 .home-ticker__track {
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
   gap: 18px;
-  animation: tickerMove 60s linear infinite;
   will-change: transform;
+}
+
+.home-ticker--divider .home-ticker__track {
+  animation: tickerMoveRight 60s linear infinite;
+}
+
+.home-ticker--lower .home-ticker__track {
+  animation: tickerMoveLeft 70s linear infinite;
 }
 
 /* ITEM */
@@ -2106,8 +2117,18 @@ main > section
   animation-play-state: paused;
 }
 
-/* ANIMASYON */
-@keyframes tickerMove {
+/* ANIMASYON — üst sağa, alt sola (çift içerik -50% döngüsü) */
+@keyframes tickerMoveRight {
+  from {
+    transform: translateX(-50%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes tickerMoveLeft {
   from {
     transform: translateX(0);
   }
@@ -2119,7 +2140,7 @@ main > section
 
 @media (prefers-reduced-motion: reduce) {
   .home-ticker__track {
-    animation: none;
+    animation: none !important;
   }
 }
 
