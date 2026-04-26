@@ -1033,7 +1033,7 @@ main > header .site-header-tagline--manifesto {
 .home-page-editorial--section-stack
   .today-strip.today-discovery
   + .home-ticker.home-ticker--divider {
-  margin-top: calc(6px - var(--home-section-gap));
+  margin-top: calc(10px - var(--home-section-gap));
 }
 
 /* --- Arama dışı manifesto: eski hero padding’i (köprü sınıfı ile sıfırlanır) --- */
@@ -1548,7 +1548,7 @@ main > section
     aside[aria-label="Yazılmayı bekleyenler"]
     > .col-head-band,
   .home-editorial-cols
-    aside[aria-label="En çok konuşulan başlıklar"]
+    aside[aria-label="Çok konuşulanlar"]
     > .col-head-band {
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
@@ -2029,9 +2029,16 @@ main > section
   }
 }
 
-/* TICKER — ince editorial kutu (üst + alt aynı) */
-.home-ticker {
+/* TICKER — ince editorial kutu (üst + alt aynı boyut) */
+.home-ticker,
+.home-ticker--divider,
+.home-ticker--lower {
   width: 100%;
+  min-height: 34px;
+  height: 34px;
+  padding: 0 14px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -2040,9 +2047,6 @@ main > section
   border: 1px solid rgba(0, 0, 0, 0.045);
   background: rgba(255, 255, 255, 0.55);
 
-  padding: 8px 14px;
-  margin: 12px 0;
-
   border-radius: 4px;
 
   transition:
@@ -2050,14 +2054,9 @@ main > section
     border-color 0.2s ease;
 }
 
-.home-ticker--divider {
-  margin-top: 6px;
-  margin-bottom: 14px;
-}
-
 .home-ticker--lower {
-  margin-top: 12px;
-  margin-bottom: 12px;
+  margin-top: 8px;
+  margin-bottom: 10px;
 }
 
 .home-ticker:hover {
@@ -2714,18 +2713,18 @@ main > section
   padding-bottom: 0;
 }
 
-/* FAZ 2: üçlü kolon ↔ “Trabzon’u keşfetmeye devam et” — grid/panel iç gap’e dokunmadan section arası */
+/* Üç kolon ↔ alt keşif: section-stack gap + keşif üst padding’i ~12–16px nefese indir */
 .home-page-editorial.home-page-editorial--section-stack
   .home-main-columns-wrap
   + .home-explore--prefooter.home-explore--faz51 {
-  margin-top: -0.75rem; /* 12px, 12–16px bandı */
+  margin-top: calc(12px - var(--home-section-gap));
 }
 
 @media (min-width: 768px) {
   .home-page-editorial.home-page-editorial--section-stack
     .home-main-columns-wrap
     + .home-explore--prefooter.home-explore--faz51 {
-    margin-top: -1rem; /* 16px (tablet+; lg’deki margin-top:0 aşılır) */
+    margin-top: calc(14px - var(--home-section-gap));
   }
 }
 
@@ -2967,6 +2966,22 @@ main
 
 .home-page-editorial .home-explore--prefooter {
   margin-top: 0;
+}
+
+.home-page-editorial .home-explore--prefooter.home-explore {
+  padding-top: 0.3rem;
+}
+
+@media (min-width: 768px) {
+  .home-page-editorial .home-explore--prefooter.home-explore {
+    padding-top: 0.35rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-page-editorial .home-explore--prefooter.home-explore {
+    padding-top: 0.4rem;
+  }
 }
 
 /* KEŞİF başlığı: kendi bölümü, kolon ızgarasından görsel bağımsız */
