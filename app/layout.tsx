@@ -44,9 +44,9 @@ export const metadata: Metadata = {
     google: "otK0EamJ7liIaIKzHTz4NKpVUbfYfdf9oGDZKBkYvpU",
   },
   icons: {
-    icon: "/favicon.png?v=2",
-    shortcut: "/favicon.png?v=2",
-    apple: "/favicon.png?v=2",
+    icon: "/favicon.png?v=3",
+    shortcut: "/favicon.png?v=3",
+    apple: "/favicon.png?v=3",
   },
 };
 
@@ -60,6 +60,9 @@ export default function RootLayout({
       lang="tr"
       className={`${geistSans.variable} ${geistMono.variable} ${libreBaskerville.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="icon" href="/favicon.png?v=3" />
+      </head>
       <body className="flex min-h-full flex-col overflow-x-hidden">
         <div className="app-shell mx-auto flex w-full max-w-[min(88rem,100%)] flex-col px-5 pb-10 pt-5 md:px-10 md:pb-12 md:pt-7 lg:px-14">
           {children}
