@@ -1392,7 +1392,7 @@ export default function HomePageClient({
                                   <span className="home-explore-item-meta">
                                     {cc > 0
                                       ? `${cc} yorum`
-                                      : "Yeni yazı"}
+                                      : null}
                                   </span>
                                 </button>
                               </li>
@@ -1452,7 +1452,7 @@ export default function HomePageClient({
                               dailyQuestionEntry.id
                             ]?.length ?? 0) > 0
                               ? `${commentsByEntryIdLive[dailyQuestionEntry.id]?.length ?? 0} yorum`
-                              : "Yeni yazı"}
+                              : null}
                           </span>
                           <span className="home-explore-cta">
                             Yazıyı aç →
