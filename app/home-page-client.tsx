@@ -760,8 +760,8 @@ export default function HomePageClient({
     return picked;
   }, [centerEntries, commentsByEntryIdLive]);
 
-  const dailyQuestionEntry = useMemo((): EntryItem | null => {
-    if (centerEntries.length === 0) return null;
+  const dailyQuestionEntries = useMemo((): EntryItem[] => {
+    if (centerEntries.length === 0) return [];
     const withMeta = centerEntries.map((entry) => ({
       entry,
       commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
@@ -775,40 +775,54 @@ export default function HomePageClient({
       }
       return compareEntriesByNewest(a.entry, b.entry);
     };
+    const picked: EntryItem[] = [];
+    const used = new Set<string>();
+    const pushUpTo4 = (rows: typeof withMeta) => {
+      for (const w of rows) {
+        if (picked.length >= 4) break;
+        if (!used.has(w.entry.id)) {
+          picked.push(w.entry);
+          used.add(w.entry.id);
+        }
+      }
+    };
+
     const questionTagged = withMeta
       .filter((w) => entryPublishSlug(w.entry) === "question_of_day")
       .sort(sortByEngagement);
-    if (questionTagged.length > 0) {
-      return questionTagged[0].entry;
+    pushUpTo4(questionTagged);
+
+    const legacyCandidates = (pred: (w: (typeof withMeta)[0]) => boolean) =>
+      withMeta
+        .filter(
+          (w) =>
+            !hasAdminPublishSection(w.entry) &&
+            !used.has(w.entry.id) &&
+            pred(w)
+        )
+        .sort(sortByEngagement);
+
+    if (picked.length < 4) {
+      pushUpTo4(legacyCandidates((w) => w.entry.title.includes("?")));
     }
-    const legacyPool = withMeta.filter(
-      (w) => !hasAdminPublishSection(w.entry)
-    );
-    const withQuestionMark = legacyPool.filter((w) =>
-      w.entry.title.includes("?")
-    );
-    if (withQuestionMark.length > 0) {
-      withQuestionMark.sort(sortByEngagement);
-      return withQuestionMark[0].entry;
+    if (picked.length < 4) {
+      pushUpTo4(
+        legacyCandidates(
+          (w) => normalizeEntryCategory(w.entry.category) === "gundem"
+        )
+      );
     }
-    const gundem = legacyPool.filter(
-      (w) => normalizeEntryCategory(w.entry.category) === "gundem"
-    );
-    if (gundem.length > 0) {
-      gundem.sort(sortByEngagement);
-      return gundem[0].entry;
+    if (picked.length < 4) {
+      pushUpTo4(legacyCandidates(() => true));
     }
-    if (legacyPool.length > 0) {
-      const sorted = [...legacyPool].sort(sortByEngagement);
-      return sorted[0].entry;
-    }
-    return null;
+
+    return picked;
   }, [centerEntries, commentsByEntryIdLive]);
 
   const hasHomeExplore =
     starterEntries.length > 0 ||
     waitingEntriesForExplore.length > 0 ||
-    dailyQuestionEntry !== null;
+    dailyQuestionEntries.length > 0;
 
   const feedEntriesSearchFiltered = useMemo(() => {
     let list = shuffledMainFeedEntries;
@@ -1564,35 +1578,43 @@ export default function HomePageClient({
                         </ul>
                       </div>
                     ) : null}
-                    {dailyQuestionEntry ? (
+                    {dailyQuestionEntries.length > 0 ? (
                       <div className="home-explore-panel home-explore-panel--question">
                         <header className="col-section-head home-explore-panel-head">
                           <h3 className="home-explore-panel-label m-0">
-                            Günün sorusu
+                            Günün soruları
                           </h3>
                         </header>
-                        <button
-                          type="button"
-                          className="home-explore-question"
-                          onClick={() =>
-                            goToEntry(dailyQuestionEntry.id)
-                          }
-                          aria-label={`Aç: ${dailyQuestionEntry.title}`}
+                        <div
+                          className="home-explore-questions-grid"
+                          role="list"
+                          aria-label="Günün soruları"
                         >
-                          <span className="home-explore-item-title">
-                            {dailyQuestionEntry.title}
-                          </span>
-                          <span className="home-explore-item-meta">
-                            {(commentsByEntryIdLive[
-                              dailyQuestionEntry.id
-                            ]?.length ?? 0) > 0
-                              ? `${commentsByEntryIdLive[dailyQuestionEntry.id]?.length ?? 0} yorum`
-                              : null}
-                          </span>
-                          <span className="home-explore-cta">
-                            Yazıyı aç →
-                          </span>
-                        </button>
+                          {dailyQuestionEntries.map((entry) => {
+                            const cc =
+                              commentsByEntryIdLive[entry.id]?.length ?? 0;
+                            return (
+                              <button
+                                key={entry.id}
+                                type="button"
+                                role="listitem"
+                                className="home-explore-question"
+                                onClick={() => goToEntry(entry.id)}
+                                aria-label={`Aç: ${entry.title}`}
+                              >
+                                <span className="home-explore-item-title">
+                                  {entry.title}
+                                </span>
+                                <span className="home-explore-item-meta">
+                                  {cc > 0 ? `${cc} yorum` : null}
+                                </span>
+                                <span className="home-explore-cta">
+                                  Yazıyı aç →
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     ) : null}
                   </div>

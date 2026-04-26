@@ -3057,6 +3057,57 @@ main
   padding: 0.2rem 0.05rem 0.15rem 0;
 }
 
+/* Günün soruları: panel içi dört sütun (dar ekranda kademeli) */
+.home-explore-questions-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.65rem 1rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0.1rem 0 0;
+  box-sizing: border-box;
+}
+
+@media (min-width: 480px) {
+  .home-explore-questions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-explore-questions-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 1.25rem;
+  }
+}
+
+.home-explore-questions-grid .home-explore-question {
+  min-width: 0;
+  height: 100%;
+  padding: 0.5rem 0.15rem 0.35rem 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@media (min-width: 1024px) {
+  .home-explore-questions-grid .home-explore-question {
+    border-top: 0;
+    padding-top: 0.15rem;
+    border-left: 1px solid rgba(0, 0, 0, 0.06);
+    padding-left: 1rem;
+  }
+
+  .home-explore-questions-grid .home-explore-question:first-child {
+    border-left: 0;
+    padding-left: 0;
+  }
+}
+
+.home-explore-questions-grid .home-explore-question .home-explore-item-title {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
 .home-explore-question:hover {
   background: color-mix(in srgb, var(--surface-hover) 55%, transparent);
   opacity: 1;
