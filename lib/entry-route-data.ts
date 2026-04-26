@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { normalizeEntryCategory } from "@/lib/entry-category";
 import { normalizeEntrySlug } from "@/lib/slug";
+import { isRfc4122Uuid } from "@/lib/seo-entry-description";
 import type { CommentItem, EntryItem } from "@/app/home-page-client";
 
 function authorLabelFromUserRow(row: {
@@ -254,6 +255,39 @@ function entryRowMatchesSlugResolution(
   return false;
 }
 
+async function loadEntryBySlugInList(
+  client: Exclude<
+    ReturnType<typeof createSupabaseServiceClient> | Awaited<
+      ReturnType<typeof createSupabaseServerClient>
+    >,
+    null
+  >,
+  candidates: string[]
+): Promise<EntryRow | null> {
+  const uniq = [...new Set(candidates.filter((s) => s.length > 0))];
+  if (uniq.length === 0) return null;
+
+  const res = await client
+    .from("entries")
+    .select("id, title, content, created_at, category, user_id, slug")
+    .in("slug", uniq)
+    .limit(1);
+
+  if (!res.error && res.data?.[0]) {
+    return res.data[0] as EntryRow;
+  }
+  if (
+    res.error &&
+    /slug|column|schema|not exist/i.test(res.error.message ?? "")
+  ) {
+    return null;
+  }
+  if (res.error) {
+    console.warn("[entry-route] slug.in lookup", res.error.message);
+  }
+  return null;
+}
+
 export async function getEntryDetailBySlug(
   segment: string
 ): Promise<EntryRouteDetail | null> {
@@ -269,6 +303,21 @@ export async function getEntryDetailBySlug(
 
   const targetSlug = normalizeEntrySlug(decodedSlug);
 
+  const bySlugCols = await loadEntryBySlugInList(client, [
+    decodedSlug,
+    targetSlug,
+  ]);
+  if (bySlugCols) {
+    return buildDetailFromRow(supabase, bySlugCols);
+  }
+
+  if (isRfc4122Uuid(decodedSlug)) {
+    const byId = await loadEntryRowById(client, decodedSlug);
+    if (byId) {
+      return buildDetailFromRow(supabase, byId);
+    }
+  }
+
   const { data, error } = await client
     .from("entries")
     .select("*")
@@ -276,7 +325,7 @@ export async function getEntryDetailBySlug(
     .limit(500);
 
   if (error) {
-    console.warn("[entry-route] getEntryDetailBySlug", error.message);
+    console.warn("[entry-route] getEntryDetailBySlug fallback scan", error.message);
     return null;
   }
 

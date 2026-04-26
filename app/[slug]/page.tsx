@@ -126,6 +126,12 @@ export default async function EntrySlugPage({ params }: PageProps) {
             <EntryDetailBodyRsc
               entry={row}
               comments={detail.comments}
+              commentAuth={{
+                isAuthenticated: p.isAuthenticated,
+                initialAgreementDone: p.initialAgreementDone,
+                initialPlatformAccessSuspended:
+                  p.initialPlatformAccessSuspended,
+              }}
             />
           </div>
         </div>

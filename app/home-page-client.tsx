@@ -112,8 +112,8 @@ export type EntryItem = {
 };
 
 function entryHrefPath(entry: EntryItem | undefined, id: string): string {
-  const stored = entry?.slug?.trim() ?? "";
-  if (stored.length > 0) return stored;
+  const fromDb = entry?.slug?.trim();
+  if (fromDb) return fromDb;
   const title = entry?.title ?? "";
   return (
     normalizeEntrySlug(title.trim()) || slugifyEntryTitle(title, id)

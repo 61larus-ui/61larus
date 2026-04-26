@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CommentItem, EntryItem } from "@/app/home-page-client";
+import { EntryDetailCommentCompose } from "@/components/entry-detail-comment-compose";
 import { EntryDetailShareClient } from "@/components/entry-detail-share-client";
 
 function formatDate(value: string) {
@@ -20,9 +21,15 @@ function formatEntryDetailDate(value: string) {
 export function EntryDetailBodyRsc({
   entry,
   comments,
+  commentAuth,
 }: {
   entry: EntryItem;
   comments: CommentItem[];
+  commentAuth: {
+    isAuthenticated: boolean;
+    initialAgreementDone: boolean;
+    initialPlatformAccessSuspended: boolean;
+  };
 }) {
   const authorName = entry.authorName?.trim() || "61Larus";
   const formattedDate = formatEntryDetailDate(entry.created_at);
@@ -31,8 +38,8 @@ export function EntryDetailBodyRsc({
   return (
     <div className="relative z-0 max-w-none">
       <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
-        <Link href="/" className="entry-detail-back">
-          ← akışa dön
+        <Link href="/" scroll={false} className="entry-detail-back">
+          ← Akışa dön
         </Link>
       </div>
 
@@ -89,19 +96,14 @@ export function EntryDetailBodyRsc({
         )}
       </section>
 
-      <div className="entry-comment-compose-wrap">
-        <div className="entry-comment-compose">
-          <textarea
-            readOnly
-            disabled
-            placeholder="yorumlar yakında bu sayfada"
-            className="entry-comment-textarea"
-            defaultValue=""
-            rows={2}
-            aria-label="Yorum alanı (yakında)"
-          />
-        </div>
-      </div>
+      <EntryDetailCommentCompose
+        entryId={entry.id}
+        isAuthenticated={commentAuth.isAuthenticated}
+        initialAgreementDone={commentAuth.initialAgreementDone}
+        initialPlatformAccessSuspended={
+          commentAuth.initialPlatformAccessSuspended
+        }
+      />
     </div>
   );
 }
