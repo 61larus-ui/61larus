@@ -1,6 +1,7 @@
 "use client";
 
-import { type KeyboardEvent } from "react";
+import { useRouter } from "next/navigation";
+import { type KeyboardEvent, useCallback } from "react";
 
 export type FeedEntryCardProps = {
   title: string;
@@ -13,6 +14,8 @@ export type FeedEntryCardProps = {
   createdAtRaw: string;
   isActive: boolean;
   onSelect: () => void;
+  /** Hover’da RSC yolu önceden yüklenir, ör. /yazi-slug */
+  prefetchHref?: string;
 };
 
 export function FeedEntryCard({
@@ -24,7 +27,15 @@ export function FeedEntryCard({
   createdAtRaw,
   isActive,
   onSelect,
+  prefetchHref,
 }: FeedEntryCardProps) {
+  const router = useRouter();
+  const onPointerEnter = useCallback(() => {
+    if (!prefetchHref) return;
+    if (typeof router.prefetch === "function") {
+      void router.prefetch(prefetchHref);
+    }
+  }, [prefetchHref, router]);
   function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -39,6 +50,7 @@ export function FeedEntryCard({
       aria-current={isActive ? "true" : undefined}
       data-active={isActive ? "true" : undefined}
       onClick={onSelect}
+      onPointerEnter={onPointerEnter}
       onKeyDown={handleKeyDown}
       className="feed-entry-card feed-entry-card--editorial group w-full min-w-0 cursor-pointer border-0 text-left last:border-b-0"
     >

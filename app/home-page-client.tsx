@@ -446,10 +446,25 @@ export default function HomePageClient({
   }, [isAuthenticated, authUserId]);
 
   const goToEntry = useCallback((id: string) => {
+    if (process.env.NODE_ENV === "development") {
+      console.time("goToEntry:navigate");
+    }
     writePendingReturn(id, "comment");
     const item = entriesByIdRef.current.find((e) => e.id === id);
     const path = entryHrefPath(item, id);
-    void routerRef.current.push(`/${encodeURI(path)}`);
+    const href = `/${encodeURI(path)}`;
+    const r = routerRef.current;
+    if (typeof r.prefetch === "function") {
+      void r.prefetch(href);
+    }
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (process.env.NODE_ENV === "development") {
+          console.timeEnd("goToEntry:navigate");
+        }
+        void r.push(href);
+      }, 0);
+    });
   }, []);
 
   /** Tam yazı akışı: arama kapalı, ana sayfaya dön. */
@@ -939,6 +954,7 @@ export default function HomePageClient({
                 metaDate={formatFeedLineDate(entry.created_at)}
                 createdAtRaw={entry.created_at}
                 isActive={false}
+                prefetchHref={`/${encodeURI(entryHrefPath(entry, entry.id))}`}
                 onSelect={() => goToEntry(entry.id)}
               />
             );

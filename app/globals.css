@@ -4334,7 +4334,7 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   text-decoration: none;
   text-underline-offset: 0;
   display: inline-block;
-  transition: color 0.16s ease, opacity 0.16s ease;
+  transition: color 0.15s ease, opacity 0.15s ease;
 }
 
 .entry-detail-page-inner a.entry-detail-back:hover,
@@ -4443,7 +4443,7 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   text-decoration: underline;
   text-decoration-color: var(--divide-muted);
   text-underline-offset: 4px;
-  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
 
 .entry-detail-back:hover {
@@ -4484,7 +4484,7 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   letter-spacing: var(--type-meta-tracking);
   color: var(--text-tertiary);
   opacity: 0.92;
-  transition: color 0.18s ease, opacity 0.18s ease;
+  transition: color 0.15s ease, opacity 0.15s ease;
 }
 
 .entry-share-btn:hover {

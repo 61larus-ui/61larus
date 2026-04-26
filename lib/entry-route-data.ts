@@ -51,7 +51,7 @@ function sanitizeEntryTitle<T extends EntryItem>(entry: T): T {
   return { ...entry, title: limited };
 }
 
-type EntryRow = {
+export type EntryRow = {
   id: string;
   title: string;
   content: string;
@@ -83,6 +83,296 @@ export type EntryRouteDetail = {
   entry: EntryItem;
   comments: CommentItem[];
 };
+
+type SupabaseForEntry = Awaited<ReturnType<typeof createSupabaseServerClient>>;
+
+type DbClient = Exclude<
+  ReturnType<typeof createSupabaseServiceClient> | Awaited<
+    ReturnType<typeof createSupabaseServerClient>
+  >,
+  null
+>;
+
+async function resolveEntryRowWithClient(
+  client: DbClient,
+  raw: string
+): Promise<EntryRow | null> {
+  const decodedSlug = decodeSlugSegment(raw);
+  if (!decodedSlug) return null;
+
+  const targetSlug = normalizeEntrySlug(decodedSlug);
+
+  const bySlugCols = await loadEntryBySlugInList(client, [
+    decodedSlug,
+    targetSlug,
+  ]);
+  if (bySlugCols) {
+    return bySlugCols;
+  }
+
+  if (isRfc4122Uuid(decodedSlug)) {
+    const byId = await loadEntryRowById(client, decodedSlug);
+    if (byId) {
+      return byId;
+    }
+  }
+
+  const { data, error } = await client
+    .from("entries")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (error) {
+    console.warn(
+      "[entry-route] resolveEntryRowWithClient fallback scan",
+      error.message
+    );
+    return null;
+  }
+
+  for (const rowRaw of data ?? []) {
+    const row = rowRaw as EntryRow;
+    if (entryRowMatchesSlugResolution(row, targetSlug, decodedSlug)) {
+      return row;
+    }
+  }
+
+  return null;
+}
+
+/** Slug/UUID → entry satırı (sayfa aşaması). */
+export async function resolveEntryRowBySegment(
+  raw: string
+): Promise<EntryRow | null> {
+  unstable_noStore();
+  const supabase = await createSupabaseServerClient();
+  const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
+  return resolveEntryRowWithClient(client, raw);
+}
+
+/**
+ * Giriş sayfası hızı: yorum sorgusu yok; yazar için en fazla 1 yorum (fallback uid)
+ * + ilgili kullanıcı(lar) çekilir. İçerik anında ekranlanabilir; yorumlar ayrı RSC.
+ */
+export async function buildEntryItemFast(
+  supabase: SupabaseForEntry,
+  row: EntryRow
+): Promise<EntryItem> {
+  const entryUid =
+    typeof row.user_id === "string" && row.user_id.length > 0
+      ? row.user_id
+      : null;
+
+  let fallbackUid: string | null = null;
+  if (!entryUid) {
+    const c = await supabase
+      .from("comments")
+      .select("user_id")
+      .eq("entry_id", row.id)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    fallbackUid =
+      c.data && typeof c.data.user_id === "string" && c.data.user_id.length > 0
+        ? c.data.user_id
+        : null;
+  }
+
+  const userIds = [
+    ...new Set(
+      [entryUid, fallbackUid].filter(
+        (u): u is string => typeof u === "string" && u.length > 0
+      )
+    ),
+  ];
+
+  const authorInfoByUserId = new Map<
+    string,
+    {
+      authorLabel: string;
+      nicknameOrFullName: string | null;
+      bio61: string | null;
+    }
+  >();
+
+  if (userIds.length > 0) {
+    const userLookupClient = (createSupabaseServiceClient() ??
+      supabase) as typeof supabase;
+    const { data: usersRows } = await userLookupClient
+      .from("users")
+      .select(
+        "id, first_name, last_name, nickname, display_name_mode, email, bio_61"
+      )
+      .in("id", userIds);
+    for (const u of usersRows ?? []) {
+      if (typeof u.id === "string") {
+        const rawBio = u.bio_61;
+        const bio61 =
+          typeof rawBio === "string" && rawBio.trim().length > 0
+            ? rawBio.trim()
+            : null;
+        authorInfoByUserId.set(u.id, {
+          authorLabel: authorLabelFromUserRow(u),
+          nicknameOrFullName: authorNameNicknameOrFullName(u),
+          bio61,
+        });
+      }
+    }
+  }
+
+  const slugVal =
+    typeof row.slug === "string" && row.slug.trim().length > 0
+      ? row.slug.trim()
+      : null;
+  const rawCat =
+    typeof row.category === "string" && row.category.trim().length > 0
+      ? row.category.trim()
+      : null;
+  const cat = normalizeEntryCategory(rawCat);
+
+  const base: EntryItem = sanitizeEntryTitle({
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    created_at: row.created_at,
+    category: cat,
+    slug: slugVal,
+  });
+
+  if (entryUid) {
+    const info = authorInfoByUserId.get(entryUid);
+    if (info) {
+      const authorName = info.nicknameOrFullName ?? info.authorLabel ?? null;
+      return { ...base, authorName, bio61: info.bio61, slug: slugVal };
+    }
+    return { ...base, authorName: null, bio61: null, slug: slugVal };
+  }
+  if (typeof fallbackUid === "string" && fallbackUid.length > 0) {
+    const info = authorInfoByUserId.get(fallbackUid);
+    if (info) {
+      return {
+        ...base,
+        authorName: info.authorLabel,
+        bio61: info.bio61,
+        slug: slugVal,
+      };
+    }
+    return {
+      ...base,
+      authorName: SILINMIS_KULLANICI_LABEL,
+      bio61: null,
+      slug: slugVal,
+    };
+  }
+  return { ...base, slug: slugVal };
+}
+
+/** Giriş sayfası: slug → satır + EntryItem, tek istemci (yorum sorgusu yok). */
+export async function getEntryShellBySlug(
+  raw: string
+): Promise<{ entry: EntryItem; row: EntryRow } | null> {
+  unstable_noStore();
+  const supabase = await createSupabaseServerClient();
+  const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
+  const row = await resolveEntryRowWithClient(client, raw);
+  if (!row) {
+    return null;
+  }
+  const entry = await buildEntryItemFast(supabase, row);
+  return { entry, row };
+}
+
+/** Tüm yorum satırları + yazar etiketleri (ayrı Suspense aşaması). */
+export async function getCommentItemsForEntryRow(
+  supabase: SupabaseForEntry,
+  row: EntryRow
+): Promise<CommentItem[]> {
+  const { data: commentsData, error: commentsError } = await supabase
+    .from("comments")
+    .select(
+      "id, entry_id, user_id, content, created_at, parent_comment_id, reply_to_user_id, reply_to_username"
+    )
+    .eq("entry_id", row.id)
+    .order("created_at", { ascending: true });
+
+  if (commentsError) {
+    console.warn("[entry-route] comments", commentsError.message);
+  }
+
+  const commentsChrono = [...(commentsData ?? [])].sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+  const entryAuthorUserIdByEntryId = new Map<string, string>();
+  for (const c of commentsChrono) {
+    if (!entryAuthorUserIdByEntryId.has(c.entry_id)) {
+      entryAuthorUserIdByEntryId.set(c.entry_id, c.user_id);
+    }
+  }
+
+  const commentUserIds = [
+    ...new Set((commentsData ?? []).map((c) => c.user_id).filter(Boolean)),
+  ] as string[];
+
+  const entryUid =
+    typeof row.user_id === "string" && row.user_id.length > 0
+      ? row.user_id
+      : null;
+  const fallbackUid = entryAuthorUserIdByEntryId.get(row.id) ?? null;
+  const userIdsForAuthor = [
+    ...new Set(
+      [entryUid, fallbackUid, ...commentUserIds].filter(
+        (u): u is string => typeof u === "string" && u.length > 0
+      )
+    ),
+  ];
+
+  const authorInfoByUserId = new Map<
+    string,
+    {
+      authorLabel: string;
+      nicknameOrFullName: string | null;
+      bio61: string | null;
+    }
+  >();
+
+  if (userIdsForAuthor.length > 0) {
+    const userLookupClient = (createSupabaseServiceClient() ??
+      supabase) as typeof supabase;
+    const { data: usersRows } = await userLookupClient
+      .from("users")
+      .select(
+        "id, first_name, last_name, nickname, display_name_mode, email, bio_61"
+      )
+      .in("id", userIdsForAuthor);
+    for (const u of usersRows ?? []) {
+      if (typeof u.id === "string") {
+        const rawBio = u.bio_61;
+        const bio61 =
+          typeof rawBio === "string" && rawBio.trim().length > 0
+            ? rawBio.trim()
+            : null;
+        authorInfoByUserId.set(u.id, {
+          authorLabel: authorLabelFromUserRow(u),
+          nicknameOrFullName: authorNameNicknameOrFullName(u),
+          bio61,
+        });
+      }
+    }
+  }
+
+  return (commentsData ?? []).map((c) => {
+    const info = authorInfoByUserId.get(c.user_id);
+    const authorLabel = info?.authorLabel ?? SILINMIS_KULLANICI_LABEL;
+    const bio61 = info?.bio61 ?? null;
+    return {
+      ...c,
+      authorLabel,
+      bio61,
+    } as CommentItem;
+  });
+}
 
 async function buildDetailFromRow(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
@@ -293,50 +583,13 @@ export async function getEntryDetailBySlug(
 ): Promise<EntryRouteDetail | null> {
   unstable_noStore();
   const supabase = await createSupabaseServerClient();
-  const client = (createSupabaseServiceClient() ?? supabase) as Exclude<
-    typeof supabase,
-    null
-  >;
+  const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
 
-  const decodedSlug = decodeSlugSegment(segment);
-  if (!decodedSlug) return null;
-
-  const targetSlug = normalizeEntrySlug(decodedSlug);
-
-  const bySlugCols = await loadEntryBySlugInList(client, [
-    decodedSlug,
-    targetSlug,
-  ]);
-  if (bySlugCols) {
-    return buildDetailFromRow(supabase, bySlugCols);
-  }
-
-  if (isRfc4122Uuid(decodedSlug)) {
-    const byId = await loadEntryRowById(client, decodedSlug);
-    if (byId) {
-      return buildDetailFromRow(supabase, byId);
-    }
-  }
-
-  const { data, error } = await client
-    .from("entries")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(500);
-
-  if (error) {
-    console.warn("[entry-route] getEntryDetailBySlug fallback scan", error.message);
+  const row = await resolveEntryRowWithClient(client, segment);
+  if (!row) {
     return null;
   }
-
-  for (const raw of data ?? []) {
-    const row = raw as EntryRow;
-    if (entryRowMatchesSlugResolution(row, targetSlug, decodedSlug)) {
-      return buildDetailFromRow(supabase, row);
-    }
-  }
-
-  return null;
+  return buildDetailFromRow(supabase, row);
 }
 
 export async function getEntryDetailById(

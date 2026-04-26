@@ -1,12 +1,8 @@
 import Link from "next/link";
-import type { CommentItem, EntryItem } from "@/app/home-page-client";
+import type { ReactNode } from "react";
+import type { EntryItem } from "@/app/home-page-client";
 import { EntryDetailCommentCompose } from "@/components/entry-detail-comment-compose";
 import { EntryDetailShareClient } from "@/components/entry-detail-share-client";
-
-function formatDate(value: string) {
-  const date = new Date(value);
-  return date.toLocaleString("tr-TR");
-}
 
 function formatEntryDetailDate(value: string) {
   const date = new Date(value);
@@ -20,20 +16,20 @@ function formatEntryDetailDate(value: string) {
 
 export function EntryDetailBodyRsc({
   entry,
-  comments,
   commentAuth,
+  commentsSlot,
 }: {
   entry: EntryItem;
-  comments: CommentItem[];
   commentAuth: {
     isAuthenticated: boolean;
     initialAgreementDone: boolean;
     initialPlatformAccessSuspended: boolean;
   };
+  /** Suspense sınırı: yorum listesi ayrı RSC */
+  commentsSlot: ReactNode;
 }) {
   const authorName = entry.authorName?.trim() || "61Larus";
   const formattedDate = formatEntryDetailDate(entry.created_at);
-  const commentList = comments;
 
   return (
     <div className="relative z-0 max-w-none">
@@ -70,31 +66,7 @@ export function EntryDetailBodyRsc({
         slug={entry.slug}
       />
 
-      <section className="entry-comments-section" aria-label="Yorumlar">
-        {commentList.length === 0 ? (
-          <div className="entry-comments-empty">ilk yorumu sen yaz</div>
-        ) : (
-          <div className="flex flex-col">
-            {commentList.map((comment, index) => (
-              <div
-                key={comment.id}
-                className={`entry-comment-item${index > 0 ? " entry-comment-item--follows" : ""}`}
-              >
-                <p className="entry-comment-author">{comment.authorLabel}</p>
-                {comment.bio61?.trim() ? (
-                  <p className="entry-comment-bio">{comment.bio61.trim()}</p>
-                ) : null}
-                <p className="entry-comment-text">{comment.content}</p>
-                <div className="entry-comment-meta">
-                  <time dateTime={comment.created_at}>
-                    {formatDate(comment.created_at)}
-                  </time>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      {commentsSlot}
 
       <EntryDetailCommentCompose
         entryId={entry.id}
