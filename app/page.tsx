@@ -7,6 +7,8 @@ import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
 import HomePageClient from "./home-page-client";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { getEntryDetailById } from "@/lib/entry-route-data";
+import { slugifyEntryTitle } from "@/lib/entry-slug";
+import { normalizeEntrySlug } from "@/lib/slug";
 import { isRfc4122Uuid } from "@/lib/seo-entry-description";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
@@ -109,9 +111,16 @@ export async function generateMetadata({
     typeof data.slug === "string" && data.slug.trim().length > 0
       ? data.slug.trim()
       : null;
-  const canonical = slugFromRow
-    ? `${SITE}/${slugFromRow}`
-    : `${SITE}/?entry=${id}`;
+  const pathSegment =
+    slugFromRow ??
+    (normalizeEntrySlug(
+      (typeof data.title === "string" ? data.title : "").trim()
+    ) ||
+      slugifyEntryTitle(
+        typeof data.title === "string" ? data.title : "",
+        data.id
+      ));
+  const canonical = `${SITE}/${pathSegment}`;
 
   return buildEntrySeoMetadata({
     pageTitle,
@@ -174,7 +183,13 @@ export default async function Home({
       if (row) {
         const s = row.slug;
         if (typeof s === "string" && s.trim().length > 0) {
-          permanentRedirect(`/${s.trim()}`);
+          permanentRedirect(`/${encodeURI(s.trim())}`);
+        }
+        const title = row.title ?? "";
+        const pathSlug =
+          normalizeEntrySlug(title.trim()) || slugifyEntryTitle(title, id);
+        if (pathSlug.length > 0) {
+          permanentRedirect(`/${encodeURI(pathSlug)}`);
         }
         const detail = await getEntryDetailById(id);
         const result = await getHomeClientProps();

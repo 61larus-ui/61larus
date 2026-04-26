@@ -16,6 +16,8 @@ import { anonymizeCurrentUserAccount } from "@/lib/anonymize-account";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { resolveVisibleName } from "@/lib/visible-name";
 import { normalizeEntryCategory } from "@/lib/entry-category";
+import { normalizeEntrySlug } from "@/lib/slug";
+import { slugifyEntryTitle } from "@/lib/entry-slug";
 
 const STARTER_ENCYCLOPEDIA_CATEGORY_IDS = new Set<string>([
   "tarih",
@@ -396,12 +398,19 @@ export default function HomePageClient({
   const goToEntry = useCallback((id: string) => {
     writePendingReturn(id, "comment");
     const item = entriesByIdRef.current.find((e) => e.id === id);
-    const slug = item?.slug?.trim() ?? "";
-    const nextPath =
-      slug.length > 0
-        ? `/${encodeURI(slug)}`
-        : `/?entry=${encodeURIComponent(id)}`;
-    void routerRef.current.push(nextPath);
+    const stored = item?.slug?.trim() ?? "";
+    if (stored.length > 0) {
+      void routerRef.current.push(`/${encodeURI(stored)}`);
+      return;
+    }
+    const title = item?.title ?? "";
+    const fromTitle = normalizeEntrySlug(title);
+    const fallback = fromTitle || slugifyEntryTitle(title, id);
+    if (fallback.length > 0) {
+      void routerRef.current.push(`/${encodeURI(fallback)}`);
+      return;
+    }
+    void routerRef.current.push(`/?entry=${encodeURIComponent(id)}`);
   }, []);
 
   /** Tam yazı akışı: arama kapalı, ana sayfaya dön. */

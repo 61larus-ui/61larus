@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { normalizeEntrySlug } from "@/lib/slug";
 
 /**
  * Turkish-aware ASCII slug (ç→c, ğ→g, ı/İ→i, ö→o, ş→s, ü→u; lowercase;
@@ -8,30 +9,7 @@ export function slugifyEntryTitle(
   title: string,
   idForFallback: string
 ): string {
-  let s = title.normalize("NFC");
-  const mapPairs: [string, string][] = [
-    ["Ç", "c"],
-    ["ç", "c"],
-    ["Ğ", "g"],
-    ["ğ", "g"],
-    ["İ", "i"],
-    ["I", "i"],
-    ["ı", "i"],
-    ["Ö", "o"],
-    ["ö", "o"],
-    ["Ş", "s"],
-    ["ş", "s"],
-    ["Ü", "u"],
-    ["ü", "u"],
-  ];
-  for (const [a, b] of mapPairs) {
-    s = s.split(a).join(b);
-  }
-  s = s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  const s = normalizeEntrySlug(title);
   if (s.length > 0) return s;
   const compact = idForFallback
     .replace(/-/g, "")

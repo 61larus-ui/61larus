@@ -5,6 +5,8 @@ import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
 import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
 import { getEntryDetailBySlug } from "@/lib/entry-route-data";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
+import { slugifyEntryTitle } from "@/lib/entry-slug";
+import { normalizeEntrySlug } from "@/lib/slug";
 import { getHomeClientProps } from "@/lib/home-client-props";
 
 export const dynamic = "force-dynamic";
@@ -32,8 +34,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const pageTitle =
     entryTitle.length > 0 ? `${entryTitle} | ${SITE_BRAND}` : SITE_BRAND;
   const s = data.slug;
+  const fromTitle = normalizeEntrySlug(
+    (typeof data.title === "string" ? data.title : "").trim()
+  );
   const canonicalSlug =
-    typeof s === "string" && s.trim().length > 0 ? s.trim() : segment;
+    (typeof s === "string" && s.trim().length > 0
+      ? s.trim()
+      : fromTitle) ||
+    slugifyEntryTitle(
+      typeof data.title === "string" ? data.title : "",
+      data.id
+    ) ||
+    segment;
   const canonical = `${SITE}/${encodeURI(canonicalSlug)}`;
 
   return buildEntrySeoMetadata({
@@ -68,12 +80,18 @@ export default async function EntrySlugPage({ params }: PageProps) {
   }
 
   const row = detail.entry;
-  if (
-    typeof row.slug === "string" &&
-    row.slug.trim() &&
-    row.slug.trim() !== segment
-  ) {
-    permanentRedirect(`/${encodeURI(row.slug.trim())}`);
+  const dbSlug =
+    typeof row.slug === "string" && row.slug.trim().length > 0
+      ? row.slug.trim()
+      : null;
+  const titleNorm = normalizeEntrySlug(
+    (typeof row.title === "string" ? row.title : "").trim()
+  );
+  const pathFromTitle =
+    titleNorm || slugifyEntryTitle(row.title ?? "", row.id);
+  const canonicalPath = dbSlug ?? (pathFromTitle || null);
+  if (canonicalPath && canonicalPath !== segment) {
+    permanentRedirect(`/${encodeURI(canonicalPath)}`);
   }
 
   const p = home.props;

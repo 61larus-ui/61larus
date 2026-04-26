@@ -8,6 +8,8 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { normalizeEntryCategory } from "@/lib/entry-category";
+import { normalizeEntrySlug } from "@/lib/slug";
+import { isRfc4122Uuid } from "@/lib/seo-entry-description";
 import type { CommentItem, EntryItem } from "@/app/home-page-client";
 
 function authorLabelFromUserRow(row: {
@@ -93,6 +95,59 @@ async function loadEntryRowById(
     .maybeSingle();
   if (error || !data) return null;
   return data as EntryRow;
+}
+
+/** URL segment for slug lookup (raw path + safe decode, deduped). */
+function segmentLookupKeys(segment: string): string[] {
+  const t = segment.trim();
+  if (!t) return [];
+  const out = new Set<string>([t]);
+  try {
+    out.add(decodeURIComponent(t));
+  } catch {
+    /* keep single variant */
+  }
+  return [...out].filter((s) => s.length > 0);
+}
+
+const TITLE_SLUG_SCAN_PAGE = 500;
+const TITLE_SLUG_SCAN_MAX_ROWS = 200_000;
+
+async function loadEntryRowByNormalizedTitle(
+  client: Exclude<
+    ReturnType<typeof createSupabaseServiceClient> | Awaited<
+      ReturnType<typeof createSupabaseServerClient>
+    >,
+    null
+  >,
+  segment: string
+): Promise<EntryRow | null> {
+  const target = segment.trim();
+  if (!target) return null;
+
+  let from = 0;
+  for (;;) {
+    if (from >= TITLE_SLUG_SCAN_MAX_ROWS) return null;
+    const to = from + TITLE_SLUG_SCAN_PAGE - 1;
+    const { data, error } = await client
+      .from("entries")
+      .select("id, title, content, created_at, category, user_id, slug")
+      .order("created_at", { ascending: false })
+      .range(from, to);
+    if (error) {
+      console.warn("[entry-route] title-slug scan", error.message);
+      return null;
+    }
+    if (!data?.length) return null;
+    for (const row of data) {
+      const title = row.title;
+      if (typeof title === "string" && normalizeEntrySlug(title) === target) {
+        return row as EntryRow;
+      }
+    }
+    if (data.length < TITLE_SLUG_SCAN_PAGE) return null;
+    from += TITLE_SLUG_SCAN_PAGE;
+  }
 }
 
 export type EntryRouteDetail = {
@@ -244,17 +299,28 @@ export async function getEntryDetailBySlug(
   segment: string
 ): Promise<EntryRouteDetail | null> {
   unstable_noStore();
-  const seg = decodeURIComponent(segment).trim();
-  if (!seg) return null;
-
   const supabase = await createSupabaseServerClient();
   const client = (createSupabaseServiceClient() ?? supabase) as Exclude<
     typeof supabase,
     null
   >;
-  const row = await loadEntryRowBySlug(client, seg);
-  if (!row) return null;
-  return buildDetailFromRow(supabase, row);
+  const keys = segmentLookupKeys(segment);
+  if (keys.length === 0) return null;
+
+  for (const k of keys) {
+    const row = await loadEntryRowBySlug(client, k);
+    if (row) return buildDetailFromRow(supabase, row);
+  }
+  for (const k of keys) {
+    if (isRfc4122Uuid(k)) {
+      const row = await loadEntryRowById(client, k);
+      if (row) return buildDetailFromRow(supabase, row);
+    }
+  }
+  const titleKey = keys[keys.length - 1]!;
+  const titleRow = await loadEntryRowByNormalizedTitle(client, titleKey);
+  if (titleRow) return buildDetailFromRow(supabase, titleRow);
+  return null;
 }
 
 export async function getEntryDetailById(
