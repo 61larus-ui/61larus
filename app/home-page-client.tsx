@@ -1016,7 +1016,7 @@ export default function HomePageClient({
                 </button>
               </h1>
               <p className="site-header-tagline m-0 site-header-tagline--manifesto">
-                Trabzon&apos;u anlamak için yaz. Okumak için değil. Katılmak için.
+                TRABZON&apos;UN GÜNDEMİ, LAFI VE HAFIZASI
               </p>
             </div>
           <div
@@ -1188,14 +1188,11 @@ export default function HomePageClient({
                   className="home-manifesto-input home-manifesto-input--premium"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Trabzon hakkında ne düşünüyorsun?"
+                  placeholder="Başlık ara..."
                   autoComplete="off"
                   spellCheck={false}
                 />
               </div>
-              <p className="text-xs opacity-50 mt-2">
-                Bir başlık seç ve fikrini yaz.
-              </p>
             </div>
             {todayDiscoveryEntries.length > 0 ? (
               <section
