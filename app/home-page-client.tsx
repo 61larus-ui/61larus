@@ -262,20 +262,12 @@ export default function HomePageClient({
     ...rightEntries,
   ];
 
-  const stripEntryQueryFromUrl = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const sp = new URLSearchParams(window.location.search);
-    if (!sp.has("entry")) return;
-    sp.delete("entry");
-    const next = sp.toString();
-    const path = window.location.pathname;
-    void router.replace(next ? `${path}?${next}` : path, { scroll: false });
-  }, [router]);
   const [commentText, setCommentText] = useState("");
   const commentComposeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const pendingFocusAfterEntrySelectRef = useRef(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const [, setPendingEntryRouteId] = useState<string | null>(null);
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
@@ -496,25 +488,10 @@ export default function HomePageClient({
   }, []);
 
   const closeEntryModal = useCallback(() => {
-    openEntryNavRef.current = false;
-    if (openEntryNavTimerRef.current) {
-      clearTimeout(openEntryNavTimerRef.current);
-      openEntryNavTimerRef.current = null;
-    }
-    clearPendingReturn();
     setSelectedEntryId(null);
-    setCenterMode("feed");
-    if (typeof window === "undefined") {
-      return;
-    }
-    if (pathCanonicalSlug) {
-      if (window.location.pathname !== "/") {
-        void routerRef.current.replace("/", { scroll: false });
-      }
-    } else {
-      stripEntryQueryFromUrl();
-    }
-  }, [pathCanonicalSlug, stripEntryQueryFromUrl]);
+    setPendingEntryRouteId(null);
+    void router.replace("/", { scroll: false });
+  }, [router]);
 
   /** Tam yazı akışı: arama kapalı, detay kapalı, feed modu. */
   const resetToWritingsFeed = useCallback(() => {
@@ -1177,8 +1154,16 @@ export default function HomePageClient({
         <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
           <button
             type="button"
-            onClick={() => closeEntryModal()}
             className="entry-detail-back"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              closeEntryModal();
+            }}
           >
             ← akışa dön
           </button>
@@ -2058,14 +2043,7 @@ export default function HomePageClient({
 
       {selectedEntryId ? (
         <div className="entry-detail-shell">
-          <div
-            className="entry-detail-backdrop"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) {
-                closeEntryModal();
-              }
-            }}
-          >
+          <div className="entry-detail-backdrop">
             <article
               className="entry-detail-card"
               role="dialog"
@@ -2077,16 +2055,25 @@ export default function HomePageClient({
               onMouseDown={(event) => {
                 event.stopPropagation();
               }}
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
             >
               {!selectedEntry && combinedEntries.length === 0 ? (
                 <div>
                   <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
                     <button
                       type="button"
-                      onClick={() => {
-                        void closeEntryModal();
-                      }}
                       className="entry-detail-back"
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        closeEntryModal();
+                      }}
                     >
                       ← akışa dön
                     </button>
@@ -2098,10 +2085,16 @@ export default function HomePageClient({
                   <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
                     <button
                       type="button"
-                      onClick={() => {
-                        void closeEntryModal();
-                      }}
                       className="entry-detail-back"
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        closeEntryModal();
+                      }}
                     >
                       ← akışa dön
                     </button>
