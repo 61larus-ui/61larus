@@ -1016,14 +1016,29 @@ main > header .site-header-tagline--manifesto {
   gap: var(--home-section-gap);
 }
 
-/* Üst ticker (doğrudan stack çocuğu): üst boşluk sıkı (alt ticker bu seçicide değil) */
+/* Üst ticker (doğrudan stack çocuğu); Bugün yoksa — alt ticker bu seçicide değil */
 .home-page-editorial--section-stack > .home-ticker {
   margin-top: 4px !important;
   margin-bottom: 10px !important;
 }
 
-.today-strip + .home-ticker--divider {
-  margin-top: 4px !important;
+/* Bugün bloğundan hemen sonra üst ticker: gap + section alt boşluğunu margin ile dengele */
+.today-strip.today-discovery + .home-ticker--divider,
+.today-discovery + .home-ticker--divider,
+.today-discovery--vitrin + .home-ticker--divider {
+  margin-top: 8px !important;
+}
+
+.home-page-editorial--section-stack > .today-strip.today-discovery + .home-ticker--divider {
+  margin-top: calc(8px - var(--home-section-gap)) !important;
+}
+
+/* Bugün → üst ticker: section alt boşluğu sıfır (asıl boşluk flex gap + ticker margin) */
+.today-strip.today-discovery,
+.today-discovery--vitrin,
+.home-page-editorial .today-strip.today-discovery--faz5 {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 /* FAZ 2: vitrin ↔ orta ticker / üçlü kolon — section-stack gap ile birlikte görsel ritim */
@@ -2057,12 +2072,16 @@ main > section
   padding: 8px 14px;
 }
 
-/* Üst (divider): margin + iç padding sıkı; alt ticker (--lower) aynı kaldı */
+/* Üst (divider): sabit kutu yüksekliği; alt ticker (--lower) aynı kaldı */
 .home-ticker--divider {
   margin-top: 4px;
   margin-bottom: 10px;
-  padding-top: 6px;
-  padding-bottom: 6px;
+  height: 34px;
+  min-height: 34px;
+  padding-top: 0;
+  padding-bottom: 0;
+  display: flex;
+  align-items: center;
 }
 
 .home-ticker--lower {
