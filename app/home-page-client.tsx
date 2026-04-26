@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -821,6 +822,38 @@ export default function HomePageClient({
     waitingEntriesForExplore.length > 0 ||
     dailyQuestionEntries.length > 0;
 
+  /** Alt keşif geçiş ticker’ı — yalnızca mevcut props listeleri; ek sorgu yok. */
+  const homeExploreTickerEntries = useMemo((): EntryItem[] => {
+    const seen = new Set<string>();
+    const out: EntryItem[] = [];
+    const take = (list: EntryItem[]) => {
+      for (const e of list) {
+        if (out.length >= 12) return;
+        if (!e?.title?.trim() || seen.has(e.id)) continue;
+        seen.add(e.id);
+        out.push(e);
+      }
+    };
+    take(todayDiscoveryEntries);
+    take(shuffledMainFeedEntries);
+    take(mostCommentedEntries);
+    take(rightRailAwaitingFirstComment);
+    take(starterEntries);
+    take(dailyQuestionEntries);
+    take(waitingEntriesForExplore);
+    if (out.length < 12) take(centerEntries);
+    return out;
+  }, [
+    todayDiscoveryEntries,
+    shuffledMainFeedEntries,
+    mostCommentedEntries,
+    rightRailAwaitingFirstComment,
+    starterEntries,
+    dailyQuestionEntries,
+    waitingEntriesForExplore,
+    centerEntries,
+  ]);
+
   const feedEntriesSearchFiltered = useMemo(() => {
     let list = shuffledMainFeedEntries;
     if (searchQuery.trim()) {
@@ -1518,9 +1551,60 @@ export default function HomePageClient({
                 aria-label="Keşif alanı"
               >
                   <header
-                    className="col-section-head col-explore-section-head home-explore-head home-explore-head--section-start col-head-band--settled home-explore-head--settled home-explore-head--transition"
-                    aria-hidden="true"
-                  />
+                    className={
+                      "col-section-head col-explore-section-head home-explore-head home-explore-head--section-start col-head-band--settled home-explore-head--settled home-explore-head--transition" +
+                      (homeExploreTickerEntries.length > 0
+                        ? " home-explore-head--transition-has-ticker"
+                        : "")
+                    }
+                    {...(homeExploreTickerEntries.length > 0
+                      ? { "aria-label": "Öne çıkan başlıklar" }
+                      : { "aria-hidden": true })}
+                  >
+                    {homeExploreTickerEntries.length > 0 ? (
+                      <div className="home-explore-ticker">
+                        <div className="home-explore-ticker-viewport">
+                          <div className="home-explore-ticker-track">
+                            <div className="home-explore-ticker-group">
+                              {homeExploreTickerEntries.map((entry) => (
+                                <Fragment key={entry.id}>
+                                  <span
+                                    className="home-explore-ticker-sep"
+                                    aria-hidden
+                                  >
+                                    •
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="home-explore-ticker-hit"
+                                    onClick={() => goToEntry(entry.id)}
+                                    aria-label={`Aç: ${entry.title}`}
+                                  >
+                                    {entry.title}
+                                  </button>
+                                </Fragment>
+                              ))}
+                            </div>
+                            <div
+                              className="home-explore-ticker-group"
+                              aria-hidden="true"
+                            >
+                              {homeExploreTickerEntries.map((entry) => (
+                                <Fragment key={`${entry.id}-mirror`}>
+                                  <span className="home-explore-ticker-sep">
+                                    •
+                                  </span>
+                                  <span className="home-explore-ticker-ghost">
+                                    {entry.title}
+                                  </span>
+                                </Fragment>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </header>
                   <div className="home-explore-grid items-stretch">
                     {starterEntries.length > 0 ? (
                       <div className="home-explore-panel home-explore-panel--starter flex h-full min-h-0 flex-col">
