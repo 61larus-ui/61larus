@@ -3,11 +3,11 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
 import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
 import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
+import { getCommentAuth } from "@/lib/comment-auth";
 import { getEntryDetailBySlug } from "@/lib/entry-route-data";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import { normalizeEntrySlug } from "@/lib/slug";
-import { getHomeClientProps } from "@/lib/home-client-props";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -74,18 +74,11 @@ export default async function EntrySlugPage({ params }: PageProps) {
     notFound();
   }
 
-  const home = await getHomeClientProps();
-  if (!home.ok) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center py-12">
-        <p className="max-w-md text-center text-sm leading-6 text-[#667085]">
-          Hata: {home.message}
-        </p>
-      </div>
-    );
-  }
+  const [detail, auth] = await Promise.all([
+    getEntryDetailBySlug(raw),
+    getCommentAuth(),
+  ]);
 
-  const detail = await getEntryDetailBySlug(raw);
   if (!detail) {
     notFound();
   }
@@ -105,8 +98,6 @@ export default async function EntrySlugPage({ params }: PageProps) {
     permanentRedirect(`/${encodeURI(canonicalPath)}`);
   }
 
-  const p = home.props;
-
   return (
     <>
       <EntryArticleJsonLd
@@ -117,9 +108,9 @@ export default async function EntrySlugPage({ params }: PageProps) {
         }
       />
       <EntryRouteLayoutClient
-        isAuthenticated={p.isAuthenticated}
-        userEmail={p.userEmail}
-        initialPlatformAccessSuspended={p.initialPlatformAccessSuspended}
+        isAuthenticated={auth.isAuthenticated}
+        userEmail={null}
+        initialPlatformAccessSuspended={auth.isSuspended}
       >
         <div className="entry-detail-page">
           <div className="entry-detail-page-inner">
@@ -127,10 +118,9 @@ export default async function EntrySlugPage({ params }: PageProps) {
               entry={row}
               comments={detail.comments}
               commentAuth={{
-                isAuthenticated: p.isAuthenticated,
-                initialAgreementDone: p.initialAgreementDone,
-                initialPlatformAccessSuspended:
-                  p.initialPlatformAccessSuspended,
+                isAuthenticated: auth.isAuthenticated,
+                initialAgreementDone: auth.agreementAccepted,
+                initialPlatformAccessSuspended: auth.isSuspended,
               }}
             />
           </div>

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const HEADER_ATATURK_QUOTES = [
   "Ne mutlu Türküm diyene!",
@@ -25,18 +24,10 @@ export function EntryRouteLayoutClient({
   userEmail: string | null;
   initialPlatformAccessSuspended: boolean;
 }) {
-  const router = useRouter();
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [footerInfoOpen, setFooterInfoOpen] = useState<FooterInfoId | null>(
     null
   );
-
-  const goToBrandHome = useCallback(() => {
-    void router.push("/");
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, [router]);
 
   const closeFooterInfo = useCallback(() => {
     setFooterInfoOpen(null);
@@ -234,6 +225,7 @@ export function EntryRouteLayoutClient({
               <h1 className="m-0 p-0">
                 <Link
                   href="/"
+                  scroll={false}
                   className="site-wordmark max-w-full border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-88"
                   style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
                   aria-label="Ana sayfa — Akış"
@@ -298,13 +290,13 @@ export function EntryRouteLayoutClient({
           className="site-footer home-page-footer home-page-footer--after-explore"
         >
           <div className="home-page-container flex flex-col gap-7 md:flex-row md:items-baseline md:justify-between md:gap-8">
-            <button
-              type="button"
-              onClick={goToBrandHome}
+            <Link
+              href="/"
+              scroll={false}
               className="site-wordmark border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-90"
             >
               61Larus
-            </button>
+            </Link>
             <nav
               className="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-normal md:justify-center md:gap-x-5"
               aria-label="Alt bağlantılar"
@@ -358,14 +350,14 @@ export function EntryRouteLayoutClient({
             </nav>
             <p className="m-0 text-[10.5px] font-normal tabular-nums leading-none text-[color:var(--footer-link)] opacity-90 md:text-right md:text-[11px]">
               © {new Date().getFullYear()}{" "}
-              <button
-                type="button"
-                onClick={goToBrandHome}
+              <Link
+                href="/"
+                scroll={false}
                 className="inline cursor-pointer border-0 bg-transparent p-0 font-inherit text-inherit align-baseline transition-opacity duration-200 hover:opacity-100"
                 aria-label="Ana sayfa — Akış"
               >
                 61Larus
-              </button>
+              </Link>
             </p>
           </div>
         </footer>
