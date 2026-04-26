@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -822,13 +821,13 @@ export default function HomePageClient({
     waitingEntriesForExplore.length > 0 ||
     dailyQuestionEntries.length > 0;
 
-  /** Alt keşif geçiş ticker’ı — yalnızca mevcut props listeleri; ek sorgu yok. */
+  /** İki ticker için ortak havuz — yalnızca mevcut props listeleri; ek sorgu yok. */
   const homeExploreTickerEntries = useMemo((): EntryItem[] => {
     const seen = new Set<string>();
     const out: EntryItem[] = [];
     const take = (list: EntryItem[]) => {
       for (const e of list) {
-        if (out.length >= 12) return;
+        if (out.length >= 22) return;
         if (!e?.title?.trim() || seen.has(e.id)) continue;
         seen.add(e.id);
         out.push(e);
@@ -841,7 +840,7 @@ export default function HomePageClient({
     take(starterEntries);
     take(dailyQuestionEntries);
     take(waitingEntriesForExplore);
-    if (out.length < 12) take(centerEntries);
+    if (out.length < 22) take(centerEntries);
     return out;
   }, [
     todayDiscoveryEntries,
@@ -853,6 +852,20 @@ export default function HomePageClient({
     waitingEntriesForExplore,
     centerEntries,
   ]);
+
+  const { topTickerItems, bottomTickerItems } = useMemo(() => {
+    const all = homeExploreTickerEntries.filter((e) => e?.title?.trim());
+    const top = all.slice(0, 10);
+    const keyOf = (e: EntryItem) =>
+      e.id?.trim() ? e.id : `t:${e.title.trim()}`;
+    const topKeys = new Set(top.map(keyOf));
+    const rest = all.filter((item) => !topKeys.has(keyOf(item)));
+    let bottom = rest.slice(0, 10);
+    if (bottom.length === 0 && all.length > 10) {
+      bottom = all.slice(10, Math.min(20, all.length));
+    }
+    return { topTickerItems: top, bottomTickerItems: bottom };
+  }, [homeExploreTickerEntries]);
 
   const feedEntriesSearchFiltered = useMemo(() => {
     let list = shuffledMainFeedEntries;
@@ -1430,13 +1443,13 @@ export default function HomePageClient({
                 </div>
               </section>
             ) : null}
-            {homeExploreTickerEntries.length > 0 ? (
+            {topTickerItems.length > 0 ? (
               <div
                 className="home-ticker home-ticker--divider"
                 aria-label="Öne çıkan başlıklar"
               >
                 <div className="home-ticker__track">
-                  {homeExploreTickerEntries.map((entry) => (
+                  {topTickerItems.map((entry) => (
                     <button
                       key={`mid-${entry.id}`}
                       type="button"
@@ -1447,7 +1460,7 @@ export default function HomePageClient({
                       {entry.title}
                     </button>
                   ))}
-                  {homeExploreTickerEntries.map((entry) => (
+                  {topTickerItems.map((entry) => (
                     <span
                       key={`mid-dup-${entry.id}`}
                       className="home-ticker__item home-ticker__item--ghost"
@@ -1582,54 +1595,37 @@ export default function HomePageClient({
                   <header
                     className={
                       "col-section-head col-explore-section-head home-explore-head home-explore-head--section-start col-head-band--settled home-explore-head--settled home-explore-head--transition" +
-                      (homeExploreTickerEntries.length > 0
+                      (bottomTickerItems.length > 0
                         ? " home-explore-head--transition-has-ticker"
                         : "")
                     }
-                    {...(homeExploreTickerEntries.length > 0
+                    {...(bottomTickerItems.length > 0
                       ? { "aria-label": "Öne çıkan başlıklar" }
                       : { "aria-hidden": true })}
                   >
-                    {homeExploreTickerEntries.length > 0 ? (
-                      <div className="home-explore-ticker">
-                        <div className="home-explore-ticker-viewport">
-                          <div className="home-explore-ticker-track">
-                            <div className="home-explore-ticker-group">
-                              {homeExploreTickerEntries.map((entry) => (
-                                <Fragment key={entry.id}>
-                                  <span
-                                    className="home-explore-ticker-sep"
-                                    aria-hidden
-                                  >
-                                    •
-                                  </span>
-                                  <button
-                                    type="button"
-                                    className="home-explore-ticker-hit"
-                                    onClick={() => goToEntry(entry.id)}
-                                    aria-label={`Aç: ${entry.title}`}
-                                  >
-                                    {entry.title}
-                                  </button>
-                                </Fragment>
-                              ))}
-                            </div>
-                            <div
-                              className="home-explore-ticker-group"
+                    {bottomTickerItems.length > 0 ? (
+                      <div className="home-ticker home-ticker--lower">
+                        <div className="home-ticker__track">
+                          {bottomTickerItems.map((entry) => (
+                            <button
+                              key={`low-${entry.id}`}
+                              type="button"
+                              className="home-ticker__item"
+                              onClick={() => goToEntry(entry.id)}
+                              aria-label={`Aç: ${entry.title}`}
+                            >
+                              {entry.title}
+                            </button>
+                          ))}
+                          {bottomTickerItems.map((entry) => (
+                            <span
+                              key={`low-dup-${entry.id}`}
+                              className="home-ticker__item home-ticker__item--ghost"
                               aria-hidden="true"
                             >
-                              {homeExploreTickerEntries.map((entry) => (
-                                <Fragment key={`${entry.id}-mirror`}>
-                                  <span className="home-explore-ticker-sep">
-                                    •
-                                  </span>
-                                  <span className="home-explore-ticker-ghost">
-                                    {entry.title}
-                                  </span>
-                                </Fragment>
-                              ))}
-                            </div>
-                          </div>
+                              {entry.title}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     ) : null}

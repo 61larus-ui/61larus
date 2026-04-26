@@ -2021,22 +2021,34 @@ main > section
   }
 }
 
-/* TICKER GENEL (orta bölücü + paylaşılan) */
+/* TICKER GENEL — üst (divider) ve alt (lower) aynı ritim */
 .home-ticker {
   width: 100%;
-  overflow: hidden;
+  min-height: 44px;
   display: flex;
   align-items: center;
-  min-height: 46px;
+  overflow: hidden;
   box-sizing: border-box;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
-/* ORTADAKİ (KESEN) TICKER */
+.home-ticker--divider,
+.home-ticker--lower {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* ORTADAKİ: ana grid yatay hizası */
 .home-ticker--divider {
-  margin-top: 4px;
-  margin-bottom: 8px;
   padding-left: var(--home-container-px);
   padding-right: var(--home-container-px);
+}
+
+/* Alt keşif bandı: yatay padding üst sarmalda (.home-explore-head) */
+.home-ticker--lower {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 /* TRACK */
@@ -2102,7 +2114,7 @@ main > section
 
 @media (max-width: 767.98px) {
   .home-ticker {
-    min-height: 42px;
+    min-height: 44px;
     max-height: 46px;
   }
 
@@ -3031,19 +3043,19 @@ main
   }
 }
 
-/* Geçiş bandı + yatay başlık ticker (mevcut veri; ek sorgu yok) */
+/* Geçiş bandı + yatay ticker: dikey boşluk .home-ticker ile (çift margin yok) */
 .home-explore-head.home-explore-head--transition.home-explore-head--transition-has-ticker {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 48px;
+  min-height: 0;
   max-height: none;
   padding-top: 0;
   padding-bottom: 0;
   overflow: hidden;
   border: none;
-  margin-top: 10px;
-  margin-bottom: 14px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .home-explore-head.home-explore-head--transition-has-ticker.home-explore-head--section-start {
@@ -3059,11 +3071,6 @@ main
 }
 
 @media (max-width: 767.98px) {
-  .home-explore-head.home-explore-head--transition.home-explore-head--transition-has-ticker {
-    min-height: 44px;
-    max-height: 46px;
-  }
-
   .home-explore-ticker-hit,
   .home-explore-ticker-ghost {
     font-size: 0.75rem;
