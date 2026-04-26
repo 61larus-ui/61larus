@@ -1480,17 +1480,17 @@ export default function HomePageClient({
             </aside>
             <aside
               className="home-rail home-rail--trending home-rail--faz5-mid home-rail--editorial-col home-rail--column flex max-h-[40vh] w-full min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-b border-[color:var(--editorial-hairline)] bg-transparent md:max-h-none md:w-full md:max-w-none md:overflow-hidden md:border-b-0"
-              aria-label="Şu an en çok konuşulanlar"
+              aria-label="En çok konuşulan başlıklar"
             >
               <div className="col-section-head col-head-band col-head-band--faz52-support col-head-band--settled col-head-band--trending home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
                 <h2 className="col-section-head__title col-section-head__title--rail m-0">
-                  Şu an en çok konuşulanlar
+                  En çok konuşulan başlıklar
                 </h2>
               </div>
               <div className="home-rail-body home-rail-body--trending col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <nav
                   className="home-rail-nav home-rail-nav--faz52-support flex flex-col px-2.5 pb-4 md:px-3.5 md:pb-5"
-                  aria-label="En çok yorumlananlar"
+                  aria-label="En çok konuşulan başlıklar"
                 >
                   {mostCommentedEntries.map((entry, index) => {
                     const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
