@@ -565,17 +565,15 @@ export default function HomePageClient({
   }, [centerEntries]);
 
   /**
-   * Blok sırası: pending → trending → memory → today → understand_trabzon →
-   * question_of_day. Publish atanmış entry yalnızca kendi slug bloğunda; legacy
-   * doldurma yalnızca `!hasAdminPublishSection`; usedEntryIds ile çift görünüm yok.
+   * Üst ana bloklar: pending → trending → memory → today.
+   * usedEntryIds yalnızca bu dörtlü arasında tekrarı keser; alt keşif panelleri
+   * ayrı hesaplanır (üstte kullanılmış legacy orada yine gösterilebilir).
    */
   const {
     rightRailAwaitingFirstComment,
     mostCommentedEntries,
     shuffledMainFeedEntries,
     todayDiscoveryEntries,
-    starterEntries,
-    dailyQuestionEntry,
   } = useMemo(() => {
     const withCounts = centerEntries.map((entry) => ({
       entry,
@@ -694,92 +692,118 @@ export default function HomePageClient({
       }
     }
 
-    // 5. understand_trabzon — Trabzon’u anlamak için
-    const understandTagged = withCounts
-      .filter((w) => entryPublishSlug(w.entry) === "understand_trabzon")
-      .sort(sortByEngagement);
-    const starterList: EntryItem[] = [];
-    for (const w of understandTagged) {
-      if (starterList.length >= 4) break;
-      starterList.push(w.entry);
-      usedEntryIds.add(w.entry.id);
-    }
-    const encyclopedic = withCounts
-      .filter(
-        (w) =>
-          !usedEntryIds.has(w.entry.id) &&
-          !hasAdminPublishSection(w.entry) &&
-          isStarterEncyclopediaEntry(w.entry)
-      )
-      .sort(sortByEngagement);
-    for (const w of encyclopedic) {
-      if (starterList.length >= 4) break;
-      starterList.push(w.entry);
-      usedEntryIds.add(w.entry.id);
-    }
-    if (starterList.length < 4) {
-      const rest = withCounts
-        .filter(
-          (w) =>
-            !usedEntryIds.has(w.entry.id) &&
-            !hasAdminPublishSection(w.entry)
-        )
-        .sort(sortByEngagement);
-      for (const w of rest) {
-        if (starterList.length >= 4) break;
-        starterList.push(w.entry);
-        usedEntryIds.add(w.entry.id);
-      }
-    }
-
-    // 6. question_of_day — Günün sorusu
-    let dailyQuestion: EntryItem | null = null;
-    const questionTagged = withCounts
-      .filter((w) => entryPublishSlug(w.entry) === "question_of_day")
-      .sort(sortByEngagement);
-    if (questionTagged.length > 0) {
-      dailyQuestion = questionTagged[0].entry;
-    } else {
-      const legacyPool = withCounts.filter(
-        (w) =>
-          !hasAdminPublishSection(w.entry) &&
-          !usedEntryIds.has(w.entry.id)
-      );
-      const withQuestionMark = legacyPool.filter((w) =>
-        w.entry.title.includes("?")
-      );
-      if (withQuestionMark.length > 0) {
-        withQuestionMark.sort(sortByEngagement);
-        dailyQuestion = withQuestionMark[0].entry;
-      } else {
-        const gundem = legacyPool.filter(
-          (w) => normalizeEntryCategory(w.entry.category) === "gundem"
-        );
-        if (gundem.length > 0) {
-          gundem.sort(sortByEngagement);
-          dailyQuestion = gundem[0].entry;
-        } else if (legacyPool.length > 0) {
-          const sorted = [...legacyPool].sort(sortByEngagement);
-          dailyQuestion = sorted[0].entry;
-        }
-      }
-    }
-    if (dailyQuestion) usedEntryIds.add(dailyQuestion.id);
-
     return {
       rightRailAwaitingFirstComment: pendingList,
       mostCommentedEntries: trendingList,
       shuffledMainFeedEntries: memoryList,
       todayDiscoveryEntries: todayList,
-      starterEntries: starterList,
-      dailyQuestionEntry: dailyQuestion,
     };
   }, [centerEntries, commentsByEntryIdLive]);
 
-  const waitingEntriesForExplore = useMemo(
-    () => rightRailAwaitingFirstComment.slice(0, 4),
-    [rightRailAwaitingFirstComment]
-  );
+  /** Alt keşif: üst bloklardan bağımsız; yalnızca publish atanmamış legacy. */
+  const waitingEntriesForExplore = useMemo(() => {
+    return [...centerEntries]
+      .filter((entry) => !hasAdminPublishSection(entry))
+      .sort(compareEntriesByNewest)
+      .slice(0, 4);
+  }, [centerEntries]);
+
+  const starterEntries = useMemo(() => {
+    const withMeta = centerEntries.map((entry) => ({
+      entry,
+      commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
+    }));
+    const sortByEngagement = (
+      a: (typeof withMeta)[0],
+      b: (typeof withMeta)[0]
+    ) => {
+      if (b.commentCount !== a.commentCount) {
+        return b.commentCount - a.commentCount;
+      }
+      return compareEntriesByNewest(a.entry, b.entry);
+    };
+    const understandTagged = withMeta
+      .filter((w) => entryPublishSlug(w.entry) === "understand_trabzon")
+      .sort(sortByEngagement);
+    const picked: EntryItem[] = [];
+    const usedLocal = new Set<string>();
+    for (const w of understandTagged) {
+      if (picked.length >= 4) break;
+      picked.push(w.entry);
+      usedLocal.add(w.entry.id);
+    }
+    const encyclopedic = withMeta
+      .filter(
+        (w) =>
+          !usedLocal.has(w.entry.id) &&
+          !hasAdminPublishSection(w.entry) &&
+          isStarterEncyclopediaEntry(w.entry)
+      )
+      .sort(sortByEngagement);
+    for (const w of encyclopedic) {
+      if (picked.length >= 4) break;
+      picked.push(w.entry);
+      usedLocal.add(w.entry.id);
+    }
+    if (picked.length < 4) {
+      const rest = withMeta
+        .filter(
+          (w) =>
+            !usedLocal.has(w.entry.id) && !hasAdminPublishSection(w.entry)
+        )
+        .sort(sortByEngagement);
+      for (const w of rest) {
+        if (picked.length >= 4) break;
+        picked.push(w.entry);
+      }
+    }
+    return picked;
+  }, [centerEntries, commentsByEntryIdLive]);
+
+  const dailyQuestionEntry = useMemo((): EntryItem | null => {
+    if (centerEntries.length === 0) return null;
+    const withMeta = centerEntries.map((entry) => ({
+      entry,
+      commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
+    }));
+    const sortByEngagement = (
+      a: (typeof withMeta)[0],
+      b: (typeof withMeta)[0]
+    ) => {
+      if (b.commentCount !== a.commentCount) {
+        return b.commentCount - a.commentCount;
+      }
+      return compareEntriesByNewest(a.entry, b.entry);
+    };
+    const questionTagged = withMeta
+      .filter((w) => entryPublishSlug(w.entry) === "question_of_day")
+      .sort(sortByEngagement);
+    if (questionTagged.length > 0) {
+      return questionTagged[0].entry;
+    }
+    const legacyPool = withMeta.filter(
+      (w) => !hasAdminPublishSection(w.entry)
+    );
+    const withQuestionMark = legacyPool.filter((w) =>
+      w.entry.title.includes("?")
+    );
+    if (withQuestionMark.length > 0) {
+      withQuestionMark.sort(sortByEngagement);
+      return withQuestionMark[0].entry;
+    }
+    const gundem = legacyPool.filter(
+      (w) => normalizeEntryCategory(w.entry.category) === "gundem"
+    );
+    if (gundem.length > 0) {
+      gundem.sort(sortByEngagement);
+      return gundem[0].entry;
+    }
+    if (legacyPool.length > 0) {
+      const sorted = [...legacyPool].sort(sortByEngagement);
+      return sorted[0].entry;
+    }
+    return null;
+  }, [centerEntries, commentsByEntryIdLive]);
 
   const hasHomeExplore =
     starterEntries.length > 0 ||
