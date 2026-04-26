@@ -1016,19 +1016,17 @@ main > header .site-header-tagline--manifesto {
   gap: var(--home-section-gap);
 }
 
-/* FAZ 2: “Bugün 61Larus’ta” ↔ üçlü kolon — yalnız section arası (başlık/entry sıkışması yok) */
+/* FAZ 2: vitrin ↔ orta ticker / üçlü kolon — section-stack gap ile birlikte görsel ritim */
 .home-page-editorial--section-stack
   .today-strip.today-discovery
   + .home-main-columns-wrap {
-  margin-top: -0.625rem; /* 10px, 8–12px bandı */
+  margin-top: calc(var(--home-section-gap) * -0.4);
 }
 
-@media (min-width: 768px) {
-  .home-page-editorial--section-stack
-    .today-strip.today-discovery
-    + .home-main-columns-wrap {
-    margin-top: -0.75rem; /* 12px */
-  }
+.home-page-editorial--section-stack
+  .home-ticker--divider
+  + .home-main-columns-wrap {
+  margin-top: calc(var(--home-section-gap) * -0.4);
 }
 
 /* --- Arama dışı manifesto: eski hero padding’i (köprü sınıfı ile sıfırlanır) --- */
@@ -1412,12 +1410,12 @@ main > section
 }
 
 .layout-feed-inner--post-manifesto {
-  padding-top: 0.45rem !important;
+  padding-top: 0.36rem !important;
 }
 
 @media (min-width: 768px) {
   .layout-feed-inner--post-manifesto {
-    padding-top: 0.55rem !important;
+    padding-top: 0.44rem !important;
   }
 }
 
@@ -1584,7 +1582,7 @@ main > section
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 0 0 1.5rem;
+  padding: 0 0 0.975rem;
   box-sizing: border-box;
   border-bottom: 0;
   background: transparent;
@@ -1597,7 +1595,7 @@ main > section
 
 .today-discovery--vitrin {
   padding-top: 1rem;
-  padding-bottom: 1.5rem;
+  padding-bottom: 0.975rem;
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--bg-secondary) 12%, transparent) 0%,
@@ -1607,12 +1605,12 @@ main > section
 
 @media (min-width: 640px) {
   .today-discovery {
-    padding: 0.25rem 0 1.5rem;
+    padding: 0.25rem 0 0.975rem;
   }
 
   .today-discovery--vitrin {
     padding-top: 1rem;
-    padding-bottom: 1.5rem;
+    padding-bottom: 0.975rem;
   }
 }
 
@@ -1621,12 +1619,12 @@ main > section
     max-width: min(100%, 100%);
     margin-left: 0;
     margin-right: 0;
-    padding: 0.5rem 0 1.5rem;
+    padding: 0.5rem 0 0.975rem;
   }
 
   .today-discovery--vitrin {
     padding-top: 1rem;
-    padding-bottom: 1.5rem;
+    padding-bottom: 0.975rem;
   }
 }
 
@@ -2035,7 +2033,8 @@ main > section
 
 /* ORTADAKİ (KESEN) TICKER */
 .home-ticker--divider {
-  margin: 6px 0 10px 0;
+  margin-top: 4px;
+  margin-bottom: 8px;
   padding-left: var(--home-container-px);
   padding-right: var(--home-container-px);
 }
@@ -2114,7 +2113,7 @@ main > section
 
 .feed-entry-card--editorial,
 .home-index-item {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 /* Bugün strip: 2/4 sütun; dış kutu/çerçeve yok, ince hücre ızgarası */
@@ -3005,7 +3004,9 @@ main
 }
 
 .home-explore--faz51
-  .home-explore-head.home-explore-head--transition.home-explore-head--settled {
+  .home-explore-head.home-explore-head--transition.home-explore-head--settled:not(
+    .home-explore-head--transition-has-ticker
+  ) {
   margin-bottom: 0.625rem;
 }
 
@@ -3020,14 +3021,11 @@ main
 }
 
 @media (max-width: 767.98px) {
-  .home-explore--prefooter .home-explore-head.home-explore-head--transition {
-    margin-bottom: 0;
-  }
-
   .home-explore--prefooter
     .home-explore-head.home-explore-head--transition:not(
       .home-explore-head--transition-has-ticker
     ) {
+    margin-bottom: 0;
     padding-left: 0;
     padding-right: 0;
   }
@@ -3044,6 +3042,8 @@ main
   padding-bottom: 0;
   overflow: hidden;
   border: none;
+  margin-top: 10px;
+  margin-bottom: 14px;
 }
 
 .home-explore-head.home-explore-head--transition-has-ticker.home-explore-head--section-start {
