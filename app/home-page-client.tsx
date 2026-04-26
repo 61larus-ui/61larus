@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -277,10 +276,6 @@ export default function HomePageClient({
   const pendingFocusAfterEntrySelectRef = useRef(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  /** URL /?entry= veya [slug] çözümlenene kadar otomatik temizleme yapmamak için. */
-  const [pendingEntryRouteId, setPendingEntryRouteId] = useState<string | null>(
-    null
-  );
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
@@ -297,25 +292,6 @@ export default function HomePageClient({
   const [footerInfoOpen, setFooterInfoOpen] = useState<FooterInfoId | null>(
     null
   );
-
-  /** Otomatik kapanma/temizleme: yalnızca gerçekten entry URL niyeti yokken uygulanır. */
-  const hasEntryRouteIntent = useMemo(() => {
-    if (isOAuthReturnQuery(searchParams)) {
-      return false;
-    }
-    const raw = searchParams.get("entry");
-    const urlEntryId =
-      raw && isRealUuid(decodeURIComponent(raw.trim()))
-        ? decodeURIComponent(raw.trim())
-        : null;
-    if (urlEntryId) {
-      return true;
-    }
-    if (pathCanonicalSlug && initialOpenEntryIdFromPath) {
-      return true;
-    }
-    return false;
-  }, [searchParams, pathCanonicalSlug, initialOpenEntryIdFromPath]);
 
   const commentsPropsFingerprint = useMemo(
     () =>
@@ -473,7 +449,6 @@ export default function HomePageClient({
   // Stable callback + refs for gate flags so post-onboarding code can call this in the
   // same tick as setOnboardingDone without a stale closure (same mutations as a click).
   const selectEntry = useCallback((id: string) => {
-    setPendingEntryRouteId(null);
     openEntryNavRef.current = true;
     if (openEntryNavTimerRef.current) clearTimeout(openEntryNavTimerRef.current);
     openEntryNavTimerRef.current = setTimeout(() => {
@@ -526,7 +501,6 @@ export default function HomePageClient({
       clearTimeout(openEntryNavTimerRef.current);
       openEntryNavTimerRef.current = null;
     }
-    setPendingEntryRouteId(null);
     clearPendingReturn();
     setSelectedEntryId(null);
     setCenterMode("feed");
@@ -599,7 +573,6 @@ export default function HomePageClient({
       clearTimeout(openEntryNavTimerRef.current);
       openEntryNavTimerRef.current = null;
     }
-    setPendingEntryRouteId(null);
     clearPendingReturn();
     setSelectedEntryId(null);
     setCenterMode("feed");
@@ -607,20 +580,9 @@ export default function HomePageClient({
   }, [searchParams]);
 
   /**
-   * Entry niyeti URL’de yokken selectedEntryId sıfırlanır; ?entry= veya [slug] açıkken asla
-   * “ana akışa döndü” sayılmaz (geç yüklenen veri modalı kapatmasın).
+   * ?entry= veya [slug] ile açılış: yalnızca selectEntry; closeEntryModal burada yok
+   * (kapanma sadece kullanıcı/overlay/ESC/akışa dön).
    */
-  useLayoutEffect(() => {
-    if (typeof window === "undefined") return;
-    if (isOAuthReturnQuery(searchParams)) return;
-    if (hasEntryRouteIntent) return;
-    if (openEntryNavRef.current) return;
-    clearPendingReturn();
-    setPendingEntryRouteId(null);
-    setSelectedEntryId(null);
-  }, [searchParams, hasEntryRouteIntent]);
-
-  /** Yalnızca ?entry= veya /[slug] ile URL güdümlü; localStorage ile otomatik açma yok. */
   useEffect(() => {
     if (isOAuthReturnQuery(searchParams)) return;
 
@@ -638,45 +600,16 @@ export default function HomePageClient({
       return;
     }
 
-    if (!isAuthenticated || !agreementDone || platformAccessSuspended) {
-      return;
-    }
-
-    const combined = [...centerEntries, ...leftEntries, ...rightEntries];
-
-    if (combined.length === 0) {
-      if (pendingEntryRouteId === entryId) {
-        return;
-      }
-      setPendingEntryRouteId(entryId);
-      return;
-    }
-
-    if (!combined.some((e) => e.id === entryId)) {
-      setPendingEntryRouteId(null);
-      closeEntryModal();
-      return;
-    }
-
-    setPendingEntryRouteId(null);
     if (selectedEntryId === entryId) {
       return;
     }
     selectEntry(entryId);
   }, [
-    isAuthenticated,
-    agreementDone,
-    platformAccessSuspended,
-    centerEntries,
-    leftEntries,
-    rightEntries,
-    selectEntry,
     searchParams,
     pathCanonicalSlug,
     initialOpenEntryIdFromPath,
+    selectEntry,
     selectedEntryId,
-    pendingEntryRouteId,
-    closeEntryModal,
   ]);
 
   useEffect(() => {
@@ -792,26 +725,34 @@ export default function HomePageClient({
     }
   }
 
-  const effectiveEntryId = useMemo(() => selectedEntryId, [selectedEntryId]);
+  const combinedEntries = useMemo(
+    () => [...centerEntries, ...leftEntries, ...rightEntries],
+    [centerEntries, leftEntries, rightEntries]
+  );
 
   const selectedEntry = useMemo(() => {
-    if (!effectiveEntryId) return null;
-    const all = [...centerEntries, ...leftEntries, ...rightEntries];
-    return all.find((item) => item.id === effectiveEntryId) ?? null;
-  }, [effectiveEntryId, centerEntries, leftEntries, rightEntries]);
+    if (!selectedEntryId) {
+      return null;
+    }
+    return (
+      combinedEntries.find((entry) => entry.id === selectedEntryId) ?? null
+    );
+  }, [selectedEntryId, combinedEntries]);
 
   useEffect(() => {
-    if (!selectedEntry) return;
+    if (!selectedEntryId) {
+      return;
+    }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeEntryModal();
+      if (e.key === "Escape") {
+        closeEntryModal();
+      }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [selectedEntry, closeEntryModal]);
-
-  const selectedComments = selectedEntry
-    ? (commentsByEntryIdLive[selectedEntry.id] ?? [])
-    : [];
+    return () => {
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [selectedEntryId, closeEntryModal]);
 
   async function submitComment() {
     const trimmed = commentText.trim();
@@ -1026,8 +967,10 @@ export default function HomePageClient({
   }, []);
 
   useEffect(() => {
-    if (!pendingFocusAfterEntrySelectRef.current) return;
-    if (!selectedEntryId || centerMode !== "feed") {
+    if (!pendingFocusAfterEntrySelectRef.current) {
+      return;
+    }
+    if (!selectedEntryId || !selectedEntry) {
       if (!selectedEntryId) {
         pendingFocusAfterEntrySelectRef.current = false;
       }
@@ -1044,7 +987,7 @@ export default function HomePageClient({
     return () => {
       window.clearTimeout(t);
     };
-  }, [selectedEntryId, centerMode]);
+  }, [selectedEntryId, selectedEntry]);
 
   const feedEntriesSearchFiltered = useMemo(() => {
     let list = shuffledMainFeedEntries;
@@ -1122,7 +1065,6 @@ export default function HomePageClient({
       sessionStorage.clear();
     }
     clearPendingReturn();
-    setPendingEntryRouteId(null);
     setCenterMode("feed");
     setSelectedEntryId(null);
     setAgreementDone(false);
@@ -1194,7 +1136,7 @@ export default function HomePageClient({
         <nav className="flex flex-col" aria-label="Hafızaya eklenen yazılar">
           {mainColumnDisplayEntries.map((entry) => {
             const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
-            const isActive = entry.id === effectiveEntryId;
+            const isActive = entry.id === selectedEntryId;
             return (
               <FeedEntryCard
                 key={entry.id}
@@ -1225,20 +1167,10 @@ export default function HomePageClient({
     );
   }
 
-  function renderEntryDetailContent() {
-    if (!selectedEntry) {
-      return (
-        <div
-          className="flex min-h-[120px] items-center justify-center px-4 py-10 text-center text-xs"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          Entry bulunamadı.
-        </div>
-      );
-    }
-
-    const authorName = selectedEntry.authorName?.trim() || "61Larus";
-    const formattedDate = formatEntryDetailDate(selectedEntry.created_at);
+  function renderEntryDetailContent(entry: EntryItem) {
+    const commentList = commentsByEntryIdLive[entry.id] ?? [];
+    const authorName = entry.authorName?.trim() || "61Larus";
+    const formattedDate = formatEntryDetailDate(entry.created_at);
 
     return (
       <div className="relative z-0 max-w-none">
@@ -1255,7 +1187,7 @@ export default function HomePageClient({
         <article className="entry-detail-article m-0 border-0 p-0">
           <header className="m-0 border-0 p-0">
             <h1 id="entry-detail-title" className="entry-detail-title">
-              {selectedEntry.title}
+              {entry.title}
             </h1>
             <div className="entry-meta">
               <span className="entry-author">{authorName}</span>
@@ -1269,7 +1201,7 @@ export default function HomePageClient({
             aria-labelledby="entry-detail-title"
             className="m-0 border-0 p-0"
           >
-            <p className="entry-detail-body">{selectedEntry.content}</p>
+            <p className="entry-detail-body">{entry.content}</p>
           </section>
         </article>
 
@@ -1278,9 +1210,9 @@ export default function HomePageClient({
             type="button"
             onClick={() =>
               copyEntryLink(
-                selectedEntry.id,
-                selectedEntry.title,
-                selectedEntry.slug
+                entry.id,
+                entry.title,
+                entry.slug
               )
             }
             className="entry-share-btn"
@@ -1304,9 +1236,9 @@ export default function HomePageClient({
             type="button"
             onClick={() =>
               shareWhatsApp(
-                selectedEntry.id,
-                selectedEntry.title,
-                selectedEntry.slug
+                entry.id,
+                entry.title,
+                entry.slug
               )
             }
             className="entry-share-btn"
@@ -1329,9 +1261,9 @@ export default function HomePageClient({
             type="button"
             onClick={() =>
               shareX(
-                selectedEntry.id,
-                selectedEntry.title,
-                selectedEntry.slug
+                entry.id,
+                entry.title,
+                entry.slug
               )
             }
             className="entry-share-btn"
@@ -1357,11 +1289,11 @@ export default function HomePageClient({
         </div>
 
         <section className="entry-comments-section" aria-label="Yorumlar">
-          {selectedComments.length === 0 ? (
+          {commentList.length === 0 ? (
             <div className="entry-comments-empty">ilk yorumu sen yaz</div>
           ) : (
             <div className="flex flex-col">
-              {selectedComments.map((comment, index) => (
+              {commentList.map((comment, index) => (
                 <div
                   key={comment.id}
                   className={`entry-comment-item${index > 0 ? " entry-comment-item--follows" : ""}`}
@@ -1843,7 +1775,7 @@ export default function HomePageClient({
                   aria-label="Henüz yorum almamış başlıklar"
                 >
                   {rightRailAwaitingFirstComment.map((entry, index) => {
-                    const isActive = entry.id === effectiveEntryId;
+                    const isActive = entry.id === selectedEntryId;
                     const rank = index + 1;
                     return (
                       <button
@@ -1890,7 +1822,7 @@ export default function HomePageClient({
                 >
                   {mostCommentedEntries.map((entry, index) => {
                     const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
-                    const isActive = entry.id === effectiveEntryId;
+                    const isActive = entry.id === selectedEntryId;
                     const rank = index + 1;
                     return (
                       <button
@@ -2124,24 +2056,68 @@ export default function HomePageClient({
         )}
       </section>
 
-      {selectedEntry ? (
-        <div
-          className="entry-detail-modal-root"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="entry-detail-title"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              closeEntryModal();
-            }
-          }}
-        >
-          <article
-            className="entry-detail-modal-panel"
-            onMouseDown={(event) => event.stopPropagation()}
+      {selectedEntryId ? (
+        <div className="entry-detail-shell">
+          <div
+            className="entry-detail-backdrop"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                closeEntryModal();
+              }
+            }}
           >
-            {renderEntryDetailContent()}
-          </article>
+            <article
+              className="entry-detail-card"
+              role="dialog"
+              aria-modal="true"
+              aria-label={
+                selectedEntry ? undefined : "Yazı ayrıntıları"
+              }
+              aria-labelledby={selectedEntry ? "entry-detail-title" : undefined}
+              onMouseDown={(event) => {
+                event.stopPropagation();
+              }}
+            >
+              {!selectedEntry && combinedEntries.length === 0 ? (
+                <div>
+                  <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void closeEntryModal();
+                      }}
+                      className="entry-detail-back"
+                    >
+                      ← akışa dön
+                    </button>
+                  </div>
+                  <div className="entry-detail-loading">yazı yükleniyor…</div>
+                </div>
+              ) : !selectedEntry ? (
+                <div>
+                  <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void closeEntryModal();
+                      }}
+                      className="entry-detail-back"
+                    >
+                      ← akışa dön
+                    </button>
+                  </div>
+                  <p
+                    className="m-0 mt-3 text-center text-sm"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    yazı bulunamadı
+                  </p>
+                </div>
+              ) : (
+                renderEntryDetailContent(selectedEntry)
+              )}
+            </article>
+          </div>
         </div>
       ) : null}
 
