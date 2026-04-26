@@ -347,6 +347,48 @@ export function EntryRouteLayoutClient({
               >
                 İletişim
               </button>
+              <span
+                className="text-[color:rgba(240,241,244,0.25)]"
+                aria-hidden
+              >
+                ·
+              </span>
+              <a
+                href="https://x.com/6Larus"
+                className="footer-link-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                X
+              </a>
+              <span
+                className="text-[color:rgba(240,241,244,0.25)]"
+                aria-hidden
+              >
+                ·
+              </span>
+              <a
+                href="https://instagram.com/61larus"
+                className="footer-link-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Instagram
+              </a>
+              <span
+                className="text-[color:rgba(240,241,244,0.25)]"
+                aria-hidden
+              >
+                ·
+              </span>
+              <a
+                href="https://facebook.com/61larus"
+                className="footer-link-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Facebook
+              </a>
             </nav>
             <p className="m-0 text-[10.5px] font-normal tabular-nums leading-none text-[color:var(--footer-link)] opacity-90 md:text-right md:text-[11px]">
               © {new Date().getFullYear()}{" "}
