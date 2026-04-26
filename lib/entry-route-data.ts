@@ -113,6 +113,23 @@ function segmentLookupKeys(segment: string): string[] {
 const TITLE_SLUG_SCAN_PAGE = 500;
 const TITLE_SLUG_SCAN_MAX_ROWS = 200_000;
 
+function rowMatchesNormalizedTarget(
+  row: { title?: unknown; slug?: unknown },
+  targetSlug: string
+): boolean {
+  if (!targetSlug) return false;
+  const title = row.title;
+  const normTitle = normalizeEntrySlug(
+    (typeof title === "string" ? title : "").trim()
+  );
+  if (normTitle.length > 0 && normTitle === targetSlug) return true;
+  const rawSlug = row.slug;
+  if (typeof rawSlug !== "string" || rawSlug.trim().length === 0) {
+    return false;
+  }
+  return normalizeEntrySlug(rawSlug.trim()) === targetSlug;
+}
+
 async function loadEntryRowByNormalizedTitle(
   client: Exclude<
     ReturnType<typeof createSupabaseServiceClient> | Awaited<
@@ -120,9 +137,9 @@ async function loadEntryRowByNormalizedTitle(
     >,
     null
   >,
-  segment: string
+  targetSlug: string
 ): Promise<EntryRow | null> {
-  const target = segment.trim();
+  const target = targetSlug.trim();
   if (!target) return null;
 
   let from = 0;
@@ -140,11 +157,7 @@ async function loadEntryRowByNormalizedTitle(
     }
     if (!data?.length) return null;
     for (const row of data) {
-      const title = row.title;
-      const norm = normalizeEntrySlug(
-        (typeof title === "string" ? title : "").trim()
-      );
-      if (norm.length > 0 && norm === target) {
+      if (rowMatchesNormalizedTarget(row, target)) {
         return row as EntryRow;
       }
     }
@@ -298,6 +311,16 @@ async function buildDetailFromRow(
   return { entry: entryItem, comments };
 }
 
+function decodeSlugSegment(segment: string): string {
+  const t = segment.trim();
+  if (!t) return "";
+  try {
+    return decodeURIComponent(t).trim();
+  } catch {
+    return t;
+  }
+}
+
 export async function getEntryDetailBySlug(
   segment: string
 ): Promise<EntryRouteDetail | null> {
@@ -307,22 +330,32 @@ export async function getEntryDetailBySlug(
     typeof supabase,
     null
   >;
-  const keys = segmentLookupKeys(segment);
-  if (keys.length === 0) return null;
+  const decodedSlug = decodeSlugSegment(segment);
+  if (!decodedSlug) return null;
 
-  for (const k of keys) {
-    const row = await loadEntryRowBySlug(client, k);
+  const targetSlug = normalizeEntrySlug(decodedSlug);
+  const slugLookupCandidates = [
+    ...new Set(
+      [decodedSlug, targetSlug].filter((s) => typeof s === "string" && s.length > 0)
+    ),
+  ];
+  for (const c of slugLookupCandidates) {
+    const row = await loadEntryRowBySlug(client, c);
     if (row) return buildDetailFromRow(supabase, row);
   }
+
+  const keys = segmentLookupKeys(segment);
   for (const k of keys) {
     if (isRfc4122Uuid(k)) {
       const row = await loadEntryRowById(client, k);
       if (row) return buildDetailFromRow(supabase, row);
     }
   }
-  const titleKey = keys[0]!;
-  const titleRow = await loadEntryRowByNormalizedTitle(client, titleKey);
-  if (titleRow) return buildDetailFromRow(supabase, titleRow);
+
+  if (targetSlug.length > 0) {
+    const titleRow = await loadEntryRowByNormalizedTitle(client, targetSlug);
+    if (titleRow) return buildDetailFromRow(supabase, titleRow);
+  }
   return null;
 }
 
@@ -338,115 +371,4 @@ export async function getEntryDetailById(
   const row = await loadEntryRowById(client, id);
   if (!row) return null;
   return buildDetailFromRow(supabase, row);
-}
-
-export type EntryRouteDebugRow = {
-  id: string;
-  title: string | null;
-  slug: string | null;
-  normalizedTitleSlug: string;
-};
-
-export type EntryRouteDebug = {
-  incomingSlug: string;
-  decodedSlug: string;
-  normalizedSlug: string;
-  recentEntries: EntryRouteDebugRow[];
-  recentEntriesError: string | null;
-};
-
-/**
- * Temporary diagnostics for slug route 404s (last 20 rows + parsed URL segment).
- */
-export async function getEntryRouteDebug(
-  rawSlugFromParams: string
-): Promise<EntryRouteDebug> {
-  unstable_noStore();
-  const incomingSlug = rawSlugFromParams;
-  let decodedSlug = "";
-  try {
-    decodedSlug = decodeURIComponent(rawSlugFromParams.trim()).trim();
-  } catch {
-    decodedSlug = rawSlugFromParams.trim();
-  }
-  const normalizedSlug = normalizeEntrySlug(decodedSlug);
-
-  const supabase = await createSupabaseServerClient();
-  const client = (createSupabaseServiceClient() ?? supabase) as Exclude<
-    typeof supabase,
-    null
-  >;
-
-  const full = await client
-    .from("entries")
-    .select("id, title, slug")
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  if (full.error) {
-    if (
-      /slug|column|schema|not exist/i.test(full.error.message ?? "")
-    ) {
-      const fb = await client
-        .from("entries")
-        .select("id, title")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (fb.error) {
-        return {
-          incomingSlug,
-          decodedSlug,
-          normalizedSlug,
-          recentEntries: [],
-          recentEntriesError: fb.error.message,
-        };
-      }
-      const recentEntries: EntryRouteDebugRow[] = (fb.data ?? []).map(
-        (row) => {
-          const title = row.title;
-          const t = typeof title === "string" ? title : "";
-          return {
-            id: row.id,
-            title: typeof title === "string" ? title : null,
-            slug: null,
-            normalizedTitleSlug: normalizeEntrySlug(t.trim()),
-          };
-        }
-      );
-      return {
-        incomingSlug,
-        decodedSlug,
-        normalizedSlug,
-        recentEntries,
-        recentEntriesError: null,
-      };
-    }
-    return {
-      incomingSlug,
-      decodedSlug,
-      normalizedSlug,
-      recentEntries: [],
-      recentEntriesError: full.error.message,
-    };
-  }
-
-  const recentEntries: EntryRouteDebugRow[] = (full.data ?? []).map((row) => {
-    const title = row.title;
-    const t = typeof title === "string" ? title : "";
-    const s = row.slug;
-    return {
-      id: row.id,
-      title: typeof title === "string" ? title : null,
-      slug: typeof s === "string" && s.trim().length > 0 ? s.trim() : null,
-      normalizedTitleSlug: normalizeEntrySlug(t.trim()),
-    };
-  });
-
-  return {
-    incomingSlug,
-    decodedSlug,
-    normalizedSlug,
-    recentEntries,
-    recentEntriesError: null,
-  };
 }
