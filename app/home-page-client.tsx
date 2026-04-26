@@ -65,11 +65,6 @@ function isRealUuid(value: string) {
   return UUID_RE.test(value);
 }
 
-/** Demo/seed or non-UUID ids: never call Supabase for comments tied to these rows. */
-function isSeedId(value: string) {
-  return value.startsWith("seed-") || !isRealUuid(value);
-}
-
 /** OAuth / PKCE redirect artıkları — entry derin bağlantısı değil. */
 function isOAuthReturnQuery(sp: { get: (key: string) => string | null }): boolean {
   const code = sp.get("code");
@@ -161,29 +156,9 @@ export type HomePageClientProps = {
   profileNickname: string | null;
   /** `users.display_name_mode` */
   profileDisplayMode: "nickname" | "real_name" | null;
-  /** `app/[slug]`: açılacak entry id (path ile eşleşen). */
-  initialOpenEntryIdFromPath?: string | null;
-  /** `app/[slug]`: bu segment canonical URL; kapatınca `/` */
-  pathCanonicalSlug?: string | null;
 };
 
 type Props = HomePageClientProps;
-
-function formatDate(value: string) {
-  const date = new Date(value);
-  return date.toLocaleString("tr-TR");
-}
-
-/** Entry detail header only: calendar date, Turkish long month, no time. */
-function formatEntryDetailDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("tr-TR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
 
 /** Kısa tarih: meta satır (ör. 12 Oca 2025) */
 function formatFeedLineDate(value: string) {
@@ -194,16 +169,6 @@ function formatFeedLineDate(value: string) {
     month: "short",
     year: "numeric",
   });
-}
-
-function entryPublicUrl(entryId: string, slug?: string | null): string {
-  if (typeof window === "undefined") return "";
-  const origin = window.location.origin;
-  const s = typeof slug === "string" ? slug.trim() : "";
-  if (s.length > 0) {
-    return `${origin}/${encodeURI(s)}`;
-  }
-  return `${origin}/?entry=${encodeURIComponent(entryId)}`;
 }
 
 /** Yalnızca public.users satırı; RSC / stale prop fallback yok. */
@@ -230,8 +195,6 @@ export default function HomePageClient({
   profileFullName,
   profileNickname,
   profileDisplayMode,
-  initialOpenEntryIdFromPath = null,
-  pathCanonicalSlug = null,
 }: Props) {
   const headerDisplayName = useMemo(
     () =>
@@ -253,8 +216,6 @@ export default function HomePageClient({
   const routerRef = useRef(router);
   routerRef.current = router;
   const searchParams = useSearchParams();
-  const openEntryNavRef = useRef(false);
-  const openEntryNavTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const entriesByIdRef = useRef<EntryItem[]>([]);
   entriesByIdRef.current = [
     ...centerEntries,
@@ -262,11 +223,6 @@ export default function HomePageClient({
     ...rightEntries,
   ];
 
-  const [commentText, setCommentText] = useState("");
-  const commentComposeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const pendingFocusAfterEntrySelectRef = useRef(false);
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
@@ -437,53 +393,15 @@ export default function HomePageClient({
     };
   }, [isAuthenticated, authUserId]);
 
-  // Stable callback + refs for gate flags so post-onboarding code can call this in the
-  // same tick as setOnboardingDone without a stale closure (same mutations as a click).
-  const selectEntry = useCallback((id: string) => {
-    openEntryNavRef.current = true;
-    if (openEntryNavTimerRef.current) clearTimeout(openEntryNavTimerRef.current);
-    openEntryNavTimerRef.current = setTimeout(() => {
-      openEntryNavRef.current = false;
-    }, 600);
-    // Source of truth: persist immediately on every entry click so pending survives
-    // auth redirect, router.refresh, and re-renders until successful open clears it.
+  const goToEntry = useCallback((id: string) => {
     writePendingReturn(id, "comment");
-    setSelectedEntryId(id);
     const item = entriesByIdRef.current.find((e) => e.id === id);
     const slug = item?.slug?.trim() ?? "";
     const nextPath =
       slug.length > 0
         ? `/${encodeURI(slug)}`
         : `/?entry=${encodeURIComponent(id)}`;
-    if (typeof window !== "undefined") {
-      const nextUrl = new URL(nextPath, window.location.origin);
-      const cur = `${window.location.pathname}${window.location.search}`;
-      const n = `${nextUrl.pathname}${nextUrl.search}`;
-      if (cur !== n) {
-        void routerRef.current.replace(nextPath, { scroll: false });
-      }
-    } else {
-      void routerRef.current.replace(nextPath, { scroll: false });
-    }
-    if (!isAuthenticatedRef.current) {
-      setCenterMode("auth");
-      return;
-    }
-    if (platformAccessSuspendedRef.current) {
-      setCenterMode("feed");
-      if (readPendingFromStorage().entryId === id) {
-        clearPendingReturn();
-      }
-      return;
-    }
-    if (!agreementDoneRef.current) {
-      setCenterMode("agreement");
-      return;
-    }
-    setCenterMode("feed");
-    if (readPendingFromStorage().entryId === id) {
-      clearPendingReturn();
-    }
+    void routerRef.current.push(nextPath);
   }, []);
 
   /** Tam yazı akışı: arama kapalı, ana sayfaya dön. */
@@ -530,56 +448,16 @@ export default function HomePageClient({
         : null;
     if (urlEntryId) {
       writePendingReturn(urlEntryId, "comment");
-    } else if (pathCanonicalSlug && initialOpenEntryIdFromPath) {
-      writePendingReturn(initialOpenEntryIdFromPath, "comment");
     }
-  }, [searchParams, pathCanonicalSlug, initialOpenEntryIdFromPath]);
+  }, [searchParams]);
 
-  /** OAuth dönüşünde entry modalı açma; pending + URL temizliği, ana akışta kal. */
+  /** OAuth dönüşü: entry URL açma; pending temiz, ana sayfa. */
   useEffect(() => {
     if (!isOAuthReturnQuery(searchParams)) return;
-    openEntryNavRef.current = false;
-    if (openEntryNavTimerRef.current) {
-      clearTimeout(openEntryNavTimerRef.current);
-      openEntryNavTimerRef.current = null;
-    }
     clearPendingReturn();
-    setSelectedEntryId(null);
     setCenterMode("feed");
     void routerRef.current.replace("/", { scroll: false });
   }, [searchParams]);
-
-  /**
-   * ?entry= veya [slug] ile açılış: yalnızca selectEntry. Ana sayfaya dönüş href="/" link ile.
-   */
-  useEffect(() => {
-    if (isOAuthReturnQuery(searchParams)) return;
-
-    const raw = searchParams.get("entry");
-    const urlEntryId =
-      raw && isRealUuid(decodeURIComponent(raw.trim()))
-        ? decodeURIComponent(raw.trim())
-        : null;
-    const pathEntryId =
-      pathCanonicalSlug && initialOpenEntryIdFromPath
-        ? initialOpenEntryIdFromPath
-        : null;
-    const entryId = urlEntryId ?? pathEntryId;
-    if (!entryId) {
-      return;
-    }
-
-    if (selectedEntryId === entryId) {
-      return;
-    }
-    selectEntry(entryId);
-  }, [
-    searchParams,
-    pathCanonicalSlug,
-    initialOpenEntryIdFromPath,
-    selectEntry,
-    selectedEntryId,
-  ]);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -643,17 +521,16 @@ export default function HomePageClient({
       return;
     }
     if (centerMode === "auth") {
-      const raw = searchParams.get("entry");
-      const urlEntryId =
-        raw && isRealUuid(decodeURIComponent(raw.trim()))
-          ? decodeURIComponent(raw.trim())
-          : null;
-      const pathId =
-        pathCanonicalSlug && initialOpenEntryIdFromPath
-          ? initialOpenEntryIdFromPath
-          : null;
-      if (urlEntryId || pathId) {
-        selectEntry((urlEntryId ?? pathId) as string);
+      const pending = readPendingFromStorage().entryId;
+      if (pending) {
+        const found = centerEntries.find((e) => e.id === pending);
+        const slug = found?.slug?.trim() ?? "";
+        if (slug.length > 0) {
+          void router.push(`/${encodeURI(slug)}`);
+        } else {
+          void router.push(`/?entry=${encodeURIComponent(pending)}`);
+        }
+        clearPendingReturn();
       } else {
         setCenterMode("feed");
       }
@@ -663,130 +540,15 @@ export default function HomePageClient({
     agreementDone,
     platformAccessSuspended,
     centerMode,
-    selectEntry,
-    searchParams,
-    pathCanonicalSlug,
-    initialOpenEntryIdFromPath,
+    centerEntries,
+    router,
   ]);
 
   const persistStateBeforeOAuth = useCallback(() => {
-    const id = selectedEntryId ?? centerEntries[0]?.id ?? null;
+    const id = centerEntries[0]?.id ?? null;
     if (!id) return;
     writePendingReturn(id, "comment");
-  }, [selectedEntryId, centerEntries]);
-
-  async function requireAuthForComment(): Promise<void> {
-    const supabase = createSupabaseBrowserClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      const id = selectedEntryId ?? centerEntries[0]?.id ?? null;
-      if (id) writePendingReturn(id, "comment");
-      setCenterMode("auth");
-      return;
-    }
-    if (platformAccessSuspendedRef.current) {
-      return;
-    }
-    if (!agreementDoneRef.current) {
-      setCenterMode("agreement");
-    }
-  }
-
-  const combinedEntries = useMemo(
-    () => [...centerEntries, ...leftEntries, ...rightEntries],
-    [centerEntries, leftEntries, rightEntries]
-  );
-
-  const selectedEntry = useMemo(() => {
-    if (!selectedEntryId) {
-      return null;
-    }
-    return (
-      combinedEntries.find((entry) => entry.id === selectedEntryId) ?? null
-    );
-  }, [selectedEntryId, combinedEntries]);
-
-  async function submitComment() {
-    const trimmed = commentText.trim();
-    if (!trimmed) return;
-    if (isSubmittingComment) return;
-    if (!selectedEntry) return;
-    if (isSeedId(selectedEntry.id)) return;
-
-    const supabase = createSupabaseBrowserClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      await requireAuthForComment();
-      return;
-    }
-
-    if (platformAccessSuspendedRef.current) {
-      return;
-    }
-    if (!agreementDoneRef.current) {
-      setCenterMode("agreement");
-      return;
-    }
-
-    setIsSubmittingComment(true);
-    try {
-      // check if user exists in public.users
-      const { data: existingUser } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (!existingUser) {
-        console.log("USER NOT IN public.users → inserting");
-
-        const userEmail = user.email ?? null;
-
-        const { error: ensureUserError } = await supabase
-          .from("users")
-          .upsert(
-            {
-              id: user.id,
-              email: userEmail,
-            },
-            { onConflict: "id" }
-          );
-
-        if (ensureUserError) {
-          console.error("COMMENT SUBMIT ERROR", ensureUserError);
-          return;
-        }
-      }
-
-      const { error } = await supabase
-        .from("comments")
-        .insert({
-          entry_id: selectedEntry.id,
-          user_id: user.id,
-          content: trimmed.slice(0, 161),
-          parent_comment_id: null,
-          reply_to_user_id: null,
-          reply_to_username: null,
-        });
-
-      if (error) {
-        console.error("COMMENT SUBMIT ERROR", error);
-        return;
-      }
-
-      setCommentText("");
-      await router.refresh();
-    } catch (error) {
-      console.error("COMMENT SUBMIT ERROR", error);
-    } finally {
-      setIsSubmittingComment(false);
-    }
-  }
+  }, [centerEntries]);
 
   const mostCommentedEntries = useMemo(() => {
     const ranked = centerEntries.map((entry) => ({
@@ -910,39 +672,6 @@ export default function HomePageClient({
     return ranked.slice(0, 4).map((r) => r.entry);
   }, [centerEntries, commentsByEntryIdLive]);
 
-  const focusCommentCompose = useCallback(() => {
-    window.setTimeout(() => {
-      const el = commentComposeTextareaRef.current;
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        el.focus();
-      }
-    }, 80);
-  }, []);
-
-  useEffect(() => {
-    if (!pendingFocusAfterEntrySelectRef.current) {
-      return;
-    }
-    if (!selectedEntryId || !selectedEntry) {
-      if (!selectedEntryId) {
-        pendingFocusAfterEntrySelectRef.current = false;
-      }
-      return;
-    }
-    const t = window.setTimeout(() => {
-      const el = commentComposeTextareaRef.current;
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        el.focus();
-      }
-      pendingFocusAfterEntrySelectRef.current = false;
-    }, 120);
-    return () => {
-      window.clearTimeout(t);
-    };
-  }, [selectedEntryId, selectedEntry]);
-
   const feedEntriesSearchFiltered = useMemo(() => {
     let list = shuffledMainFeedEntries;
     if (searchQuery.trim()) {
@@ -961,28 +690,6 @@ export default function HomePageClient({
     [feedVisibleCount, feedEntriesSearchFiltered.length]
   );
 
-  const copyEntryLink = (entryId: string, title: string, slug?: string | null) => {
-    const url = entryPublicUrl(entryId, slug);
-    void navigator.clipboard.writeText(`${title}\n${url}`);
-  };
-
-  const shareWhatsApp = (entryId: string, title: string, slug?: string | null) => {
-    const link = entryPublicUrl(entryId, slug);
-    const text = encodeURIComponent(`${title} ${link}`);
-    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
-  };
-
-  const shareX = (entryId: string, title: string, slug?: string | null) => {
-    const link = entryPublicUrl(entryId, slug);
-    const text = encodeURIComponent(title);
-    const url = encodeURIComponent(link);
-    window.open(
-      `https://x.com/intent/tweet?text=${text}&url=${url}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  };
-
   async function onAgreementSuccess() {
     setAgreementDone(true);
     setOnboardingDone(true);
@@ -994,12 +701,17 @@ export default function HomePageClient({
       raw && isRealUuid(decodeURIComponent(raw.trim()))
         ? decodeURIComponent(raw.trim())
         : null;
-    const pathId =
-      pathCanonicalSlug && initialOpenEntryIdFromPath
-        ? initialOpenEntryIdFromPath
-        : null;
-    if (urlEntryId || pathId) {
-      selectEntry((urlEntryId ?? pathId) as string);
+    const pending = readPendingFromStorage().entryId;
+    const id = urlEntryId ?? pending;
+    if (id) {
+      const found = centerEntries.find((e) => e.id === id);
+      const slug = found?.slug?.trim() ?? "";
+      if (slug.length > 0) {
+        void router.push(`/${encodeURI(slug)}`);
+      } else {
+        void router.push(`/?entry=${encodeURIComponent(id)}`);
+      }
+      clearPendingReturn();
     } else {
       setCenterMode("feed");
     }
@@ -1020,7 +732,6 @@ export default function HomePageClient({
     }
     clearPendingReturn();
     setCenterMode("feed");
-    setSelectedEntryId(null);
     setAgreementDone(false);
     setOnboardingDone(false);
     await router.refresh();
@@ -1090,7 +801,6 @@ export default function HomePageClient({
         <nav className="flex flex-col" aria-label="Hafızaya eklenen yazılar">
           {mainColumnDisplayEntries.map((entry) => {
             const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
-            const isActive = entry.id === selectedEntryId;
             return (
               <FeedEntryCard
                 key={entry.id}
@@ -1100,8 +810,8 @@ export default function HomePageClient({
                 authorLabel={entry.authorName?.trim() || "61Larus"}
                 metaDate={formatFeedLineDate(entry.created_at)}
                 createdAtRaw={entry.created_at}
-                isActive={isActive}
-                onSelect={() => selectEntry(entry.id)}
+                isActive={false}
+                onSelect={() => goToEntry(entry.id)}
               />
             );
           })}
@@ -1117,228 +827,6 @@ export default function HomePageClient({
             Daha fazla yazı yükle ↓
           </button>
         ) : null}
-      </div>
-    );
-  }
-
-  function renderEntryDetailContent(entry: EntryItem) {
-    const commentList = commentsByEntryIdLive[entry.id] ?? [];
-    const authorName = entry.authorName?.trim() || "61Larus";
-    const formattedDate = formatEntryDetailDate(entry.created_at);
-
-    return (
-      <div className="relative z-0 max-w-none">
-        <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
-          <Link href="/" className="entry-detail-back">
-            ← akışa dön
-          </Link>
-        </div>
-
-        <article className="entry-detail-article m-0 border-0 p-0">
-          <header className="m-0 border-0 p-0">
-            <h1 id="entry-detail-title" className="entry-detail-title">
-              {entry.title}
-            </h1>
-            <div className="entry-meta">
-              <span className="entry-author">{authorName}</span>
-              <span className="entry-dot" aria-hidden>
-                •
-              </span>
-              <span className="entry-date">{formattedDate}</span>
-            </div>
-          </header>
-          <section
-            aria-labelledby="entry-detail-title"
-            className="m-0 border-0 p-0"
-          >
-            <p className="entry-detail-body">{entry.content}</p>
-          </section>
-        </article>
-
-        <div className="entry-share-row">
-          <button
-            type="button"
-            onClick={() =>
-              copyEntryLink(
-                entry.id,
-                entry.title,
-                entry.slug
-              )
-            }
-            className="entry-share-btn"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.15}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
-            >
-              <rect x="9" y="9" width="13" height="13" rx="2" />
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-            </svg>
-            <span>kopyala</span>
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              shareWhatsApp(
-                entry.id,
-                entry.title,
-                entry.slug
-              )
-            }
-            className="entry-share-btn"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.15}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
-            >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            <span>whatsapp</span>
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              shareX(
-                entry.id,
-                entry.title,
-                entry.slug
-              )
-            }
-            className="entry-share-btn"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.15}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
-            >
-              <circle cx="18" cy="5" r="3" />
-              <circle cx="6" cy="12" r="3" />
-              <circle cx="18" cy="19" r="3" />
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-            </svg>
-            <span>x</span>
-          </button>
-        </div>
-
-        <section className="entry-comments-section" aria-label="Yorumlar">
-          {commentList.length === 0 ? (
-            <div className="entry-comments-empty">ilk yorumu sen yaz</div>
-          ) : (
-            <div className="flex flex-col">
-              {commentList.map((comment, index) => (
-                <div
-                  key={comment.id}
-                  className={`entry-comment-item${index > 0 ? " entry-comment-item--follows" : ""}`}
-                >
-                  <p className="entry-comment-author">{comment.authorLabel}</p>
-                  {comment.bio61?.trim() ? (
-                    <p className="entry-comment-bio">{comment.bio61.trim()}</p>
-                  ) : null}
-                  <p className="entry-comment-text">{comment.content}</p>
-                  <div className="entry-comment-meta">
-                    <time dateTime={comment.created_at}>
-                      {formatDate(comment.created_at)}
-                    </time>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <div className="entry-comment-compose-wrap">
-          <div className="entry-comment-compose">
-            <textarea
-              ref={commentComposeTextareaRef}
-              placeholder="sen ne düşünüyorsun?"
-              maxLength={161}
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value.slice(0, 161))}
-              onFocus={() => {
-                void requireAuthForComment();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void submitComment();
-                }
-              }}
-              disabled={platformAccessSuspended}
-              className="entry-comment-textarea"
-            />
-            <div className="entry-comment-actions">
-              <button
-                type="button"
-                disabled={isSubmittingComment || platformAccessSuspended}
-                onClick={() => void submitComment()}
-                className="entry-comment-submit"
-              >
-                gönder
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  function renderEntryDetailPage() {
-    if (!selectedEntry && combinedEntries.length === 0) {
-      return (
-        <div className="entry-detail-page">
-          <div className="entry-detail-page-inner">
-            <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
-              <Link href="/" className="entry-detail-back">
-                ← akışa dön
-              </Link>
-            </div>
-            <div className="entry-detail-loading">yazı yükleniyor…</div>
-          </div>
-        </div>
-      );
-    }
-    if (!selectedEntry) {
-      return (
-        <div className="entry-detail-page">
-          <div className="entry-detail-page-inner">
-            <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
-              <Link href="/" className="entry-detail-back">
-                ← akışa dön
-              </Link>
-            </div>
-            <p
-              className="m-0 mt-3 text-center text-sm"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              yazı bulunamadı
-            </p>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="entry-detail-page">
-        <div className="entry-detail-page-inner">
-          {renderEntryDetailContent(selectedEntry)}
-        </div>
       </div>
     );
   }
@@ -1683,9 +1171,6 @@ export default function HomePageClient({
                 üzerinden bize ulaşabilirsin.
               </div>
             ) : null}
-            {selectedEntryId ? (
-              renderEntryDetailPage()
-            ) : (
             <div className="home-page-editorial home-page-editorial--section-stack">
             <div
               className="home-manifesto home-manifesto--bridge home-search-bridge home-manifesto-inner--bridge home-search-field min-w-0 w-full max-w-full"
@@ -1736,7 +1221,7 @@ export default function HomePageClient({
                         type="button"
                         role="listitem"
                         className="today-discovery-item"
-                        onClick={() => selectEntry(entry.id)}
+                        onClick={() => goToEntry(entry.id)}
                         aria-label={`Aç: ${entry.title}`}
                       >
                         <span
@@ -1771,13 +1256,13 @@ export default function HomePageClient({
                   aria-label="Henüz yorum almamış başlıklar"
                 >
                   {rightRailAwaitingFirstComment.map((entry, index) => {
-                    const isActive = entry.id === selectedEntryId;
+                    const isActive = false;
                     const rank = index + 1;
                     return (
                       <button
                         key={entry.id}
                         type="button"
-                        onClick={() => selectEntry(entry.id)}
+                        onClick={() => goToEntry(entry.id)}
                         className={`home-index-row group flex w-full items-start gap-2.5 border-0 border-b border-[color:var(--editorial-hairline)] py-2.5 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3 md:py-2.5 md:pl-1 ${
                           isActive
                             ? "home-index-row--active"
@@ -1818,13 +1303,13 @@ export default function HomePageClient({
                 >
                   {mostCommentedEntries.map((entry, index) => {
                     const cc = commentsByEntryIdLive[entry.id]?.length ?? 0;
-                    const isActive = entry.id === selectedEntryId;
+                    const isActive = false;
                     const rank = index + 1;
                     return (
                       <button
                         key={entry.id}
                         type="button"
-                        onClick={() => selectEntry(entry.id)}
+                        onClick={() => goToEntry(entry.id)}
                         className={`home-index-row group flex w-full items-start gap-2.5 border-0 border-b border-[color:var(--editorial-hairline)] py-2.5 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3 md:py-2.5 md:pl-1 ${
                           isActive
                             ? "home-index-row--active"
@@ -1899,7 +1384,7 @@ export default function HomePageClient({
                                 <button
                                   type="button"
                                   className="home-explore-item"
-                                  onClick={() => selectEntry(entry.id)}
+                                  onClick={() => goToEntry(entry.id)}
                                   aria-label={`Aç: ${entry.title}`}
                                 >
                                   <span className="home-explore-item-title">
@@ -1930,7 +1415,7 @@ export default function HomePageClient({
                               <button
                                 type="button"
                                 className="home-explore-item"
-                                onClick={() => selectEntry(entry.id)}
+                                onClick={() => goToEntry(entry.id)}
                                 aria-label={`Aç: ${entry.title}`}
                               >
                                 <span className="home-explore-item-title">
@@ -1956,7 +1441,7 @@ export default function HomePageClient({
                           type="button"
                           className="home-explore-question"
                           onClick={() =>
-                            selectEntry(dailyQuestionEntry.id)
+                            goToEntry(dailyQuestionEntry.id)
                           }
                           aria-label={`Aç: ${dailyQuestionEntry.title}`}
                         >
@@ -1980,7 +1465,6 @@ export default function HomePageClient({
               </section>
             ) : null}
             </div>
-            )}
 
             <footer
               id="site-footer"

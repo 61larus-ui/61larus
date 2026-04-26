@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { Suspense, type ReactNode } from "react";
+import { Suspense } from "react";
 import { permanentRedirect } from "next/navigation";
 import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
+import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
+import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
 import HomePageClient from "./home-page-client";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
+import { getEntryDetailById } from "@/lib/entry-route-data";
 import { isRfc4122Uuid } from "@/lib/seo-entry-description";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
@@ -126,7 +129,7 @@ export default async function Home({
   const params = await searchParams;
   const raw = params.entry;
   const entryParam = Array.isArray(raw) ? raw[0] : raw;
-  let entryArticleJsonLd: ReactNode = null;
+
   if (entryParam != null && typeof entryParam === "string") {
     const id = decodeURIComponent(entryParam.trim());
     if (isRfc4122Uuid(id)) {
@@ -173,15 +176,47 @@ export default async function Home({
         if (typeof s === "string" && s.trim().length > 0) {
           permanentRedirect(`/${s.trim()}`);
         }
-        entryArticleJsonLd = (
-          <EntryArticleJsonLd
-            title={row.title}
-            content={row.content}
-            createdAt={
-              row.created_at != null ? String(row.created_at) : null
-            }
-          />
-        );
+        const detail = await getEntryDetailById(id);
+        const result = await getHomeClientProps();
+        if (!result.ok) {
+          return (
+            <div className="flex flex-1 flex-col items-center justify-center py-12">
+              <p className="max-w-md text-center text-sm leading-6 text-[#667085]">
+                Hata: {result.message}
+              </p>
+            </div>
+          );
+        }
+        if (detail) {
+          const p = result.props;
+          return (
+            <>
+              <EntryArticleJsonLd
+                title={detail.entry.title}
+                content={detail.entry.content}
+                createdAt={
+                  detail.entry.created_at != null
+                    ? String(detail.entry.created_at)
+                    : null
+                }
+              />
+              <EntryRouteLayoutClient
+                isAuthenticated={p.isAuthenticated}
+                userEmail={p.userEmail}
+                initialPlatformAccessSuspended={p.initialPlatformAccessSuspended}
+              >
+                <div className="entry-detail-page">
+                  <div className="entry-detail-page-inner">
+                    <EntryDetailBodyRsc
+                      entry={detail.entry}
+                      comments={detail.comments}
+                    />
+                  </div>
+                </div>
+              </EntryRouteLayoutClient>
+            </>
+          );
+        }
       }
     }
   }
@@ -197,11 +232,8 @@ export default async function Home({
     );
   }
   return (
-    <>
-      {entryArticleJsonLd}
-      <Suspense fallback={null}>
-        <HomePageClient {...result.props} />
-      </Suspense>
-    </>
+    <Suspense fallback={null}>
+      <HomePageClient {...result.props} />
+    </Suspense>
   );
 }

@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { Suspense } from "react";
-import HomePageClient from "../home-page-client";
 import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
+import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
+import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
+import { getEntryDetailBySlug } from "@/lib/entry-route-data";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
-import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { getHomeClientProps } from "@/lib/home-client-props";
 
 export const dynamic = "force-dynamic";
@@ -14,38 +13,28 @@ const SITE = "https://61larus.com";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug: raw } = await params;
   const segment = decodeURIComponent(raw).trim();
   if (!segment) {
     return { robots: { index: false, follow: true } };
   }
 
-  const supabase = await createSupabaseServerClient();
-  const client = createSupabaseServiceClient() ?? supabase;
-  const { data, error } = await client
-    .from("entries")
-    .select("id, title, content, slug")
-    .eq("slug", segment)
-    .maybeSingle();
-
-  if (error || !data) {
+  const detail = await getEntryDetailBySlug(segment);
+  if (!detail) {
     return { robots: { index: false, follow: true } };
   }
 
+  const data = detail.entry;
   const titleRaw = typeof data.title === "string" ? data.title : "";
   const contentRaw = typeof data.content === "string" ? data.content : "";
   const entryTitle = titleRaw.trim();
   const pageTitle =
     entryTitle.length > 0 ? `${entryTitle} | ${SITE_BRAND}` : SITE_BRAND;
+  const s = data.slug;
   const canonicalSlug =
-    typeof (data as { slug?: string | null }).slug === "string" &&
-    (data as { slug: string }).slug.trim().length > 0
-      ? (data as { slug: string }).slug.trim()
-      : segment;
-  const canonical = `${SITE}/${canonicalSlug}`;
+    typeof s === "string" && s.trim().length > 0 ? s.trim() : segment;
+  const canonical = `${SITE}/${encodeURI(canonicalSlug)}`;
 
   return buildEntrySeoMetadata({
     pageTitle,
@@ -62,44 +51,32 @@ export default async function EntrySlugPage({ params }: PageProps) {
     notFound();
   }
 
-  const supabase = await createSupabaseServerClient();
-  const client = createSupabaseServiceClient() ?? supabase;
-  const { data: entry, error } = await client
-    .from("entries")
-    .select("id, slug, title, content, created_at")
-    .eq("slug", segment)
-    .maybeSingle();
+  const home = await getHomeClientProps();
+  if (!home.ok) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center py-12">
+        <p className="max-w-md text-center text-sm leading-6 text-[#667085]">
+          Hata: {home.message}
+        </p>
+      </div>
+    );
+  }
 
-  if (error || !entry) {
+  const detail = await getEntryDetailBySlug(segment);
+  if (!detail) {
     notFound();
   }
 
-  const row = entry as {
-    id: string;
-    title: string | null;
-    content: string | null;
-    created_at: string | null;
-    slug?: string | null;
-  };
-  const id = row.id;
+  const row = detail.entry;
   if (
     typeof row.slug === "string" &&
     row.slug.trim() &&
     row.slug.trim() !== segment
   ) {
-    permanentRedirect(`/${row.slug.trim()}`);
+    permanentRedirect(`/${encodeURI(row.slug.trim())}`);
   }
 
-  const result = await getHomeClientProps();
-  if (!result.ok) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center py-12">
-        <p className="max-w-md text-center text-sm leading-6 text-[#667085]">
-          Hata: {result.message}
-        </p>
-      </div>
-    );
-  }
+  const p = home.props;
 
   return (
     <>
@@ -110,13 +87,20 @@ export default async function EntrySlugPage({ params }: PageProps) {
           row.created_at != null ? String(row.created_at) : null
         }
       />
-      <Suspense fallback={null}>
-        <HomePageClient
-          {...result.props}
-          initialOpenEntryIdFromPath={id}
-          pathCanonicalSlug={segment}
-        />
-      </Suspense>
+      <EntryRouteLayoutClient
+        isAuthenticated={p.isAuthenticated}
+        userEmail={p.userEmail}
+        initialPlatformAccessSuspended={p.initialPlatformAccessSuspended}
+      >
+        <div className="entry-detail-page">
+          <div className="entry-detail-page-inner">
+            <EntryDetailBodyRsc
+              entry={row}
+              comments={detail.comments}
+            />
+          </div>
+        </div>
+      </EntryRouteLayoutClient>
     </>
   );
 }
