@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Mobil: yatay taşmayı kökten kes; layout flex bug’larına karşı */
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 :root {
   /* Editorial light — warm neutral paper, coal type, restrained teal */
   --bg-deep: #e8e5e0;
@@ -451,6 +457,23 @@ body {
   letter-spacing: -0.009em;
   line-height: 1.48;
   margin-bottom: 0.32rem;
+}
+
+@media (max-width: 767.98px) {
+  .feed-entry-title--editorial {
+    font-size: clamp(1.0625rem, 0.96rem + 0.45vw, 1.25rem);
+    line-height: 1.52;
+    letter-spacing: -0.01em;
+  }
+
+  .feed-entry-excerpt--editorial {
+    line-height: 1.62;
+  }
+
+  .feed-entry-card--editorial {
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+  }
 }
 
 .feed-entry-excerpt--editorial {
@@ -993,6 +1016,7 @@ main > header .site-header-tagline--manifesto {
   box-sizing: border-box;
   padding-left: var(--home-container-px);
   padding-right: var(--home-container-px);
+  overflow-x: hidden;
   /* FAZ 2: keşf / footer hizasında ekstra sürükleyici kuyruk yok; alt nefes son bölümlerde */
   padding-bottom: 0;
 }
@@ -2033,6 +2057,14 @@ main > section
 .main-3col > * {
   padding-left: 14px;
   padding-right: 14px;
+  min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .main-3col > * {
+    padding-left: max(0px, var(--home-container-px) - 2px);
+    padding-right: max(0px, var(--home-container-px) - 2px);
+  }
 }
 
 @media (min-width: 768px) {
@@ -2175,6 +2207,30 @@ main > section
 @media (max-width: 767.98px) {
   .home-ticker__item {
     font-size: 0.75rem;
+    letter-spacing: -0.008em;
+  }
+
+  .home-ticker,
+  .home-ticker--divider,
+  .home-ticker--lower {
+    max-width: 100%;
+  }
+
+  .home-ticker__track {
+    gap: 12px;
+  }
+
+  .home-ticker__item::after {
+    margin: 0 8px;
+  }
+
+  /* Daha sakin kayma; küçük ekranda okunabilirlik */
+  .home-ticker--divider .home-ticker__track {
+    animation-duration: 88s;
+  }
+
+  .home-ticker--lower .home-ticker__track {
+    animation-duration: 102s;
   }
 }
 
@@ -4207,6 +4263,31 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   display: flex;
   justify-content: center;
   align-items: flex-start;
+}
+
+@media (max-width: 767.98px) {
+  .entry-detail-page {
+    min-height: 100dvh;
+    padding: 0.65rem 0.65rem 2.25rem;
+    align-items: stretch;
+  }
+
+  .entry-detail-page-inner {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 4px;
+    padding: clamp(0.85rem, 2.8vw, 1.15rem);
+  }
+
+  .entry-detail-title {
+    font-size: clamp(1.07rem, 0.92rem + 0.5vw, 1.24rem);
+    line-height: 1.35;
+  }
+
+  .entry-detail-body {
+    line-height: 1.78;
+    max-width: none;
+  }
 }
 
 @media (min-width: 768px) {
@@ -7166,6 +7247,7 @@ aside[aria-label="Yayın paneli"] .right-block {
   }
 
   .headerBlock h1 {
+    min-width: 0;
     font-size: clamp(1.65rem, 7.5vw, 1.95rem);
     letter-spacing: -0.04em;
     line-height: 1.12;

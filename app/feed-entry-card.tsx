@@ -40,10 +40,12 @@ export function FeedEntryCard({
       data-active={isActive ? "true" : undefined}
       onClick={onSelect}
       onKeyDown={handleKeyDown}
-      className="feed-entry-card feed-entry-card--editorial group w-full cursor-pointer border-0 text-left last:border-b-0"
+      className="feed-entry-card feed-entry-card--editorial group w-full min-w-0 cursor-pointer border-0 text-left last:border-b-0"
     >
-      <div className="feed-entry-card-inner">
-        <h2 className="feed-entry-title feed-entry-title--editorial">{title}</h2>
+      <div className="feed-entry-card-inner min-w-0">
+        <h2 className="feed-entry-title feed-entry-title--editorial break-words">
+          {title}
+        </h2>
         <p className="entry-excerpt feed-entry-excerpt feed-entry-excerpt--editorial mt-1.5">
           {contentPreview}
         </p>
