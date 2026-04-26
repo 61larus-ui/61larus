@@ -1016,6 +1016,12 @@ main > header .site-header-tagline--manifesto {
   gap: var(--home-section-gap);
 }
 
+/* Ticker: flex gap ile birleşince dış boşluk her zaman 10px/10px */
+.home-page-editorial--section-stack .home-ticker {
+  margin-top: 10px !important;
+  margin-bottom: 10px !important;
+}
+
 /* FAZ 2: vitrin ↔ orta ticker / üçlü kolon — section-stack gap ile birlikte görsel ritim */
 .home-page-editorial--section-stack
   .today-strip.today-discovery
@@ -1027,13 +1033,6 @@ main > header .site-header-tagline--manifesto {
   .home-ticker--divider
   + .home-main-columns-wrap {
   margin-top: calc(var(--home-section-gap) * -0.4);
-}
-
-/* Bugün vitrin ↔ üst ticker: section-stack gap’i sıkılaştır (yalnız bu komşuluk) */
-.home-page-editorial--section-stack
-  .today-strip.today-discovery
-  + .home-ticker.home-ticker--divider {
-  margin-top: calc(10px - var(--home-section-gap));
 }
 
 /* --- Arama dışı manifesto: eski hero padding’i (köprü sınıfı ile sıfırlanır) --- */
@@ -2029,14 +2028,13 @@ main > section
   }
 }
 
-/* TICKER — ince editorial kutu (üst + alt aynı boyut) */
+/* TICKER — ince editorial kutu (üst + alt tek kaynak; margin stack’te !important) */
 .home-ticker,
 .home-ticker--divider,
 .home-ticker--lower {
   width: 100%;
-  min-height: 34px;
-  height: 34px;
-  padding: 0 14px;
+  min-height: 2.5rem;
+  padding: 8px 14px;
   margin-top: 10px;
   margin-bottom: 10px;
   display: flex;
@@ -2054,10 +2052,9 @@ main > section
     border-color 0.2s ease;
 }
 
-/* Alt ticker: üst/alt dış boşluk simetrik (alt margin çöküşüne karşı net) */
 .home-ticker--lower {
   margin-top: 10px;
-  margin-bottom: 10px !important;
+  margin-bottom: 10px;
 }
 
 .home-ticker:hover {
