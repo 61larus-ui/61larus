@@ -170,8 +170,8 @@
   --home-container-px: 1rem; /* 16px mobil */
   /* Blok aralığı: 24 / 32 / 48px (FAZ 2) */
   --home-section-gap: 1.5rem;
-  /* FAZ 4: header alt çizgi → arama; 8px ritm (24/24/28), section-gap değil */
-  --home-header-below-gap: 1.5rem; /* 24px */
+  /* FAZ 4 final: header–arama 20–24px (section gap ayrı) */
+  --home-header-below-gap: 1.25rem; /* 20px */
 }
 
 @media (min-width: 768px) {
@@ -186,7 +186,7 @@
   :root {
     --home-container-px: 1.5rem; /* 24px desktop */
     --home-section-gap: 3rem;
-    --home-header-below-gap: 1.75rem; /* 28px */
+    --home-header-below-gap: 1.5rem; /* 24px */
   }
 }
 
@@ -884,11 +884,12 @@ main > header.site-header {
   text-rendering: optimizeLegibility;
 }
 
+/* FAZ 4 final: editoryal logo — ince büyütme, oturaklı ritim (global display ölçeği +) */
 main > header .site-wordmark {
   color: var(--wordmark-ink);
-  font-size: var(--type-scale-display);
-  line-height: var(--type-leading-display);
-  letter-spacing: -0.028em;
+  font-size: calc(var(--type-scale-display) + 0.0625rem); /* +1px */
+  line-height: 1.1;
+  letter-spacing: -0.03em;
 }
 
 .site-footer .site-wordmark {
@@ -901,10 +902,10 @@ main > header .site-wordmark {
   letter-spacing: -0.016em;
 }
 
-main > header .site-header-tagline,
-.header-subtitle {
-  margin-top: 0.5rem !important; /* FAZ 4: 8px logo – slogan nefes */
-  letter-spacing: 0.11em !important;
+main > header .site-header-tagline {
+  /* FAZ 4 final: kurumsal alt metin, boğuk değil */
+  margin-top: 6px !important;
+  letter-spacing: 0.15em !important; /* 0.11em + 0.04em */
   font-size: var(--type-scale-meta) !important;
   line-height: var(--type-leading-meta) !important;
   color: color-mix(
@@ -915,27 +916,43 @@ main > header .site-header-tagline,
   max-width: 17rem;
   margin-left: 0;
   margin-right: auto;
+  opacity: 0.62;
+  font-family: var(--font-sans) !important;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* Entry / genel: üst bant (header tagline değil) */
+.header-subtitle {
+  margin-top: 0.5rem !important;
+  letter-spacing: 0.11em !important;
+  font-size: var(--type-scale-meta) !important;
+  line-height: var(--type-leading-meta) !important;
+  color: color-mix(
+    in srgb,
+    var(--text-tertiary) 78%,
+    var(--text-secondary) 22%
+  ) !important;
+  max-width: none;
+  margin-left: 0;
+  margin-right: auto;
   opacity: 0.95;
   font-family: var(--font-sans) !important;
   font-weight: 500;
   text-transform: uppercase;
 }
 
-.header-subtitle {
-  max-width: none;
-}
-
 @media (min-width: 768px) {
   main > header .site-header-tagline {
     max-width: 19rem;
-    letter-spacing: 0.11em !important;
+    letter-spacing: 0.15em !important;
   }
 }
 
 /* Üst bant: uzun büyük harf slogan (manifesto fazı) */
 main > header .site-header-tagline--manifesto {
   max-width: min(100%, 22.5rem);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
 }
 
 /* Ana sayfa gövdesi: .home-page-container ile aynı max-width + yatay padding (FAZ 5.3) */
@@ -1053,10 +1070,13 @@ main > header .site-header-tagline--manifesto {
   box-sizing: border-box;
 }
 
-/* Arama satırı: max ~620px (38.75rem) — geniş, hero değil */
+/* Arama satırı: FAZ 4 final — ~520px, okuma yüzeyi */
 .home-manifesto-inner--bridge.home-search-field {
   width: 100%;
-  max-width: min(38.75rem, 100%);
+  max-width: min(32.5rem, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
 }
 
 .home-manifesto-utility {
@@ -1214,31 +1234,22 @@ main > header .site-header-tagline--manifesto {
     0 2px 12px color-mix(in srgb, rgba(15, 23, 42, 0.05) 100%, transparent);
 }
 
-/* FAZ 4: ana sayfa arama (köprü) — 34–40px, hafif çerçeve, yüzey; placeholder okunur */
+/* FAZ 4 final: ana sayfa arama — flat editoryal alan, gölge yok */
 main > section .home-page-editorial--section-stack
   .home-search-bridge.home-manifesto--bridge.home-search-field
   .home-manifesto-input--premium.home-manifesto-input {
-  min-height: 2.25rem;
-  max-height: 2.5rem;
-  padding: 0.375rem 0.9rem;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  background: color-mix(
-    in srgb,
-    var(--bg-secondary) 30%,
-    var(--bg-primary) 70%
-  );
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+  box-sizing: border-box;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 14px;
+  padding-right: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.6);
   box-shadow: none;
-  border-radius: 2px;
-}
-
-@media (min-width: 768px) {
-  main > section .home-page-editorial--section-stack
-    .home-search-bridge.home-manifesto--bridge.home-search-field
-    .home-manifesto-input--premium.home-manifesto-input {
-    min-height: 2.375rem;
-    max-height: 2.5rem;
-    padding: 0.4rem 1.05rem;
-  }
 }
 
 main > section
@@ -1246,7 +1257,7 @@ main > section
   .home-search-bridge.home-manifesto--bridge.home-search-field
   .home-manifesto-input--premium.home-manifesto-input::placeholder {
   color: var(--text-tertiary);
-  opacity: 0.62;
+  opacity: 0.55;
   letter-spacing: 0.02em;
 }
 
@@ -1255,30 +1266,34 @@ main > section
   .home-search-bridge.home-manifesto--bridge.home-search-field
   .home-manifesto-input--premium.home-manifesto-input:hover {
   box-shadow: none;
-  border-color: rgba(0, 0, 0, 0.1);
-  background: color-mix(
-    in srgb,
-    var(--bg-secondary) 38%,
-    var(--bg-primary) 62%
-  );
+  border-color: rgba(0, 0, 0, 0.09);
+  background: rgba(255, 255, 255, 0.65);
 }
 
 main > section
   .home-page-editorial--section-stack
   .home-search-bridge.home-manifesto--bridge.home-search-field
   .home-manifesto-input--premium.home-manifesto-input:focus {
-  box-shadow: 0 0 0 1px
-    color-mix(in srgb, var(--accent-green-glow) 32%, transparent);
-  border-color: color-mix(
-    in srgb,
-    var(--accent-green-line) 18%,
-    var(--editorial-hairline) 82%
-  );
-  background: color-mix(
-    in srgb,
-    var(--bg-secondary) 40%,
-    var(--bg-primary) 60%
-  );
+  outline: none;
+  box-shadow: none;
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* FAZ 4 final: arama alanı + vitrin/sonraki blok: FAZ2 row-gap yanına alt nefes; üst 0 (çizgiye yaslanık) */
+main > section
+  .home-page-editorial--section-stack
+  .home-search-bridge.home-manifesto--bridge {
+  padding-top: 0 !important;
+  padding-bottom: 0.5rem !important;
+}
+
+@media (min-width: 1024px) {
+  main > section
+    .home-page-editorial--section-stack
+    .home-search-bridge.home-manifesto--bridge {
+    padding-bottom: 0.75rem !important; /* 12px: ~24+28 bölgesi section-gap ile */
+  }
 }
 
 .home-manifesto-input {
@@ -4060,6 +4075,7 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   }
 }
 
+/* FAZ 4 final: sessiz editoryal detay — 13px sabit */
 .site-header-editorial-text {
   width: 100%;
   min-width: 0;
@@ -4068,14 +4084,13 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: var(--font-sans);
-  /* FAZ 1: ölçek aynı; FAZ 4: sadece okunur kontrast */
-  font-size: var(--type-scale-meta);
+  font-size: 13px;
   font-weight: 400;
   font-style: normal;
   line-height: var(--type-leading-meta);
   letter-spacing: 0.02em;
   color: var(--text-secondary);
-  opacity: 0.78;
+  opacity: 0.7;
   animation: site-header-editorial-soft-in 1.35s ease-out forwards;
 }
 
@@ -4085,7 +4100,7 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
     transform: translateY(1px);
   }
   to {
-    opacity: 0.78;
+    opacity: 0.7;
     transform: translateY(0);
   }
 }
@@ -4097,10 +4112,22 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   letter-spacing: var(--type-nav-tracking);
 }
 
-/* FAZ 4: kullanıcı adı sakin, köşeye yapışmaz */
+/* FAZ 4 final: imza; köşe değil, 13px (kapsayıcıda opacity yok — çarpma yok) */
+main > header .headerBar .headerUserName {
+  padding-right: 0.875rem;
+  font-size: 13px;
+}
+
+main > header .headerBar .headerUserName a[href] {
+  font-size: 13px;
+  opacity: 0.65;
+}
+
 main > header .headerBar .account-menu-handle.header-user {
   line-height: 1.35;
   letter-spacing: 0.02em;
+  font-size: 13px;
+  opacity: 0.65;
 }
 
 .site-header .site-header-aux > a[href] {
@@ -6393,14 +6420,14 @@ aside[aria-label="Yayın paneli"] .right-block {
 
   .headerBlock p:first-of-type,
   .headerBlock p.site-header-tagline {
-    margin-top: 0.4rem !important;
+    margin-top: 6px !important;
     max-width: 100% !important;
     font-size: 10.5px !important;
-    letter-spacing: 0.11em !important;
+    letter-spacing: 0.15em !important;
     text-transform: uppercase !important;
     line-height: 1.5 !important;
-    /* FAZ 4: soluk değil, bağırmayan */
-    color: rgba(15, 23, 42, 0.5) !important;
+    /* FAZ 4 final: masaüstü slogan ile aynı yönelim */
+    color: rgba(15, 23, 42, 0.56) !important;
   }
 
   .headerBlock .headerCenterText {
