@@ -6456,3 +6456,240 @@ aside[aria-label="Yayın paneli"] .right-block {
     display: none;
   }
 }
+
+/* =============================================================================
+   FAZ 5.6 — Ana sayfa hover & etkileşim (yalnızca globals; 160–180ms, gölge yok)
+   ============================================================================= */
+
+:root {
+  --home-interact-ease: ease;
+  --home-interact-160: 160ms;
+  --home-interact-180: 180ms;
+  --home-title-ink-hover: rgba(0, 0, 0, 0.7);
+  --home-line-faint: rgba(0, 0, 0, 0.12);
+  --home-line-faint-mid: rgba(0, 0, 0, 0.14);
+  --home-row-veil: rgba(0, 0, 0, 0.021);
+  --home-focus-hair: rgba(0, 0, 0, 0.2);
+}
+
+/* —— 1) Akış: entry başlığı (kart = odak) —— */
+.feed-entry-card--editorial .feed-entry-title--editorial {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition:
+    color var(--home-interact-160) var(--home-interact-ease),
+    opacity var(--home-interact-160) var(--home-interact-ease),
+    text-decoration-color var(--home-interact-160) var(--home-interact-ease);
+}
+
+.feed-entry-card--editorial:hover .feed-entry-title--editorial,
+.feed-entry-card--editorial:focus-within .feed-entry-title--editorial,
+.feed-entry-card--editorial:focus-visible .feed-entry-title--editorial {
+  opacity: 1;
+  color: var(--home-title-ink-hover);
+  text-decoration-color: var(--home-line-faint-mid);
+}
+
+.feed-entry-card--editorial:focus-visible {
+  outline: 1px solid var(--home-focus-hair);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+/* Eski kural: genel kart hover’da title opacity; editoryal akışta üstteki niyeti koru */
+.feed-entry-card--editorial:hover .feed-entry-title--editorial,
+.feed-entry-card--editorial:focus-within .feed-entry-title--editorial,
+.feed-entry-card--editorial:focus-visible .feed-entry-title--editorial,
+.feed-entry-card--editorial:hover .feed-entry-title,
+.feed-entry-card--editorial:focus-within .feed-entry-title,
+.feed-entry-card--editorial:focus-visible .feed-entry-title {
+  opacity: 1;
+}
+
+/* —— 1) Bugün vurgu satırı: başlık —— */
+.today-discovery--faz5 .today-discovery-title {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+  transition:
+    color var(--home-interact-160) var(--home-interact-ease),
+    text-decoration-color var(--home-interact-160) var(--home-interact-ease);
+}
+
+.today-discovery--faz5 .today-discovery-item:hover .today-discovery-title,
+.today-discovery--faz5 .today-discovery-item:focus-visible .today-discovery-title {
+  color: var(--home-title-ink-hover);
+  text-decoration-color: var(--home-line-faint);
+}
+
+/* —— 1) Üçlü sütun + keşif üst: bölüm h2 (statik; yalnızca hover) —— */
+main .home-editorial-cols .col-section-head__title--rail,
+main .home-explore--faz51 .col-section-head__title--explore {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition:
+    color var(--home-interact-160) var(--home-interact-ease),
+    text-decoration-color var(--home-interact-160) var(--home-interact-ease);
+}
+
+main .home-editorial-cols .col-section-head__title--rail:hover,
+main .home-explore--faz51 .col-section-head__title--explore:hover {
+  color: var(--home-title-ink-hover);
+  text-decoration-color: var(--home-line-faint);
+}
+
+/* Alt keşif: panel h3 */
+main .home-explore--faz51 .home-explore-panel-label {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition:
+    color var(--home-interact-160) var(--home-interact-ease),
+    text-decoration-color var(--home-interact-160) var(--home-interact-ease),
+    opacity var(--home-interact-160) var(--home-interact-ease);
+}
+
+main .home-explore--faz51 .home-explore-panel-label:hover {
+  color: color-mix(in srgb, var(--text-secondary) 45%, var(--text-muted) 55%);
+  text-decoration-color: var(--home-line-faint);
+  opacity: 0.95;
+}
+
+/* —— 1) Keşif listesi + günün sorusu: madde başlıkları (buton = odak) —— */
+.home-explore--faz51 .home-explore-item-title {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+  transition:
+    color var(--home-interact-160) var(--home-interact-ease),
+    text-decoration-color var(--home-interact-160) var(--home-interact-ease);
+}
+
+.home-explore--faz51 .home-explore-item:hover .home-explore-item-title,
+.home-explore--faz51 .home-explore-item:focus-visible .home-explore-item-title,
+.home-explore--faz51 .home-explore-question:hover .home-explore-item-title,
+.home-explore--faz51 .home-explore-question:focus-visible .home-explore-item-title {
+  color: var(--home-title-ink-hover);
+  text-decoration-color: var(--home-line-faint);
+}
+
+/* —— 1) Yan sütun indeks: satır başlığı —— */
+.home-index-title {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+  transition:
+    color var(--home-interact-160) var(--home-interact-ease),
+    text-decoration-color var(--home-interact-160) var(--home-interact-ease);
+}
+
+.home-index-row:hover .home-index-title,
+.home-index-row:focus-visible .home-index-title {
+  color: var(--home-title-ink-hover);
+  text-decoration-color: var(--home-line-faint);
+}
+
+/* —— 2) CTA: “Yazıyı aç →” (sağ sütun) —— */
+.home-rail--faz5-primary .feed-entry-cta {
+  transition:
+    color var(--home-interact-160) var(--home-interact-ease),
+    opacity var(--home-interact-160) var(--home-interact-ease);
+}
+
+.home-rail--faz5-primary .feed-entry-cta::after {
+  transition:
+    color var(--home-interact-160) var(--home-interact-ease),
+    opacity var(--home-interact-160) var(--home-interact-ease);
+  opacity: 0.9;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.home-rail--faz5-primary
+  .feed-entry-card--editorial:hover
+  .feed-entry-cta::after,
+.home-rail--faz5-primary
+  .feed-entry-card--editorial:focus-within
+  .feed-entry-cta::after {
+  opacity: 1;
+  color: rgba(0, 0, 0, 0.58);
+}
+
+.home-explore--faz51 .home-explore-question .home-explore-cta {
+  transition:
+    color var(--home-interact-160) var(--home-interact-ease),
+    opacity var(--home-interact-160) var(--home-interact-ease),
+    border-color var(--home-interact-160) var(--home-interact-ease);
+  opacity: 0.9;
+}
+
+.home-explore--faz51 .home-explore-question:hover .home-explore-cta,
+.home-explore--faz51 .home-explore-question:focus-visible .home-explore-cta {
+  opacity: 1;
+  color: rgba(0, 0, 0, 0.56);
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+/* —— 3) Yan liste satırı: arka plan (yükseklik/padding aynı) —— */
+.home-index-row {
+  transition: background-color var(--home-interact-180) var(--home-interact-ease);
+}
+
+.home-index-row:hover:not(.home-index-row--active) {
+  background: var(--home-row-veil);
+}
+
+.home-rail--faz5-left .home-index-row:hover:not(.home-index-row--active),
+.home-rail--faz5-mid .home-index-row:hover:not(.home-index-row--active) {
+  background: var(--home-row-veil);
+}
+
+.home-index-row:focus-visible {
+  outline: 1px solid var(--home-focus-hair);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+/* —— 4) Arama: FAZ 4 düz alan; klavye focus-visible (gölge yok) —— */
+main > section
+  .home-page-editorial--section-stack
+  .home-search-bridge.home-manifesto--bridge.home-search-field
+  .home-manifesto-input--premium.home-manifesto-input {
+  transition: border-color var(--home-interact-160) var(--home-interact-ease),
+    background-color var(--home-interact-160) var(--home-interact-ease);
+}
+
+main > section
+  .home-page-editorial--section-stack
+  .home-search-bridge.home-manifesto--bridge.home-search-field
+  .home-manifesto-input--premium.home-manifesto-input:focus-visible {
+  outline: 1px solid var(--home-focus-hair);
+  outline-offset: 2px;
+  box-shadow: none;
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+/* —— 5) Header logo: sakin opacity (underline / hareket yok) —— */
+main > header.site-header .site-wordmark {
+  transition: opacity var(--home-interact-160) var(--home-interact-ease);
+  text-decoration: none;
+}
+
+main > header.site-header .site-wordmark:hover,
+main > header.site-header .site-wordmark:focus-visible {
+  opacity: 0.86;
+}
+
+main > header.site-header .site-wordmark:focus-visible {
+  outline: 1px solid var(--home-focus-hair);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
