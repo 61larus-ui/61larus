@@ -654,7 +654,27 @@ export default function HomePageClient({
       }
     }
 
-    // 3. memory — Hafızaya eklenenler (ana akış)
+    // 3. today — Bugün 61Larus’ta (vitrin; memory’den önce — yoksa usedEntryIds vitrini boşaltıyordu)
+    const todayTagged = withCounts
+      .filter((r) => entryPublishSlug(r.entry) === "today")
+      .sort(sortRanked);
+    const todayList: EntryItem[] = [];
+    for (const row of todayTagged) {
+      if (todayList.length >= 4) break;
+      todayList.push(row.entry);
+    }
+    if (todayList.length < 4) {
+      const ranked = [...withCounts].sort(sortRanked);
+      for (const row of ranked) {
+        if (todayList.length >= 4) break;
+        if (!todayList.some((e) => e.id === row.entry.id)) {
+          todayList.push(row.entry);
+        }
+      }
+    }
+    for (const e of todayList) usedEntryIds.add(e.id);
+
+    // 4. memory — Hafızaya eklenenler (ana akış)
     const memoryExplicit = centerEntries
       .filter((e) => entryPublishSlug(e) === "memory")
       .sort(compareEntriesByNewest);
@@ -668,29 +688,6 @@ export default function HomePageClient({
       compareEntriesByNewest
     );
     for (const e of memoryList) usedEntryIds.add(e.id);
-
-    // 4. today — Bugün 61Larus’ta
-    const todayTagged = withCounts
-      .filter((r) => entryPublishSlug(r.entry) === "today")
-      .sort(sortRanked);
-    const todayList: EntryItem[] = [];
-    for (const row of todayTagged) {
-      if (todayList.length >= 4) break;
-      todayList.push(row.entry);
-      usedEntryIds.add(row.entry.id);
-    }
-    if (todayList.length < 4) {
-      const legacyRanked = withCounts
-        .filter((r) => !hasAdminPublishSection(r.entry))
-        .sort(sortRanked);
-      for (const row of legacyRanked) {
-        if (todayList.length >= 4) break;
-        if (!usedEntryIds.has(row.entry.id)) {
-          todayList.push(row.entry);
-          usedEntryIds.add(row.entry.id);
-        }
-      }
-    }
 
     return {
       rightRailAwaitingFirstComment: pendingList,
