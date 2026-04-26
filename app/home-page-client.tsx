@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthPanel from "@/components/auth-panel";
 import AgreementPanel from "@/components/agreement-panel";
+import XFeed from "@/components/x-feed";
 import { anonymizeCurrentUserAccount } from "@/lib/anonymize-account";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { resolveVisibleName } from "@/lib/visible-name";
@@ -1458,6 +1459,7 @@ export default function HomePageClient({
                             Yazıyı aç →
                           </span>
                         </button>
+                        <XFeed />
                       </div>
                     ) : null}
                   </div>
