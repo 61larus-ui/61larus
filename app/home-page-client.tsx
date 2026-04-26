@@ -277,6 +277,10 @@ export default function HomePageClient({
   const pendingFocusAfterEntrySelectRef = useRef(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  /** URL /?entry= veya [slug] çözümlenene kadar otomatik temizleme yapmamak için. */
+  const [pendingEntryRouteId, setPendingEntryRouteId] = useState<string | null>(
+    null
+  );
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
@@ -293,6 +297,25 @@ export default function HomePageClient({
   const [footerInfoOpen, setFooterInfoOpen] = useState<FooterInfoId | null>(
     null
   );
+
+  /** Otomatik kapanma/temizleme: yalnızca gerçekten entry URL niyeti yokken uygulanır. */
+  const hasEntryRouteIntent = useMemo(() => {
+    if (isOAuthReturnQuery(searchParams)) {
+      return false;
+    }
+    const raw = searchParams.get("entry");
+    const urlEntryId =
+      raw && isRealUuid(decodeURIComponent(raw.trim()))
+        ? decodeURIComponent(raw.trim())
+        : null;
+    if (urlEntryId) {
+      return true;
+    }
+    if (pathCanonicalSlug && initialOpenEntryIdFromPath) {
+      return true;
+    }
+    return false;
+  }, [searchParams, pathCanonicalSlug, initialOpenEntryIdFromPath]);
 
   const commentsPropsFingerprint = useMemo(
     () =>
@@ -450,6 +473,7 @@ export default function HomePageClient({
   // Stable callback + refs for gate flags so post-onboarding code can call this in the
   // same tick as setOnboardingDone without a stale closure (same mutations as a click).
   const selectEntry = useCallback((id: string) => {
+    setPendingEntryRouteId(null);
     openEntryNavRef.current = true;
     if (openEntryNavTimerRef.current) clearTimeout(openEntryNavTimerRef.current);
     openEntryNavTimerRef.current = setTimeout(() => {
@@ -502,11 +526,17 @@ export default function HomePageClient({
       clearTimeout(openEntryNavTimerRef.current);
       openEntryNavTimerRef.current = null;
     }
+    setPendingEntryRouteId(null);
     clearPendingReturn();
     setSelectedEntryId(null);
     setCenterMode("feed");
+    if (typeof window === "undefined") {
+      return;
+    }
     if (pathCanonicalSlug) {
-      void routerRef.current.replace("/", { scroll: false });
+      if (window.location.pathname !== "/") {
+        void routerRef.current.replace("/", { scroll: false });
+      }
     } else {
       stripEntryQueryFromUrl();
     }
@@ -569,6 +599,7 @@ export default function HomePageClient({
       clearTimeout(openEntryNavTimerRef.current);
       openEntryNavTimerRef.current = null;
     }
+    setPendingEntryRouteId(null);
     clearPendingReturn();
     setSelectedEntryId(null);
     setCenterMode("feed");
@@ -576,19 +607,18 @@ export default function HomePageClient({
   }, [searchParams]);
 
   /**
-   * ?entry= veya [slug] yokken entry modalı açma. Tıkla→replace tamamlanırken
-   * openEntryNavRef kısa süre temizliği erteler; auth/ agreement moduna dokunmaz.
+   * Entry niyeti URL’de yokken selectedEntryId sıfırlanır; ?entry= veya [slug] açıkken asla
+   * “ana akışa döndü” sayılmaz (geç yüklenen veri modalı kapatmasın).
    */
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     if (isOAuthReturnQuery(searchParams)) return;
-    if (pathCanonicalSlug && initialOpenEntryIdFromPath) return;
-    if (window.location.search.includes("entry=")) return;
-    if (searchParams.get("entry")) return;
+    if (hasEntryRouteIntent) return;
     if (openEntryNavRef.current) return;
     clearPendingReturn();
+    setPendingEntryRouteId(null);
     setSelectedEntryId(null);
-  }, [searchParams, pathCanonicalSlug, initialOpenEntryIdFromPath]);
+  }, [searchParams, hasEntryRouteIntent]);
 
   /** Yalnızca ?entry= veya /[slug] ile URL güdümlü; localStorage ile otomatik açma yok. */
   useEffect(() => {
@@ -604,44 +634,49 @@ export default function HomePageClient({
         ? initialOpenEntryIdFromPath
         : null;
     const entryId = urlEntryId ?? pathEntryId;
-    if (!entryId) return;
+    if (!entryId) {
+      return;
+    }
 
-    if (!isAuthenticated || !agreementDone || platformAccessSuspended) return;
+    if (!isAuthenticated || !agreementDone || platformAccessSuspended) {
+      return;
+    }
 
     const combined = [...centerEntries, ...leftEntries, ...rightEntries];
+
     if (combined.length === 0) {
+      if (pendingEntryRouteId === entryId) {
+        return;
+      }
+      setPendingEntryRouteId(entryId);
       return;
     }
 
     if (!combined.some((e) => e.id === entryId)) {
-      if (
-        pathCanonicalSlug &&
-        initialOpenEntryIdFromPath &&
-        entryId === initialOpenEntryIdFromPath
-      ) {
-        return;
-      }
-      clearPendingReturn();
-      setSelectedEntryId(null);
-      setCenterMode("feed");
-      stripEntryQueryFromUrl();
+      setPendingEntryRouteId(null);
+      closeEntryModal();
       return;
     }
 
+    setPendingEntryRouteId(null);
+    if (selectedEntryId === entryId) {
+      return;
+    }
     selectEntry(entryId);
   }, [
     isAuthenticated,
     agreementDone,
     platformAccessSuspended,
-    centerMode,
     centerEntries,
     leftEntries,
     rightEntries,
     selectEntry,
     searchParams,
-    stripEntryQueryFromUrl,
     pathCanonicalSlug,
     initialOpenEntryIdFromPath,
+    selectedEntryId,
+    pendingEntryRouteId,
+    closeEntryModal,
   ]);
 
   useEffect(() => {
@@ -766,13 +801,13 @@ export default function HomePageClient({
   }, [effectiveEntryId, centerEntries, leftEntries, rightEntries]);
 
   useEffect(() => {
-    if (!selectedEntry || centerMode !== "feed") return;
+    if (!selectedEntry) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeEntryModal();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedEntry, centerMode, closeEntryModal]);
+  }, [selectedEntry, closeEntryModal]);
 
   const selectedComments = selectedEntry
     ? (commentsByEntryIdLive[selectedEntry.id] ?? [])
@@ -1087,6 +1122,7 @@ export default function HomePageClient({
       sessionStorage.clear();
     }
     clearPendingReturn();
+    setPendingEntryRouteId(null);
     setCenterMode("feed");
     setSelectedEntryId(null);
     setAgreementDone(false);
@@ -2088,7 +2124,7 @@ export default function HomePageClient({
         )}
       </section>
 
-      {selectedEntry && centerMode === "feed" ? (
+      {selectedEntry ? (
         <div
           className="entry-detail-modal-root"
           role="dialog"
