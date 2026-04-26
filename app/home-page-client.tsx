@@ -1430,6 +1430,35 @@ export default function HomePageClient({
                 </div>
               </section>
             ) : null}
+            {homeExploreTickerEntries.length > 0 ? (
+              <div
+                className="home-ticker home-ticker--divider"
+                aria-label="Öne çıkan başlıklar"
+              >
+                <div className="home-ticker__track">
+                  {homeExploreTickerEntries.map((entry) => (
+                    <button
+                      key={`mid-${entry.id}`}
+                      type="button"
+                      className="home-ticker__item"
+                      onClick={() => goToEntry(entry.id)}
+                      aria-label={`Aç: ${entry.title}`}
+                    >
+                      {entry.title}
+                    </button>
+                  ))}
+                  {homeExploreTickerEntries.map((entry) => (
+                    <span
+                      key={`mid-dup-${entry.id}`}
+                      className="home-ticker__item home-ticker__item--ghost"
+                      aria-hidden="true"
+                    >
+                      {entry.title}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="home-main-columns-wrap home-main-columns-wrap--faz51 home-main-columns-wrap--faz56 min-h-0 w-full min-w-0 max-w-full">
             <div className="main-3col home-editorial-cols home-editorial-cols--faz52 home-content-grid home-content-grid--editorial home-content-grid--flow home-content-grid--faz3 flex w-full min-h-0 min-w-0 max-w-full flex-col gap-0 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.1fr)] md:items-stretch md:gap-0 md:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.1fr)]">
             <aside
@@ -1437,7 +1466,7 @@ export default function HomePageClient({
               aria-label="Yazılmayı bekleyenler"
             >
               <div className="col-section-head col-head-band col-head-band--faz52-support col-head-band--settled home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
-                <h2 className="col-section-head__title col-section-head__title--rail m-0">
+                <h2 className="col-section-head__title col-section-head__title--rail">
                   Yazılmayı bekleyenler
                 </h2>
               </div>
@@ -1483,7 +1512,7 @@ export default function HomePageClient({
               aria-label="En çok konuşulan başlıklar"
             >
               <div className="col-section-head col-head-band col-head-band--faz52-support col-head-band--settled col-head-band--trending home-rail-header home-rail-header--col shrink-0 px-3.5 md:px-4">
-                <h2 className="col-section-head__title col-section-head__title--rail m-0">
+                <h2 className="col-section-head__title col-section-head__title--rail">
                   En çok konuşulan başlıklar
                 </h2>
               </div>
@@ -1531,7 +1560,7 @@ export default function HomePageClient({
               <div className="home-feed-rail home-feed-rail--faz55 layout-feed-inner layout-feed-inner--post-manifesto mx-auto flex w-full min-h-0 min-w-0 max-w-none flex-1 flex-col px-0 py-5 sm:py-6 md:h-auto md:min-h-0 md:flex-none md:py-0 lg:min-h-0 lg:max-h-full lg:h-full lg:flex-1">
                 <div className="col-section-head col-head-band col-head-band--feed col-head-band--faz5-primary col-head-band--settled home-feed-rail__head home-rail-header--col shrink-0">
                   <h2
-                    className="col-section-head__title col-section-head__title--rail m-0"
+                    className="col-section-head__title col-section-head__title--rail"
                     id="main-feed-title"
                   >
                     Hafızaya eklenenler

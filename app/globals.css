@@ -607,7 +607,7 @@ h3.col-section-head__kicker {
 }
 
 .col-section-head__title {
-  margin: 0 0 0.2rem;
+  margin: 0 0 10px;
   font-family: var(--font-editorial-display);
   font-size: var(--type-scale-section);
   font-weight: 500;
@@ -663,7 +663,7 @@ h3.col-section-head__kicker {
   }
 
   .col-section-head__title {
-    margin-bottom: 0.22rem;
+    margin-bottom: 10px;
   }
 }
 
@@ -1543,7 +1543,7 @@ main > section
     aside[aria-label="Yazılmayı bekleyenler"]
     > .col-head-band,
   .home-editorial-cols
-    aside[aria-label="Şu an en çok konuşulanlar"]
+    aside[aria-label="En çok konuşulan başlıklar"]
     > .col-head-band {
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
@@ -1569,7 +1569,7 @@ main > section
   }
 
   .home-editorial-cols .col-section-head__title {
-    margin-bottom: 0.12rem;
+    margin-bottom: 10px;
   }
 
   .home-editorial-cols .col-section-head__micro {
@@ -2006,6 +2006,11 @@ main > section
   background: transparent;
 }
 
+.main-3col > * {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
 @media (min-width: 768px) {
   .main-3col > *:not(:last-child) {
     border-right: 1px solid var(--divide-column);
@@ -2016,6 +2021,100 @@ main > section
     > *:not(:last-child) {
     border-right: none;
   }
+}
+
+/* TICKER GENEL (orta bölücü + paylaşılan) */
+.home-ticker {
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  box-sizing: border-box;
+}
+
+/* ORTADAKİ (KESEN) TICKER */
+.home-ticker--divider {
+  margin: 6px 0 10px 0;
+  padding-left: var(--home-container-px);
+  padding-right: var(--home-container-px);
+}
+
+/* TRACK */
+.home-ticker__track {
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+  white-space: nowrap;
+  animation: tickerMove 60s linear infinite;
+  will-change: transform;
+}
+
+/* ITEM */
+.home-ticker__item {
+  flex-shrink: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 12.8px;
+  color: rgba(0, 0, 0, 0.55);
+  letter-spacing: -0.01em;
+}
+
+.home-ticker__item--ghost {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* AYIRICI */
+.home-ticker__item::after {
+  content: "•";
+  margin-left: 14px;
+  color: rgba(0, 0, 0, 0.3);
+}
+
+/* HOVER / FOCUS DURDUR */
+.home-ticker:hover .home-ticker__track,
+.home-ticker:focus-within .home-ticker__track {
+  animation-play-state: paused;
+}
+
+/* ANIMASYON */
+@keyframes tickerMove {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-ticker__track {
+    animation: none;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .home-ticker {
+    min-height: 42px;
+    max-height: 46px;
+  }
+
+  .home-ticker__item {
+    font-size: 0.75rem;
+  }
+}
+
+.feed-entry-card--editorial,
+.home-index-item {
+  margin-bottom: 10px;
 }
 
 /* Bugün strip: 2/4 sütun; dış kutu/çerçeve yok, ince hücre ızgarası */
@@ -2901,8 +3000,7 @@ main
   min-height: 0;
   max-height: none;
   box-sizing: border-box;
-  border-top: none;
-  border-bottom: none;
+  border: none;
   background: transparent;
 }
 
@@ -2945,8 +3043,7 @@ main
   padding-top: 0;
   padding-bottom: 0;
   overflow: hidden;
-  border-top: none;
-  border-bottom: none;
+  border: none;
 }
 
 .home-explore-head.home-explore-head--transition-has-ticker.home-explore-head--section-start {
@@ -3321,12 +3418,16 @@ main
   list-style: none;
   display: flex;
   flex-direction: column;
-  /* FAZ 3: satır-satır border yerine hafif aralık — tablo değil liste */
-  gap: 0.28rem;
+  /* Maddeler arası: .home-explore-item margin-bottom ile */
+  gap: 0;
 }
 
 .home-explore-list > li {
   border-top: none;
+}
+
+.home-explore-list > li:last-child .home-explore-item {
+  margin-bottom: 0;
 }
 
 .home-explore-item {
@@ -3336,7 +3437,7 @@ main
   text-align: left;
   width: 100%;
   min-width: 0;
-  margin: 0;
+  margin: 0 0 10px;
   padding: 0.62rem 0 0.62rem;
   box-sizing: border-box;
   border: 0;
