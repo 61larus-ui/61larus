@@ -1598,19 +1598,21 @@ export default function HomePageClient({
                                 key={entry.id}
                                 type="button"
                                 role="listitem"
-                                className="home-explore-question"
+                                className="home-explore-question home-explore-question--stack w-full max-w-full text-left"
                                 onClick={() => goToEntry(entry.id)}
                                 aria-label={`Aç: ${entry.title}`}
                               >
-                                <span className="home-explore-item-title">
+                                <span className="home-explore-item-title home-explore-questions-grid__title">
                                   {entry.title}
-                                </span>
-                                <span className="home-explore-item-meta">
-                                  {cc > 0 ? `${cc} yorum` : null}
                                 </span>
                                 <span className="home-explore-cta">
                                   Yazıyı aç →
                                 </span>
+                                {cc > 0 ? (
+                                  <span className="home-explore-item-meta">
+                                    {`${cc} yorum`}
+                                  </span>
+                                ) : null}
                               </button>
                             );
                           })}
