@@ -4,13 +4,28 @@ import { useEffect } from "react";
 
 export default function XFeed() {
   useEffect(() => {
-    if (document.getElementById("twitter-script")) return;
+    const existingScript = document.getElementById("twitter-script");
 
-    const script = document.createElement("script");
-    script.id = "twitter-script";
-    script.src = "https://platform.twitter.com/widgets.js";
-    script.async = true;
-    document.body.appendChild(script);
+    if (!existingScript) {
+      const script = document.createElement("script");
+      script.id = "twitter-script";
+      script.src = "https://platform.twitter.com/widgets.js";
+      script.async = true;
+      script.onload = () => {
+        // @ts-ignore
+        if (window.twttr) {
+          // @ts-ignore
+          window.twttr.widgets.load();
+        }
+      };
+      document.body.appendChild(script);
+    } else {
+      // @ts-ignore
+      if (window.twttr) {
+        // @ts-ignore
+        window.twttr.widgets.load();
+      }
+    }
   }, []);
 
   return (
