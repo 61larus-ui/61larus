@@ -354,7 +354,7 @@ export function EntryRouteLayoutClient({
                 ·
               </span>
               <a
-                href="https://x.com/6Larus"
+                href="https://x.com/61Larus"
                 className="footer-link-btn"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -368,7 +368,7 @@ export function EntryRouteLayoutClient({
                 ·
               </span>
               <a
-                href="https://instagram.com/61larus"
+                href="https://www.instagram.com/61aktif/"
                 className="footer-link-btn"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -382,7 +382,7 @@ export function EntryRouteLayoutClient({
                 ·
               </span>
               <a
-                href="https://facebook.com/61larus"
+                href="https://www.facebook.com/profile.php?id=61586158055479"
                 className="footer-link-btn"
                 target="_blank"
                 rel="noopener noreferrer"
