@@ -3553,48 +3553,49 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
 }
 
 /* -------------------------------------------------------------------------
-   Entry detail modal (akış) — paper yüzey, hafif scrim; sadece shell burada
+   Entry detail modal (akış) — sabit overlay + panel; animasyon yok
    ------------------------------------------------------------------------- */
-.entry-detail-modal-scrim {
+.entry-detail-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  box-sizing: border-box;
   background: rgba(17, 24, 39, 0.26);
-  -webkit-backdrop-filter: blur(1.2px);
-  backdrop-filter: blur(1.2px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 5rem 1rem 2rem;
 }
 
-@media (min-width: 768px) {
-  .entry-detail-modal-scrim {
-    background: rgba(17, 24, 39, 0.28);
-    -webkit-backdrop-filter: blur(1.5px);
-    backdrop-filter: blur(1.5px);
+@media (max-width: 640px) {
+  .entry-detail-modal-root {
+    padding: 2.5rem 0.75rem 1.25rem;
   }
 }
 
 .entry-detail-modal-panel {
+  box-sizing: border-box;
+  width: min(100%, 48rem);
+  background: color-mix(in srgb, var(--bg-primary) 88%, #fff 12%);
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 6px;
-  background: color-mix(in srgb, #f7f4ef 40%, #ffffff 60%);
   box-shadow: 0 20px 56px rgba(15, 23, 42, 0.042);
+  padding: clamp(1.1rem, 2vw, 2rem);
+  pointer-events: auto;
 }
 
-.entry-detail-modal-pad {
-  box-sizing: border-box;
-  padding: 1.1rem 1.1rem 1.05rem;
-}
-
-@media (min-width: 640px) {
-  .entry-detail-modal-pad {
-    padding: 1.4rem 1.5rem 1.35rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .entry-detail-modal-pad {
-    padding: 1.7rem 1.85rem 1.55rem;
+@media (max-width: 640px) {
+  .entry-detail-modal-panel {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 6px;
+    padding: clamp(0.85rem, 3vw, 1.1rem);
   }
 }
 
 /* Geri dön: yalnız entry modal; site-info "kapat" aynı sınıfı farklı bağlamda */
-.entry-detail-modal-scrim .entry-detail-back {
+.entry-detail-modal-root .entry-detail-back {
   font-size: var(--type-scale-meta);
   font-weight: 400;
   line-height: 1.3;
@@ -3606,7 +3607,7 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   transition: color 0.16s ease, opacity 0.16s ease;
 }
 
-.entry-detail-modal-scrim .entry-detail-back:hover {
+.entry-detail-modal-root .entry-detail-back:hover {
   color: var(--text-primary);
   opacity: 0.72;
   text-decoration: none;

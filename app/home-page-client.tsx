@@ -584,6 +584,7 @@ export default function HomePageClient({
     if (isOAuthReturnQuery(searchParams)) return;
     if (pathCanonicalSlug && initialOpenEntryIdFromPath) return;
     if (window.location.search.includes("entry=")) return;
+    if (searchParams.get("entry")) return;
     if (openEntryNavRef.current) return;
     clearPendingReturn();
     setSelectedEntryId(null);
@@ -613,6 +614,13 @@ export default function HomePageClient({
     }
 
     if (!combined.some((e) => e.id === entryId)) {
+      if (
+        pathCanonicalSlug &&
+        initialOpenEntryIdFromPath &&
+        entryId === initialOpenEntryIdFromPath
+      ) {
+        return;
+      }
       clearPendingReturn();
       setSelectedEntryId(null);
       setCenterMode("feed");
@@ -756,6 +764,15 @@ export default function HomePageClient({
     const all = [...centerEntries, ...leftEntries, ...rightEntries];
     return all.find((item) => item.id === effectiveEntryId) ?? null;
   }, [effectiveEntryId, centerEntries, leftEntries, rightEntries]);
+
+  useEffect(() => {
+    if (!selectedEntry || centerMode !== "feed") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeEntryModal();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedEntry, centerMode, closeEntryModal]);
 
   const selectedComments = selectedEntry
     ? (commentsByEntryIdLive[selectedEntry.id] ?? [])
@@ -2071,25 +2088,24 @@ export default function HomePageClient({
         )}
       </section>
 
-      {selectedEntryId && centerMode === "feed" ? (
+      {selectedEntry && centerMode === "feed" ? (
         <div
-          className="entry-detail-modal-scrim fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto px-3 py-4 md:items-center md:py-6"
-          role="presentation"
-          onClick={() => closeEntryModal()}
+          className="entry-detail-modal-root"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="entry-detail-title"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeEntryModal();
+            }
+          }}
         >
-          <div
-            className="entry-detail-modal-panel my-auto w-full min-w-0 max-w-[48rem]"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="entry-detail-title"
-            onClick={(e) => e.stopPropagation()}
+          <article
+            className="entry-detail-modal-panel"
+            onMouseDown={(event) => event.stopPropagation()}
           >
-            <div className="entry-detail-modal-scroll left-scroll max-h-[min(92dvh,900px)] min-w-0 overflow-y-auto overscroll-contain">
-              <div className="entry-detail-modal-pad">
-                {renderEntryDetailContent()}
-              </div>
-            </div>
-          </div>
+            {renderEntryDetailContent()}
+          </article>
         </div>
       ) : null}
 
