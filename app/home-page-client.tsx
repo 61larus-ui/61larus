@@ -111,6 +111,15 @@ export type EntryItem = {
   bio61?: string | null;
 };
 
+function entryHrefPath(entry: EntryItem | undefined, id: string): string {
+  const stored = entry?.slug?.trim() ?? "";
+  if (stored.length > 0) return stored;
+  const title = entry?.title ?? "";
+  return (
+    normalizeEntrySlug(title.trim()) || slugifyEntryTitle(title, id)
+  );
+}
+
 function compareEntriesByNewest(a: EntryItem, b: EntryItem): number {
   const ta = new Date(a.created_at).getTime();
   const tb = new Date(b.created_at).getTime();
@@ -398,19 +407,8 @@ export default function HomePageClient({
   const goToEntry = useCallback((id: string) => {
     writePendingReturn(id, "comment");
     const item = entriesByIdRef.current.find((e) => e.id === id);
-    const stored = item?.slug?.trim() ?? "";
-    if (stored.length > 0) {
-      void routerRef.current.push(`/${encodeURI(stored)}`);
-      return;
-    }
-    const title = item?.title ?? "";
-    const fromTitle = normalizeEntrySlug(title);
-    const fallback = fromTitle || slugifyEntryTitle(title, id);
-    if (fallback.length > 0) {
-      void routerRef.current.push(`/${encodeURI(fallback)}`);
-      return;
-    }
-    void routerRef.current.push(`/?entry=${encodeURIComponent(id)}`);
+    const path = entryHrefPath(item, id);
+    void routerRef.current.push(`/${encodeURI(path)}`);
   }, []);
 
   /** Tam yazı akışı: arama kapalı, ana sayfaya dön. */
@@ -533,12 +531,8 @@ export default function HomePageClient({
       const pending = readPendingFromStorage().entryId;
       if (pending) {
         const found = centerEntries.find((e) => e.id === pending);
-        const slug = found?.slug?.trim() ?? "";
-        if (slug.length > 0) {
-          void router.push(`/${encodeURI(slug)}`);
-        } else {
-          void router.push(`/?entry=${encodeURIComponent(pending)}`);
-        }
+        const path = entryHrefPath(found, pending);
+        void router.push(`/${encodeURI(path)}`);
         clearPendingReturn();
       } else {
         setCenterMode("feed");
@@ -714,12 +708,8 @@ export default function HomePageClient({
     const id = urlEntryId ?? pending;
     if (id) {
       const found = centerEntries.find((e) => e.id === id);
-      const slug = found?.slug?.trim() ?? "";
-      if (slug.length > 0) {
-        void router.push(`/${encodeURI(slug)}`);
-      } else {
-        void router.push(`/?entry=${encodeURIComponent(id)}`);
-      }
+      const path = entryHrefPath(found, id);
+      void router.push(`/${encodeURI(path)}`);
       clearPendingReturn();
     } else {
       setCenterMode("feed");

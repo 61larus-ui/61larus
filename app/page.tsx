@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { permanentRedirect } from "next/navigation";
-import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
-import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
-import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
 import HomePageClient from "./home-page-client";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
-import { getEntryDetailById } from "@/lib/entry-route-data";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import { normalizeEntrySlug } from "@/lib/slug";
 import { isRfc4122Uuid } from "@/lib/seo-entry-description";
@@ -19,6 +15,19 @@ export const revalidate = 0;
 
 const SITE = "https://61larus.com";
 const DEFAULT_HOME_DESCRIPTION = "Trabzon'un gündemi, lafı ve hafızası";
+
+function entryPathSegmentForUrl(
+  slug: string | null | undefined,
+  title: string | null | undefined,
+  id: string
+): string {
+  const s = typeof slug === "string" && slug.trim().length > 0 ? slug.trim() : "";
+  if (s.length > 0) return s;
+  const t = typeof title === "string" ? title : "";
+  return (
+    normalizeEntrySlug(t.trim()) || slugifyEntryTitle(t, id)
+  );
+}
 
 const defaultHomeMetadata = (): Metadata => ({
   title: SITE_BRAND,
@@ -107,19 +116,7 @@ export async function generateMetadata({
   const entryTitle = titleRaw.trim();
   const pageTitle =
     entryTitle.length > 0 ? `${entryTitle} | ${SITE_BRAND}` : SITE_BRAND;
-  const slugFromRow =
-    typeof data.slug === "string" && data.slug.trim().length > 0
-      ? data.slug.trim()
-      : null;
-  const pathSegment =
-    slugFromRow ??
-    (normalizeEntrySlug(
-      (typeof data.title === "string" ? data.title : "").trim()
-    ) ||
-      slugifyEntryTitle(
-        typeof data.title === "string" ? data.title : "",
-        data.id
-      ));
+  const pathSegment = entryPathSegmentForUrl(data.slug, data.title, data.id);
   const canonical = `${SITE}/${pathSegment}`;
 
   return buildEntrySeoMetadata({
@@ -146,16 +143,11 @@ export default async function Home({
       const entriesClient = createSupabaseServiceClient() ?? supabase;
       const full = await entriesClient
         .from("entries")
-        .select("slug, title, content, created_at")
+        .select("slug, title")
         .eq("id", id)
         .maybeSingle();
 
-      type QueryRow = {
-        slug?: string | null;
-        title: string | null;
-        content: string | null;
-        created_at: string | null;
-      };
+      type QueryRow = { slug?: string | null; title: string | null };
       let row: QueryRow | null = null;
       if (full.data && !full.error) {
         row = full.data as QueryRow;
@@ -165,73 +157,19 @@ export default async function Home({
       ) {
         const fb = await entriesClient
           .from("entries")
-          .select("title, content, created_at")
+          .select("title")
           .eq("id", id)
           .maybeSingle();
         if (fb.data && !fb.error) {
-          const r = fb.data as {
-            title: string | null;
-            content: string | null;
-            created_at: string | null;
-          };
-          row = { ...r, slug: null };
+          row = { ...(fb.data as { title: string | null }), slug: null };
         }
       } else {
         row = (full.data as QueryRow) ?? null;
       }
 
       if (row) {
-        const s = row.slug;
-        if (typeof s === "string" && s.trim().length > 0) {
-          permanentRedirect(`/${encodeURI(s.trim())}`);
-        }
-        const title = row.title ?? "";
-        const pathSlug =
-          normalizeEntrySlug(title.trim()) || slugifyEntryTitle(title, id);
-        if (pathSlug.length > 0) {
-          permanentRedirect(`/${encodeURI(pathSlug)}`);
-        }
-        const detail = await getEntryDetailById(id);
-        const result = await getHomeClientProps();
-        if (!result.ok) {
-          return (
-            <div className="flex flex-1 flex-col items-center justify-center py-12">
-              <p className="max-w-md text-center text-sm leading-6 text-[#667085]">
-                Hata: {result.message}
-              </p>
-            </div>
-          );
-        }
-        if (detail) {
-          const p = result.props;
-          return (
-            <>
-              <EntryArticleJsonLd
-                title={detail.entry.title}
-                content={detail.entry.content}
-                createdAt={
-                  detail.entry.created_at != null
-                    ? String(detail.entry.created_at)
-                    : null
-                }
-              />
-              <EntryRouteLayoutClient
-                isAuthenticated={p.isAuthenticated}
-                userEmail={p.userEmail}
-                initialPlatformAccessSuspended={p.initialPlatformAccessSuspended}
-              >
-                <div className="entry-detail-page">
-                  <div className="entry-detail-page-inner">
-                    <EntryDetailBodyRsc
-                      entry={detail.entry}
-                      comments={detail.comments}
-                    />
-                  </div>
-                </div>
-              </EntryRouteLayoutClient>
-            </>
-          );
-        }
+        const pathSlug = entryPathSegmentForUrl(row.slug, row.title, id);
+        permanentRedirect(`/${encodeURI(pathSlug)}`);
       }
     }
   }

@@ -10,6 +10,7 @@ import { normalizeEntrySlug } from "@/lib/slug";
 import { getHomeClientProps } from "@/lib/home-client-props";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const SITE = "https://61larus.com";
 

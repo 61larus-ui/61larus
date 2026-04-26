@@ -141,7 +141,10 @@ async function loadEntryRowByNormalizedTitle(
     if (!data?.length) return null;
     for (const row of data) {
       const title = row.title;
-      if (typeof title === "string" && normalizeEntrySlug(title) === target) {
+      const norm = normalizeEntrySlug(
+        (typeof title === "string" ? title : "").trim()
+      );
+      if (norm.length > 0 && norm === target) {
         return row as EntryRow;
       }
     }
@@ -317,7 +320,7 @@ export async function getEntryDetailBySlug(
       if (row) return buildDetailFromRow(supabase, row);
     }
   }
-  const titleKey = keys[keys.length - 1]!;
+  const titleKey = keys[0]!;
   const titleRow = await loadEntryRowByNormalizedTitle(client, titleKey);
   if (titleRow) return buildDetailFromRow(supabase, titleRow);
   return null;
