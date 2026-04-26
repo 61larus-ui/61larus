@@ -1029,6 +1029,13 @@ main > header .site-header-tagline--manifesto {
   margin-top: calc(var(--home-section-gap) * -0.4);
 }
 
+/* Bugün vitrin ↔ üst ticker: section-stack gap’i sıkılaştır (yalnız bu komşuluk) */
+.home-page-editorial--section-stack
+  .today-strip.today-discovery
+  + .home-ticker.home-ticker--divider {
+  margin-top: calc(6px - var(--home-section-gap));
+}
+
 /* --- Arama dışı manifesto: eski hero padding’i (köprü sınıfı ile sıfırlanır) --- */
 .home-manifesto {
   width: 100%;
@@ -1581,8 +1588,8 @@ main > section
 .today-discovery {
   width: 100%;
   max-width: 100%;
-  margin: 0;
-  padding: 0 0 0.975rem;
+  margin: 0 0 10px;
+  padding: 0 0 0.75rem;
   box-sizing: border-box;
   border-bottom: 0;
   background: transparent;
@@ -1595,7 +1602,7 @@ main > section
 
 .today-discovery--vitrin {
   padding-top: 1rem;
-  padding-bottom: 0.975rem;
+  padding-bottom: 0.75rem;
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--bg-secondary) 12%, transparent) 0%,
@@ -1605,12 +1612,12 @@ main > section
 
 @media (min-width: 640px) {
   .today-discovery {
-    padding: 0.25rem 0 0.975rem;
+    padding: 0.25rem 0 0.75rem;
   }
 
   .today-discovery--vitrin {
     padding-top: 1rem;
-    padding-bottom: 0.975rem;
+    padding-bottom: 0.75rem;
   }
 }
 
@@ -1619,12 +1626,13 @@ main > section
     max-width: min(100%, 100%);
     margin-left: 0;
     margin-right: 0;
-    padding: 0.5rem 0 0.975rem;
+    margin-bottom: 12px;
+    padding: 0.5rem 0 0.75rem;
   }
 
   .today-discovery--vitrin {
     padding-top: 1rem;
-    padding-bottom: 0.975rem;
+    padding-bottom: 0.75rem;
   }
 }
 
@@ -2042,7 +2050,11 @@ main > section
     border-color 0.2s ease;
 }
 
-.home-ticker--divider,
+.home-ticker--divider {
+  margin-top: 6px;
+  margin-bottom: 14px;
+}
+
 .home-ticker--lower {
   margin-top: 12px;
   margin-bottom: 12px;
@@ -2163,7 +2175,7 @@ main > section
   }
 
   .today-strip .today-discovery--faz5 .today-discovery-item {
-    min-height: 4.35rem;
+    min-height: 3.48rem;
     border-bottom: 0;
     border-right: 1px solid rgba(0, 0, 0, 0.035);
   }
@@ -2203,12 +2215,14 @@ main > section
 .home-page-editorial .today-strip.today-discovery--faz5 {
   padding-top: 0.38rem !important;
   padding-bottom: 0.5rem !important;
+  margin-bottom: 8px !important;
 }
 
 @media (min-width: 1024px) {
   .home-page-editorial .today-strip.today-discovery--faz5 {
     padding-top: 0.42rem !important;
-    padding-bottom: 0.55rem !important;
+    padding-bottom: 0.625rem !important;
+    margin-bottom: 10px !important;
   }
 }
 
@@ -2225,26 +2239,26 @@ main > section
 }
 
 .today-strip .today-discovery--faz5 .today-discovery-item {
-  min-height: 4rem !important;
+  min-height: 3.2rem !important;
   padding: 0.4rem 0.5rem 0.42rem !important;
 }
 
 @media (min-width: 1024px) {
   .today-strip .today-discovery--faz5 .today-discovery-item {
-    min-height: 4.35rem !important;
+    min-height: 3.48rem !important;
     padding: 0.38rem 0.45rem 0.4rem !important;
   }
 }
 
 @media (max-width: 1023.98px) {
   .today-strip .today-discovery--faz5 .today-discovery-item {
-    min-height: 3.85rem !important;
+    min-height: 3.08rem !important;
   }
 }
 
 @media (max-width: 767.98px) {
   .today-strip .today-discovery--faz5 .today-discovery-item {
-    min-height: 3.75rem !important;
+    min-height: 3rem !important;
     padding: 0.38rem 0.55rem 0.4rem !important;
   }
 }
