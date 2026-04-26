@@ -943,18 +943,19 @@ main > header .site-header-tagline--manifesto {
   box-sizing: border-box;
   padding-left: var(--home-container-px);
   padding-right: var(--home-container-px);
-  padding-bottom: 0.5rem;
+  /* FAZ 2: keşf / footer hizasında ekstra sürükleyici kuyruk yok; alt nefes son bölümlerde */
+  padding-bottom: 0;
 }
 
 @media (min-width: 768px) {
   .home-page-editorial {
-    padding-bottom: 0.75rem;
+    padding-bottom: 0;
   }
 }
 
 @media (min-width: 1024px) {
   .home-page-editorial {
-    padding-bottom: 1rem;
+    padding-bottom: 0;
   }
 }
 
@@ -963,6 +964,21 @@ main > header .site-header-tagline--manifesto {
   display: flex;
   flex-direction: column;
   gap: var(--home-section-gap);
+}
+
+/* FAZ 2: “Bugün 61Larus’ta” ↔ üçlü kolon — yalnız section arası (başlık/entry sıkışması yok) */
+.home-page-editorial--section-stack
+  .today-strip.today-discovery
+  + .home-main-columns-wrap {
+  margin-top: -0.625rem; /* 10px, 8–12px bandı */
+}
+
+@media (min-width: 768px) {
+  .home-page-editorial--section-stack
+    .today-strip.today-discovery
+    + .home-main-columns-wrap {
+    margin-top: -0.75rem; /* 12px */
+  }
 }
 
 /* --- Arama dışı manifesto: eski hero padding’i (köprü sınıfı ile sıfırlanır) --- */
@@ -2398,6 +2414,21 @@ main > header .site-header-tagline--manifesto {
   padding-bottom: 0;
 }
 
+/* FAZ 2: üçlü kolon ↔ “Trabzon’u keşfetmeye devam et” — grid/panel iç gap’e dokunmadan section arası */
+.home-page-editorial.home-page-editorial--section-stack
+  .home-main-columns-wrap
+  + .home-explore--prefooter.home-explore--faz51 {
+  margin-top: -0.75rem; /* 12px, 12–16px bandı */
+}
+
+@media (min-width: 768px) {
+  .home-page-editorial.home-page-editorial--section-stack
+    .home-main-columns-wrap
+    + .home-explore--prefooter.home-explore--faz51 {
+    margin-top: -1rem; /* 16px (tablet+; lg’deki margin-top:0 aşılır) */
+  }
+}
+
 .home-rail--faz5-left .home-index-title,
 .home-rail--faz5-mid .home-index-title {
   font-size: clamp(0.66rem, 0.63rem + 0.09vw, 0.74rem);
@@ -2583,7 +2614,8 @@ main
   > section
   > .home-page-editorial:has(.home-explore--faz51)
   + footer#site-footer.home-page-footer--after-explore {
-  margin-top: calc(var(--home-section-gap) + 0.5rem);
+  /* FAZ 2: footer öncesi 24–32px bandı (footer kutusuna dokunmaz) */
+  margin-top: 1.5rem; /* 24px */
 }
 
 @media (min-width: 768px) {
@@ -2591,7 +2623,7 @@ main
     > section
     > .home-page-editorial:has(.home-explore--faz51)
     + footer#site-footer.home-page-footer--after-explore {
-    margin-top: calc(var(--home-section-gap) + 0.75rem);
+    margin-top: 2rem; /* 32px */
   }
 }
 
