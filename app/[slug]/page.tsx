@@ -3,7 +3,11 @@ import { permanentRedirect } from "next/navigation";
 import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
 import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
 import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
-import { getEntryDetailBySlug } from "@/lib/entry-route-data";
+import {
+  getEntryDetailBySlug,
+  getEntryRouteDebug,
+  type EntryRouteDebug,
+} from "@/lib/entry-route-data";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import { normalizeEntrySlug } from "@/lib/slug";
@@ -17,6 +21,74 @@ export const runtime = "nodejs";
 const SITE = "https://61larus.com";
 
 type PageProps = { params: Promise<{ slug: string }> };
+
+function EntrySlugDebugPanel({ debug }: { debug: EntryRouteDebug }) {
+  return (
+    <div className="entry-slug-debug p-4 font-mono text-sm text-[#101828]">
+      <h1 className="mb-4 text-lg font-bold">NOT FOUND DEBUG</h1>
+      <section className="mb-6 space-y-2 border-b border-[#E4E7EC] pb-6">
+        <p>
+          <span className="font-semibold text-[#667085]">Gelen slug: </span>
+          <span className="break-all">{debug.incomingSlug}</span>
+        </p>
+        <p>
+          <span className="font-semibold text-[#667085]">Decode edilmiş: </span>
+          <span className="break-all">{debug.decodedSlug}</span>
+        </p>
+        <p>
+          <span className="font-semibold text-[#667085]">Normalize (segment): </span>
+          <span className="break-all">{debug.normalizedSlug}</span>
+        </p>
+      </section>
+      {debug.recentEntriesError ? (
+        <p className="mb-4 text-red-600">
+          Son 20 kayıt yüklenemedi: {debug.recentEntriesError}
+        </p>
+      ) : null}
+      <h2 className="mb-2 text-base font-semibold">
+        Son 20 entries (Supabase)
+      </h2>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px] border-collapse border border-[#E4E7EC] text-left text-xs">
+          <thead className="bg-[#F9FAFB]">
+            <tr>
+              <th className="border border-[#E4E7EC] p-2 font-semibold">
+                id
+              </th>
+              <th className="border border-[#E4E7EC] p-2 font-semibold">
+                title
+              </th>
+              <th className="border border-[#E4E7EC] p-2 font-semibold">
+                slug
+              </th>
+              <th className="border border-[#E4E7EC] p-2 font-semibold">
+                normalizeEntrySlug(title)
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {debug.recentEntries.map((r) => (
+              <tr key={r.id}>
+                <td className="border border-[#E4E7EC] p-2 align-top break-all">
+                  {r.id}
+                </td>
+                <td className="border border-[#E4E7EC] p-2 align-top break-words">
+                  {r.title ?? "—"}
+                </td>
+                <td className="border border-[#E4E7EC] p-2 align-top break-all">
+                  {r.slug ?? "—"}
+                </td>
+                <td className="border border-[#E4E7EC] p-2 align-top break-all">
+                  {r.normalizedTitleSlug || "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug: raw } = await params;
@@ -64,9 +136,15 @@ export default async function EntrySlugPage({ params }: PageProps) {
   console.log("SLUG:", resolved.slug);
 
   const raw = resolved.slug;
-  const slug = decodeURIComponent(raw).trim();
+  let slug: string;
+  try {
+    slug = decodeURIComponent(raw).trim();
+  } catch {
+    slug = raw.trim();
+  }
   if (!slug) {
-    return <div>NOT FOUND DEBUG: {raw}</div>;
+    const debug = await getEntryRouteDebug(raw);
+    return <EntrySlugDebugPanel debug={debug} />;
   }
 
   const home = await getHomeClientProps();
@@ -82,7 +160,8 @@ export default async function EntrySlugPage({ params }: PageProps) {
 
   const detail = await getEntryDetailBySlug(slug);
   if (!detail) {
-    return <div>NOT FOUND DEBUG: {slug}</div>;
+    const debug = await getEntryRouteDebug(raw);
+    return <EntrySlugDebugPanel debug={debug} />;
   }
 
   const row = detail.entry;

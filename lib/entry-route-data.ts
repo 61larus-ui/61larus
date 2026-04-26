@@ -339,3 +339,114 @@ export async function getEntryDetailById(
   if (!row) return null;
   return buildDetailFromRow(supabase, row);
 }
+
+export type EntryRouteDebugRow = {
+  id: string;
+  title: string | null;
+  slug: string | null;
+  normalizedTitleSlug: string;
+};
+
+export type EntryRouteDebug = {
+  incomingSlug: string;
+  decodedSlug: string;
+  normalizedSlug: string;
+  recentEntries: EntryRouteDebugRow[];
+  recentEntriesError: string | null;
+};
+
+/**
+ * Temporary diagnostics for slug route 404s (last 20 rows + parsed URL segment).
+ */
+export async function getEntryRouteDebug(
+  rawSlugFromParams: string
+): Promise<EntryRouteDebug> {
+  unstable_noStore();
+  const incomingSlug = rawSlugFromParams;
+  let decodedSlug = "";
+  try {
+    decodedSlug = decodeURIComponent(rawSlugFromParams.trim()).trim();
+  } catch {
+    decodedSlug = rawSlugFromParams.trim();
+  }
+  const normalizedSlug = normalizeEntrySlug(decodedSlug);
+
+  const supabase = await createSupabaseServerClient();
+  const client = (createSupabaseServiceClient() ?? supabase) as Exclude<
+    typeof supabase,
+    null
+  >;
+
+  const full = await client
+    .from("entries")
+    .select("id, title, slug")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (full.error) {
+    if (
+      /slug|column|schema|not exist/i.test(full.error.message ?? "")
+    ) {
+      const fb = await client
+        .from("entries")
+        .select("id, title")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (fb.error) {
+        return {
+          incomingSlug,
+          decodedSlug,
+          normalizedSlug,
+          recentEntries: [],
+          recentEntriesError: fb.error.message,
+        };
+      }
+      const recentEntries: EntryRouteDebugRow[] = (fb.data ?? []).map(
+        (row) => {
+          const title = row.title;
+          const t = typeof title === "string" ? title : "";
+          return {
+            id: row.id,
+            title: typeof title === "string" ? title : null,
+            slug: null,
+            normalizedTitleSlug: normalizeEntrySlug(t.trim()),
+          };
+        }
+      );
+      return {
+        incomingSlug,
+        decodedSlug,
+        normalizedSlug,
+        recentEntries,
+        recentEntriesError: null,
+      };
+    }
+    return {
+      incomingSlug,
+      decodedSlug,
+      normalizedSlug,
+      recentEntries: [],
+      recentEntriesError: full.error.message,
+    };
+  }
+
+  const recentEntries: EntryRouteDebugRow[] = (full.data ?? []).map((row) => {
+    const title = row.title;
+    const t = typeof title === "string" ? title : "";
+    const s = row.slug;
+    return {
+      id: row.id,
+      title: typeof title === "string" ? title : null,
+      slug: typeof s === "string" && s.trim().length > 0 ? s.trim() : null,
+      normalizedTitleSlug: normalizeEntrySlug(t.trim()),
+    };
+  });
+
+  return {
+    incomingSlug,
+    decodedSlug,
+    normalizedSlug,
+    recentEntries,
+    recentEntriesError: null,
+  };
+}
