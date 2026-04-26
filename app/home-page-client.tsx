@@ -193,70 +193,6 @@ function formatFeedLineDate(value: string) {
   });
 }
 
-function HomeExploreEntryRow({
-  entry,
-  commentCount,
-  onOpen,
-}: {
-  entry: EntryItem;
-  commentCount: number;
-  onOpen: () => void;
-}) {
-  const metaDate = formatFeedLineDate(entry.created_at);
-  const authorLabel = entry.authorName?.trim() || "61Larus";
-  const excerptRaw = entry.content?.trim() ?? "";
-  const showExcerpt = excerptRaw.length > 0;
-
-  return (
-    <li>
-      <button
-        type="button"
-        className="home-explore-item flex w-full flex-col text-left"
-        onClick={onOpen}
-        aria-label={`Aç: ${entry.title}`}
-      >
-        <span className="home-explore-item-title">{entry.title}</span>
-        {showExcerpt ? (
-          <p className="home-explore-item-excerpt mt-1.5">{excerptRaw}</p>
-        ) : null}
-        <div className="home-explore-item-bottom mt-3 flex min-w-0 flex-col gap-2 sm:mt-3.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
-          <p className="feed-meta-row feed-meta-row--editorial m-0 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[0.75rem] md:gap-x-2 md:text-[0.8125rem]">
-            <span className="feed-meta-author min-w-0">{authorLabel}</span>
-            {metaDate ? (
-              <>
-                <span
-                  className="text-[color:var(--divide-muted)] opacity-75"
-                  aria-hidden
-                >
-                  ·
-                </span>
-                <time
-                  className="feed-meta-date text-[color:var(--text-meta)]"
-                  dateTime={entry.created_at}
-                >
-                  {metaDate}
-                </time>
-              </>
-            ) : null}
-            <span
-              className="text-[color:var(--divide-muted)] opacity-75"
-              aria-hidden
-            >
-              ·
-            </span>
-            <span className="feed-meta-stat tabular-nums text-[color:var(--text-meta)]">
-              {commentCount} yorum
-            </span>
-          </p>
-          <span className="home-explore-cta home-explore-cta--row shrink-0 text-left sm:text-right">
-            Yazıyı aç →
-          </span>
-        </div>
-      </button>
-    </li>
-  );
-}
-
 /** Yalnızca public.users satırı; RSC / stale prop fallback yok. */
 function platformSuspendedFromUsersRow(
   row: { is_platform_access_suspended?: unknown } | null
@@ -1581,27 +1517,35 @@ export default function HomePageClient({
                   </header>
                   <div className="home-explore-grid items-stretch">
                     {starterEntries.length > 0 ? (
-                      <div className="home-explore-panel home-explore-panel--starter home-explore-column flex h-full min-h-0 flex-col">
+                      <div className="home-explore-panel home-explore-panel--starter flex h-full min-h-0 flex-col">
                         <header className="col-section-head home-explore-panel-head shrink-0">
                           <h3 className="home-explore-panel-label m-0">
                             Trabzon&apos;u anlamak için
                           </h3>
                         </header>
                         <div className="home-explore-panel-body flex min-h-0 min-w-0 flex-1 flex-col">
-                          <ul
-                            className="home-explore-list min-h-0 flex-1"
-                            role="list"
-                          >
+                          <ul className="home-explore-list" role="list">
                             {starterEntries.map((entry) => {
                               const cc =
                                 commentsByEntryIdLive[entry.id]?.length ?? 0;
                               return (
-                                <HomeExploreEntryRow
-                                  key={entry.id}
-                                  entry={entry}
-                                  commentCount={cc}
-                                  onOpen={() => goToEntry(entry.id)}
-                                />
+                                <li key={entry.id}>
+                                  <button
+                                    type="button"
+                                    className="home-explore-item"
+                                    onClick={() => goToEntry(entry.id)}
+                                    aria-label={`Aç: ${entry.title}`}
+                                  >
+                                    <span className="home-explore-item-title">
+                                      {entry.title}
+                                    </span>
+                                    <span className="home-explore-item-meta">
+                                      {cc > 0
+                                        ? `${cc} yorum`
+                                        : null}
+                                    </span>
+                                  </button>
+                                </li>
                               );
                             })}
                           </ul>
@@ -1609,43 +1553,45 @@ export default function HomePageClient({
                       </div>
                     ) : null}
                     {waitingEntriesForExplore.length > 0 ? (
-                      <div className="home-explore-panel home-explore-panel--waiting home-explore-column flex h-full min-h-0 flex-col">
+                      <div className="home-explore-panel home-explore-panel--waiting flex h-full min-h-0 flex-col">
                         <header className="col-section-head home-explore-panel-head shrink-0">
                           <h3 className="home-explore-panel-label m-0">
                             Yazılmayı bekleyenler
                           </h3>
                         </header>
                         <div className="home-explore-panel-body flex min-h-0 min-w-0 flex-1 flex-col">
-                          <ul
-                            className="home-explore-list min-h-0 flex-1"
-                            role="list"
-                          >
-                            {waitingEntriesForExplore.map((entry) => {
-                              const cc =
-                                commentsByEntryIdLive[entry.id]?.length ?? 0;
-                              return (
-                                <HomeExploreEntryRow
-                                  key={entry.id}
-                                  entry={entry}
-                                  commentCount={cc}
-                                  onOpen={() => goToEntry(entry.id)}
-                                />
-                              );
-                            })}
+                          <ul className="home-explore-list" role="list">
+                            {waitingEntriesForExplore.map((entry) => (
+                              <li key={entry.id}>
+                                <button
+                                  type="button"
+                                  className="home-explore-item"
+                                  onClick={() => goToEntry(entry.id)}
+                                  aria-label={`Aç: ${entry.title}`}
+                                >
+                                  <span className="home-explore-item-title">
+                                    {entry.title}
+                                  </span>
+                                  <span className="home-explore-item-meta">
+                                    0 yorum
+                                  </span>
+                                </button>
+                              </li>
+                            ))}
                           </ul>
                         </div>
                       </div>
                     ) : null}
                     {dailyQuestionEntries.length > 0 ? (
-                      <div className="home-explore-panel home-explore-panel--question home-explore-column flex h-full min-h-0 flex-col">
+                      <div className="home-explore-panel home-explore-panel--question flex h-full min-h-0 flex-col">
                         <header className="col-section-head home-explore-panel-head shrink-0">
                           <h3 className="home-explore-panel-label m-0">
                             Günün soruları
                           </h3>
                         </header>
                         <div className="home-explore-panel-body flex min-h-0 min-w-0 flex-1 flex-col">
-                          <ul
-                            className="home-explore-list min-h-0 flex-1"
+                          <div
+                            className="home-explore-questions-grid min-h-0 flex-1"
                             role="list"
                             aria-label="Günün soruları"
                           >
@@ -1653,15 +1599,29 @@ export default function HomePageClient({
                               const cc =
                                 commentsByEntryIdLive[entry.id]?.length ?? 0;
                               return (
-                                <HomeExploreEntryRow
+                                <button
                                   key={entry.id}
-                                  entry={entry}
-                                  commentCount={cc}
-                                  onOpen={() => goToEntry(entry.id)}
-                                />
+                                  type="button"
+                                  role="listitem"
+                                  className="home-explore-question home-explore-question--stack w-full max-w-full text-left"
+                                  onClick={() => goToEntry(entry.id)}
+                                  aria-label={`Aç: ${entry.title}`}
+                                >
+                                  <span className="home-explore-item-title home-explore-questions-grid__title">
+                                    {entry.title}
+                                  </span>
+                                  <span className="home-explore-cta">
+                                    Yazıyı aç →
+                                  </span>
+                                  {cc > 0 ? (
+                                    <span className="home-explore-item-meta">
+                                      {`${cc} yorum`}
+                                    </span>
+                                  ) : null}
+                                </button>
                               );
                             })}
-                          </ul>
+                          </div>
                         </div>
                       </div>
                     ) : null}
