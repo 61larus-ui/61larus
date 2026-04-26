@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
 import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
 import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
@@ -11,6 +11,8 @@ import { getHomeClientProps } from "@/lib/home-client-props";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const fetchCache = "force-no-store";
+export const runtime = "nodejs";
 
 const SITE = "https://61larus.com";
 
@@ -58,10 +60,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function EntrySlugPage({ params }: PageProps) {
-  const { slug: raw } = await params;
-  const segment = decodeURIComponent(raw).trim();
-  if (!segment) {
-    notFound();
+  const resolved = await params;
+  console.log("SLUG:", resolved.slug);
+
+  const raw = resolved.slug;
+  const slug = decodeURIComponent(raw).trim();
+  if (!slug) {
+    return <div>NOT FOUND DEBUG: {raw}</div>;
   }
 
   const home = await getHomeClientProps();
@@ -75,9 +80,9 @@ export default async function EntrySlugPage({ params }: PageProps) {
     );
   }
 
-  const detail = await getEntryDetailBySlug(segment);
+  const detail = await getEntryDetailBySlug(slug);
   if (!detail) {
-    notFound();
+    return <div>NOT FOUND DEBUG: {slug}</div>;
   }
 
   const row = detail.entry;
@@ -91,7 +96,7 @@ export default async function EntrySlugPage({ params }: PageProps) {
   const pathFromTitle =
     titleNorm || slugifyEntryTitle(row.title ?? "", row.id);
   const canonicalPath = dbSlug ?? (pathFromTitle || null);
-  if (canonicalPath && canonicalPath !== segment) {
+  if (canonicalPath && canonicalPath !== slug) {
     permanentRedirect(`/${encodeURI(canonicalPath)}`);
   }
 
