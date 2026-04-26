@@ -13,16 +13,17 @@
   --surface-hover: rgba(17, 24, 39, 0.03);
   --list-row-active: rgba(13, 111, 102, 0.055);
 
-  --border-subtle: rgba(17, 24, 39, 0.06);
-  --border-strong: rgba(17, 24, 39, 0.11);
+  /* FAZ 3: editoryal çizgiler — tek ton bandı, bağırmayan çerçeve */
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-strong: rgba(0, 0, 0, 0.07);
 
-  --divide: rgba(15, 23, 42, 0.065);
-  --divide-muted: rgba(15, 23, 42, 0.04);
+  --divide: rgba(0, 0, 0, 0.05);
+  --divide-muted: rgba(0, 0, 0, 0.04);
   /* Neredeyse hissedilmeyen ayırıcı — blok/panel çizgisi yok */
-  --divide-hair: rgba(15, 23, 42, 0.045);
-  --editorial-hairline: rgba(15, 23, 42, 0.045);
-  /* Orta kolon dikey: bir tık daha hayalet */
-  --divide-column: rgba(15, 23, 42, 0.038);
+  --divide-hair: rgba(0, 0, 0, 0.05);
+  --editorial-hairline: rgba(0, 0, 0, 0.05);
+  /* Üçlü ızgara: orta-ana arası tek çizgi; çift bindirme yok */
+  --divide-column: rgba(0, 0, 0, 0.045);
 
   --text-primary: #1d2128;
   --text-secondary: #50545e;
@@ -407,7 +408,7 @@ body {
   margin-bottom: 0;
   margin-top: 0;
   padding: 1rem 0.2rem 1rem 0.2rem;
-  border-bottom: 1px solid var(--editorial-hairline);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.045);
   transform: none;
 }
 
@@ -858,8 +859,6 @@ main > header.site-header {
   margin-bottom: var(--home-header-below-gap) !important;
   /* headerBlock zaten alt nefes veriyor; çizgi hemen içerik altında */
   padding-bottom: 0 !important;
-  /* Tek, çok soluk çizgi (section üst çizgisi kapatıldı) */
-  border-bottom: 1px solid var(--editorial-hairline) !important;
 }
 
 @media (min-width: 768px) {
@@ -867,6 +866,11 @@ main > header.site-header {
     margin-bottom: var(--home-header-below-gap) !important;
     padding-bottom: 0 !important;
   }
+}
+
+/* FAZ 3: site header — çok hafif alt çerçeve, üst alanı kilitler (tamamen yok yok) */
+main > header.site-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 /* Marka wordmark — entry display’den ayrı: daha açık ağırlık, yumuşak mürekkep */
@@ -1361,8 +1365,7 @@ main > header .site-header-tagline--manifesto {
     flex-direction: column;
     height: 100%;
     box-sizing: border-box;
-    border-bottom: 1px solid
-      color-mix(in srgb, var(--editorial-hairline) 72%, transparent);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   }
 
   .home-editorial-cols .home-feed-rail.layout-feed-inner--post-manifesto {
@@ -1386,11 +1389,7 @@ main > header .site-header-tagline--manifesto {
     max-height: 6.25rem;
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid color-mix(
-      in srgb,
-      var(--editorial-hairline) 78%,
-      transparent
-    );
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   }
 
   .home-editorial-cols .col-head-band--feed {
@@ -1451,11 +1450,7 @@ main > header .site-header-tagline--manifesto {
 /* Mobil: bant alt çizgisi; yükseklik kilidi yok; kompakt başlık */
 @media (max-width: 767.98px) {
   .home-editorial-cols .col-head-band {
-    border-bottom: 1px solid color-mix(
-      in srgb,
-      var(--editorial-hairline) 78%,
-      transparent
-    );
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   }
 
   .home-editorial-cols .col-section-head__kicker {
@@ -1619,8 +1614,7 @@ main > header .site-header-tagline--manifesto {
   padding: 0.75rem 0.75rem 0.75rem;
   box-sizing: border-box;
   border: 0;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--editorial-hairline) 72%, transparent);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   background: transparent;
   cursor: pointer;
   color: inherit;
@@ -1635,8 +1629,7 @@ main > header .site-header-tagline--manifesto {
 
 @media (min-width: 640px) and (max-width: 1023.98px) {
   .today-discovery-grid .today-discovery-item {
-    border-right: 1px solid
-      color-mix(in srgb, var(--editorial-hairline) 65%, transparent);
+    border-right: 1px solid rgba(0, 0, 0, 0.04);
   }
 
   .today-discovery-grid .today-discovery-item:nth-child(2n) {
@@ -1650,8 +1643,7 @@ main > header .site-header-tagline--manifesto {
     min-height: 5.5rem;
     padding: 0.75rem 0.75rem 0.75rem;
     border-bottom: 0;
-    border-right: 1px solid
-      color-mix(in srgb, var(--editorial-hairline) 65%, transparent);
+    border-right: 1px solid rgba(0, 0, 0, 0.04);
   }
 
   .today-discovery-item:nth-child(5n) {
@@ -1801,8 +1793,7 @@ main > header .site-header-tagline--manifesto {
   .today-discovery--faz5 .today-discovery-item {
     min-height: 3.5rem;
     padding: 0.75rem 0.75rem 0.75rem;
-    border-right: 1px solid
-      color-mix(in srgb, var(--editorial-hairline) 58%, transparent);
+    border-right: 1px solid rgba(0, 0, 0, 0.04);
     border-bottom: 0;
   }
 
@@ -1847,8 +1838,13 @@ main > header .site-header-tagline--manifesto {
 
 @media (min-width: 768px) {
   .main-3col > *:not(:last-child) {
-    border-right: 1px solid
-      color-mix(in srgb, var(--divide-column) 58%, transparent);
+    border-right: 1px solid var(--divide-column);
+  }
+
+  /* FAZ 3 + FAZ 5.2: ana 3 kolon ayırıcı FAZ 5.2’de; genel .main-3col çizgisi yok (çoklu hattı önler) */
+  .main-3col.home-content-grid--editorial.home-editorial-cols--faz52
+    > *:not(:last-child) {
+    border-right: none;
   }
 }
 
@@ -1891,15 +1887,13 @@ main > header .site-header-tagline--manifesto {
   .today-strip .today-discovery--faz5 .today-discovery-item {
     min-height: 3.5rem;
     border-bottom: 0;
-    border-right: 1px solid
-      color-mix(in srgb, var(--editorial-hairline) 58%, transparent);
+    border-right: 1px solid rgba(0, 0, 0, 0.04);
   }
 
   .today-strip
     .today-discovery--faz5
     .today-discovery-item:nth-child(3n) {
-    border-right: 1px solid
-      color-mix(in srgb, var(--editorial-hairline) 58%, transparent);
+    border-right: 1px solid rgba(0, 0, 0, 0.04);
   }
 
   .today-strip
@@ -1917,8 +1911,7 @@ main > header .site-header-tagline--manifesto {
   }
 
   .today-strip .today-discovery-grid .today-discovery-item {
-    border-right: 1px solid
-      color-mix(in srgb, var(--editorial-hairline) 65%, transparent);
+    border-right: 1px solid rgba(0, 0, 0, 0.04);
   }
 
   .today-strip
@@ -2030,11 +2023,7 @@ main > header .site-header-tagline--manifesto {
 
 .home-rail--faz5-left .home-index-row,
 .home-rail--faz5-mid .home-index-row {
-  border-bottom-color: color-mix(
-    in srgb,
-    var(--editorial-hairline) 48%,
-    transparent
-  );
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
@@ -2444,11 +2433,7 @@ main > header .site-header-tagline--manifesto {
 
 .home-rail--faz5-primary .feed-entry-card--editorial {
   padding: 1rem 0.2rem 1rem 0.2rem;
-  border-bottom-color: color-mix(
-    in srgb,
-    var(--editorial-hairline) 34%,
-    transparent
-  );
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .home-rail--faz5-primary .feed-entry-excerpt--editorial {
@@ -2462,14 +2447,28 @@ main > header .site-header-tagline--manifesto {
 
 /* --- FAZ 5.2: 1:1:2.1 ızgara, destek kolonları hizası, sağ ayrışımı --- */
 @media (min-width: 768px) {
+  /* FAZ 3: ana (Hafıza) sütun — ince yumuşak dikey; çift çizgi yok (orta rail border kapatıldı) */
   main
     > section
     .home-content-grid--editorial.home-editorial-cols--faz52
-    > main[class*="border"] {
-    border-left: 1px solid
-      color-mix(in srgb, var(--divide-column) 52%, transparent) !important;
-    border-right: 1px solid
-      color-mix(in srgb, var(--divide-column) 48%, transparent) !important;
+    > main.home-rail--feed-main {
+    border-left: 1px solid var(--divide-column);
+    border-right: 1px solid var(--divide-column);
+  }
+
+  /* 1|2: sol aside sağ; 2|3: yalnızca main sol (orta asiden çift hattı kalktı) */
+  main
+    > section
+    .home-content-grid--editorial.home-editorial-cols--faz52
+    > aside[aria-label="Yazılmayı bekleyenler"] {
+    border-right: 1px solid var(--divide-column);
+  }
+
+  main
+    > section
+    .home-content-grid--editorial.home-editorial-cols--faz52
+    > aside[aria-label="Şu an en çok konuşulanlar"] {
+    border-right: none;
   }
 
   .home-editorial-cols--faz52
@@ -2690,8 +2689,7 @@ main
   margin: 0 0 0.75rem;
   padding: 0 0 0.45rem;
   box-sizing: border-box;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--editorial-hairline) 58%, transparent);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .home-explore--faz51 .home-explore-head--settled {
@@ -2745,8 +2743,7 @@ main
   padding: 0 0 0.4rem;
   box-sizing: border-box;
   border: 0;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--editorial-hairline) 48%, transparent);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.035);
   background: transparent;
 }
 
@@ -2819,8 +2816,7 @@ main
   padding: 0.75rem 0 0.5rem;
   box-sizing: border-box;
   border: 0;
-  border-top: 1px solid
-    color-mix(in srgb, var(--editorial-hairline) 52%, transparent);
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
   background: transparent;
   border-bottom: 0;
 }
@@ -2834,16 +2830,14 @@ main
   .home-explore--prefooter
     .home-explore-grid
     .home-explore-panel:not(:first-of-type) {
-    border-left: 1px solid
-      color-mix(in srgb, var(--editorial-hairline) 36%, transparent);
+    border-left: 1px solid var(--divide-column);
     padding-left: 1.5rem;
   }
 }
 
 @media (min-width: 768px) and (max-width: 1023.98px) {
   .home-explore--prefooter .home-explore-panel--question {
-    border-top: 1px solid
-      color-mix(in srgb, var(--editorial-hairline) 88%, transparent);
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
     margin-top: 0.1rem;
     padding-top: 0.5rem;
   }
@@ -2868,16 +2862,12 @@ main
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  /* FAZ 3: satır-satır border yerine hafif aralık — tablo değil liste */
+  gap: 0.35rem;
 }
 
 .home-explore-list > li {
-  border-top: 1px solid
-    color-mix(in srgb, var(--editorial-hairline) 48%, transparent);
-}
-
-.home-explore-list > li:first-of-type {
-  border-top: 0;
+  border-top: none;
 }
 
 .home-explore-item {
@@ -2997,8 +2987,7 @@ main
   line-height: 1.4;
   color: rgba(0, 0, 0, 0.5);
   text-decoration: none;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--editorial-hairline) 80%, transparent);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   padding-bottom: 0.08rem;
   transition: color 0.16s ease, border-color 0.16s ease;
   opacity: 1;
@@ -3091,8 +3080,7 @@ main
   .home-explore--prefooter .home-explore-panel {
     border: 0;
     border-radius: 0;
-    border-top: 1px solid
-      color-mix(in srgb, var(--editorial-hairline) 88%, transparent);
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
     background: transparent;
     padding: 0.45rem 0 0.35rem;
   }
@@ -3125,14 +3113,14 @@ main
 main > section.border-y {
   /* Header altı ile çift çizgi yok; alt sınır tek saç teli */
   border-top: none !important;
-  border-bottom: 1px solid var(--editorial-hairline) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
   background: transparent !important;
 }
 
 main > section .home-content-grid--editorial > aside {
   background: transparent !important;
-  border-color: transparent !important;
   box-shadow: none !important;
+  /* FAZ 3: border — FAZ 5.2 sütun ayırıcıları; şeffafla tümü silinme */
 }
 
 @media (min-width: 768px) {
@@ -3147,7 +3135,7 @@ main > section .home-content-grid--editorial > aside {
 }
 
 main > section .home-content-grid--editorial > aside > div.border-b {
-  border-bottom: 1px solid var(--editorial-hairline) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
 }
 
 main > section .home-content-grid--editorial > aside:first-of-type nav button,
@@ -3155,16 +3143,11 @@ main > section .home-content-grid--editorial
   > aside[aria-label="Yayın paneli"]
   nav
   button {
-  border-bottom: 1px solid var(--editorial-hairline) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
 }
 
 main > section .home-content-grid--editorial > main {
   background: transparent !important;
-}
-
-main > section .home-content-grid--editorial > main[class*="border"] {
-  border-left: 1px solid var(--divide-column) !important;
-  border-right: 1px solid var(--divide-column) !important;
 }
 
 .layout-feed-inner {
@@ -3264,6 +3247,8 @@ aside[aria-label="Yayın paneli"] nav button.group {
 .site-footer {
   background: var(--footer-surface, #181b20);
   color: var(--footer-text, #f0f1f4);
+  /* FAZ 3: açık yüzeyden ayrılan çok ince hat (footer içeriğine dokunmaz) */
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
   padding-top: 2.35rem !important;
   padding-bottom: 2.5rem !important;
 }
@@ -3774,7 +3759,7 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   line-height: 1.55;
   color: var(--text-secondary, #4b5563);
   background: color-mix(in srgb, var(--text-muted, #9ca3af) 8%, transparent);
-  border-bottom: 1px solid var(--divide-hair, #e5e7eb);
+  border-bottom: 1px solid var(--divide-hair, rgba(0, 0, 0, 0.05));
 }
 
 .platform-access-suspended-notice__link {
@@ -4924,21 +4909,30 @@ aside.right-column.side-panel nav button:hover .index-entry-meta {
 }
 
 aside.right-column.side-panel[aria-label="Yayın paneli"] {
-  border-top-color: var(--editorial-hairline) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  border-top-color: rgba(0, 0, 0, 0.04);
 }
 
 @media (min-width: 768px) {
   aside[aria-label="Şu an en çok konuşulanlar"] {
-    border-right: 1px solid var(--editorial-hairline) !important;
+    border-right: 1px solid var(--editorial-hairline);
   }
 
   aside.right-column.side-panel[aria-label="Yayın paneli"] {
-    border-left: 1px solid var(--editorial-hairline) !important;
+    border-left: 1px solid var(--editorial-hairline);
+  }
+
+  /* FAZ 3: ana ızgarada çift dikey hattı kaldır (sol aside + main yeter) */
+  main
+    > section
+    .home-content-grid--editorial.home-editorial-cols--faz52
+    aside[aria-label="Şu an en çok konuşulanlar"] {
+    border-right: none;
   }
 }
 
 aside[aria-label="Şu an en çok konuşulanlar"] {
-  border-bottom-color: var(--editorial-hairline) !important;
+  border-bottom-color: var(--editorial-hairline);
 }
 
 /* Sol indeks: sıra, başlık, alt satır */
