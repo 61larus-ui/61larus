@@ -21,6 +21,7 @@ import {
   COMPOSE_TITLE_CHECKING_LABEL,
   useAdminComposeTitle,
 } from "@/hooks/use-admin-compose-title";
+import { isPublishSectionLocked } from "@/lib/admin-entry-lock";
 
 type EntryRow = {
   id: string;
@@ -243,6 +244,7 @@ export default function AdminPage() {
   const [listBanner, setListBanner] = useState<string | null>(null);
 
   const [draftPublishSection, setDraftPublishSection] = useState("");
+  const isLocked = isPublishSectionLocked(draftPublishSection);
   const composeTitle = useAdminComposeTitle({
     publishSection: draftPublishSection,
   });
@@ -1992,6 +1994,14 @@ export default function AdminPage() {
               onSubmit={(e) => void onSubmitNew(e)}
               className="mt-4 space-y-4"
             >
+              {isLocked ? (
+                <p
+                  className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100/95"
+                  role="status"
+                >
+                  Bu yayın alanı geçici olarak yeni entry girişine kapalı.
+                </p>
+              ) : null}
               <div className="block">
                 <label className="block" htmlFor="admin-compose-title-input">
                   <span className="admin-label">Başlık</span>
@@ -2005,11 +2015,12 @@ export default function AdminPage() {
                       composeTitle.onTitleChange(e.target.value);
                     }}
                     maxLength={161}
-                    className="admin-field min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+                    disabled={isLocked}
+                    className="admin-field min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
                   />
                   <button
                     type="button"
-                    disabled={composeTitleSuggestLoading}
+                    disabled={isLocked || composeTitleSuggestLoading}
                     onClick={() => void requestComposeTitleSuggestions()}
                     className="shrink-0 rounded-md border border-slate-600 bg-slate-900/80 px-2.5 py-2 text-xs text-slate-400 hover:border-slate-500 hover:bg-slate-800 hover:text-slate-300 disabled:opacity-50 sm:py-1.5"
                   >
@@ -2037,11 +2048,12 @@ export default function AdminPage() {
                       <button
                         key={`${idx}-${s.slice(0, 24)}`}
                         type="button"
+                        disabled={isLocked}
                         onClick={() => {
                           setJustPublishedEntry(null);
                           composeTitle.onTitleChange(s);
                         }}
-                        className="rounded-md border border-slate-700/90 bg-slate-950/50 px-2.5 py-2 text-left text-xs leading-snug text-slate-400 hover:border-slate-600 hover:bg-slate-900 hover:text-slate-300"
+                        className="rounded-md border border-slate-700/90 bg-slate-950/50 px-2.5 py-2 text-left text-xs leading-snug text-slate-400 hover:border-slate-600 hover:bg-slate-900 hover:text-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {s}
                       </button>
@@ -2114,7 +2126,8 @@ export default function AdminPage() {
                     setDraftContent(e.target.value);
                   }}
                   rows={8}
-                  className="admin-field mt-1 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+                  disabled={isLocked}
+                  className="admin-field mt-1 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </label>
               <div className="flex justify-end gap-2 pt-1">
@@ -2130,7 +2143,9 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting || !composeTitle.canPublish}
+                  disabled={
+                    submitting || !composeTitle.canPublish || isLocked
+                  }
                   className="admin-btn-text admin-btn-text--emph rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-500 disabled:opacity-50"
                 >
                   {submitting ? "Kaydediliyor…" : "Yayınla"}

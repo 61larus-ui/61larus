@@ -19,6 +19,7 @@ import {
   isTitleTooSimilarToAny,
 } from "@/lib/entry-title-similarity";
 import { validateTitleQuality } from "@/lib/entry-title-rules";
+import { isPublishSectionLocked } from "@/lib/admin-entry-lock";
 
 type EntryListRow = {
   id: string;
@@ -258,6 +259,13 @@ export async function POST(req: Request) {
   const qualityError = validateTitleQuality(title);
   if (qualityError) {
     return NextResponse.json({ error: qualityError }, { status: 400 });
+  }
+
+  if (isPublishSectionLocked(category)) {
+    return NextResponse.json(
+      { error: "Bu yayın alanı şu an yeni entry girişine kapalı." },
+      { status: 403 }
+    );
   }
 
   const service = createSupabaseServiceClient();
