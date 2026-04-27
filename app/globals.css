@@ -7852,7 +7852,7 @@ footer#site-footer.home-page-footer .home-page-container {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-height: 2.875rem;
+  min-height: 48px;
   padding: 0 0.55rem 0 0.75rem;
   box-sizing: border-box;
   width: 100%;
@@ -7920,9 +7920,10 @@ footer#site-footer.home-page-footer .home-page-container {
   background: transparent;
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: max(1rem, 16px);
-  line-height: 1.45;
-  letter-spacing: 0.01em;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 400;
+  letter-spacing: 0;
   outline: none;
   box-shadow: none;
 }
@@ -7933,6 +7934,7 @@ footer#site-footer.home-page-footer .home-page-container {
     var(--text-tertiary) 70%,
     var(--text-secondary) 30%
   );
+  font-size: 15px;
   opacity: 0.55;
 }
 
@@ -8080,16 +8082,9 @@ footer#site-footer.home-page-footer .home-page-container {
 
 @media (min-width: 768px) {
   .home-global-search__shell {
-    min-height: 3rem;
     padding-left: 0.85rem;
     padding-right: 0.65rem;
     gap: 0.55rem;
-  }
-
-  .home-global-search__input {
-    font-size: 1.015625rem;
-    padding-top: 0.55rem;
-    padding-bottom: 0.55rem;
   }
 
   .home-global-search__title {
