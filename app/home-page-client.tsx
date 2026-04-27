@@ -498,6 +498,11 @@ export default function HomePageClient({
     []
   );
 
+  const onHomeSearchClear = useCallback(() => {
+    setSearchQuery("");
+    setSearchSuggestOpen(false);
+  }, []);
+
   const goToEntry = useCallback(
     (id: string, pathHint?: { title?: string; slug?: string | null }) => {
     if (process.env.NODE_ENV === "development") {
@@ -1432,47 +1437,82 @@ export default function HomePageClient({
             <div className="home-page-editorial home-page-editorial--section-stack">
             <div
               ref={searchSuggestRootRef}
-              className="home-manifesto home-manifesto--bridge home-search-bridge home-manifesto-inner--bridge home-search-field relative z-50 min-w-0 w-full max-w-full"
+              className="home-manifesto home-manifesto--bridge home-search-bridge home-global-search home-manifesto-inner--bridge home-search-field relative z-50 min-w-0 w-full max-w-full"
             >
-              <div className="home-manifesto-search relative w-full min-w-0 max-w-full">
+              <div className="home-manifesto-search home-global-search__column relative w-full min-w-0 max-w-full">
                 <label
                   htmlFor="feed-search-input"
                   className="sr-only"
                 >
                   Arama
                 </label>
-                <input
-                  id="feed-search-input"
-                  name="q"
-                  type="search"
-                  role="combobox"
-                  aria-autocomplete="list"
-                  aria-expanded={showTitleSearchPanel}
-                  aria-controls={
-                    showTitleSearchPanel ? homeSearchListboxId : undefined
-                  }
-                  className="home-manifesto-input home-manifesto-input--premium"
-                  value={searchQuery}
-                  onChange={onHomeSearchInputChange}
-                  onFocus={onHomeSearchInputFocus}
-                  onKeyDown={onHomeSearchKeyDown}
-                  placeholder="Başlık ara..."
-                  autoComplete="off"
-                  spellCheck={false}
-                />
+                <div className="home-global-search__shell" role="search">
+                  <span
+                    className="home-global-search__icon"
+                    aria-hidden
+                  >
+                    <svg
+                      className="home-global-search__icon-svg"
+                      viewBox="0 0 24 24"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="10.5" cy="10.5" r="6.5" />
+                      <path d="M15.2 15.2 20 20" />
+                    </svg>
+                  </span>
+                  <input
+                    id="feed-search-input"
+                    name="q"
+                    type="text"
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-expanded={showTitleSearchPanel}
+                    aria-controls={
+                      showTitleSearchPanel ? homeSearchListboxId : undefined
+                    }
+                    className="home-global-search__input"
+                    value={searchQuery}
+                    onChange={onHomeSearchInputChange}
+                    onFocus={onHomeSearchInputFocus}
+                    onKeyDown={onHomeSearchKeyDown}
+                    placeholder="Başlık, kişi, yer veya konu ara"
+                    autoComplete="off"
+                    spellCheck={false}
+                    enterKeyHint="search"
+                  />
+                  {searchQuery.length > 0 ? (
+                    <button
+                      type="button"
+                      className="home-global-search__clear"
+                      onClick={onHomeSearchClear}
+                      onMouseDown={(e) => e.preventDefault()}
+                      aria-label="Aramayı temizle"
+                    >
+                      <span className="home-global-search__clear-glyph" aria-hidden>
+                        ×
+                      </span>
+                    </button>
+                  ) : null}
+                </div>
                 {showTitleSearchPanel ? (
                   <ul
                     id={homeSearchListboxId}
                     role="listbox"
-                    aria-label="Başlık önerileri"
-                    className="absolute left-0 right-0 top-full z-10 mt-1 max-h-[min(22rem,50dvh)] min-w-0 w-full max-w-full overflow-y-auto overflow-x-hidden overscroll-contain border border-[color:var(--divide)] bg-[var(--bg-secondary)] py-1 shadow-[var(--shadow-modal)]"
+                    aria-label="Arama önerileri"
+                    className="home-global-search__panel"
                   >
                     {homeSearchLoading ? (
-                      <li className="px-3 py-2.5 text-left text-sm text-[color:var(--text-tertiary)]">
+                      <li className="home-global-search__state">
                         Aranıyor…
                       </li>
                     ) : homeSearchApiResults.length === 0 ? (
-                      <li className="px-3 py-2.5 text-left text-sm text-[color:var(--text-tertiary)]">
+                      <li className="home-global-search__state">
                         Sonuç bulunamadı.
                       </li>
                     ) : (
@@ -1485,18 +1525,22 @@ export default function HomePageClient({
                           category: row.category,
                         });
                         return (
-                          <li key={row.id} role="option" className="min-w-0 p-0">
+                          <li
+                            key={row.id}
+                            role="option"
+                            className="home-global-search__option"
+                          >
                             <button
                               type="button"
-                              className="home-title-search-suggest__row flex w-full min-w-0 max-w-full cursor-pointer flex-col items-stretch border-0 bg-transparent px-3 py-2.5 text-left transition-colors hover:bg-[color:var(--bg-tertiary)]"
+                              className="home-global-search__row"
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={() => onPickHomeSearchSuggestion(row)}
                             >
-                              <span className="min-w-0 truncate text-sm text-[color:var(--text-primary)]">
+                              <span className="home-global-search__title">
                                 {row.title}
                               </span>
                               {area ? (
-                                <span className="mt-0.5 block min-w-0 text-[11px] leading-tight text-[color:var(--text-tertiary)]">
+                                <span className="home-global-search__category">
                                   {area}
                                 </span>
                               ) : null}
