@@ -13,6 +13,12 @@ import {
   type DisplayNameModePref,
 } from "@/lib/visible-name";
 import { countPublicLiveEntries } from "@/lib/entry-public-live-count";
+import {
+  DUPLICATE_TITLE_MESSAGE,
+  fetchAllEntryTitles,
+  isTitleTooSimilarToAny,
+} from "@/lib/entry-title-similarity";
+import { validateTitleQuality } from "@/lib/entry-title-rules";
 
 type EntryListRow = {
   id: string;
@@ -249,6 +255,11 @@ export async function POST(req: Request) {
     );
   }
 
+  const qualityError = validateTitleQuality(title);
+  if (qualityError) {
+    return NextResponse.json({ error: qualityError }, { status: 400 });
+  }
+
   const service = createSupabaseServiceClient();
   if (!service) {
     return NextResponse.json(
@@ -258,6 +269,19 @@ export async function POST(req: Request) {
       },
       { status: 503 }
     );
+  }
+
+  let existingTitles: string[];
+  try {
+    existingTitles = await fetchAllEntryTitles(service);
+  } catch (e) {
+    const msg =
+      e instanceof Error ? e.message : "Başlık benzerlik kontrolü başarısız.";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+
+  if (isTitleTooSimilarToAny(title, existingTitles)) {
+    return NextResponse.json({ error: DUPLICATE_TITLE_MESSAGE }, { status: 409 });
   }
 
   const newId = randomUUID();
