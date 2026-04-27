@@ -18,9 +18,9 @@ export const ADMIN_ENTRY_PUBLISH_SECTION_OPTIONS: readonly {
   readonly slug: AdminEntryPublishSectionSlug;
   readonly label: string;
 }[] = [
-  { slug: "today", label: "Bugün 61Larus’ta" },
+  { slug: "today", label: "Gündem" },
   { slug: "pending", label: "Yazılmayı bekleyenler" },
-  { slug: "trending", label: "Çok konuşulanlar" },
+  { slug: "trending", label: "Şu an en çok konuşulanlar" },
   { slug: "memory", label: "Hafızaya eklenenler" },
   { slug: "understand_trabzon", label: "Trabzon'u anlamak için" },
   { slug: "waiting_to_read", label: "Okunmayı bekleyenler" },

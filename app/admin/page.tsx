@@ -32,9 +32,9 @@ type EntryRow = {
 };
 
 const ADMIN_PUBLISH_SECTIONS = [
-  { value: "today", label: "Bugün 61Larus’ta" },
+  { value: "today", label: "Gündem" },
   { value: "pending", label: "Yazılmayı bekleyenler" },
-  { value: "trending", label: "Çok konuşulanlar" },
+  { value: "trending", label: "Şu an en çok konuşulanlar" },
   { value: "memory", label: "Hafızaya eklenenler" },
   { value: "understand_trabzon", label: "Trabzon'u anlamak için" },
   { value: "waiting_to_read", label: "Okunmayı bekleyenler" },
