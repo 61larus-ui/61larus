@@ -38,9 +38,31 @@ export type DailyEntrySetPayload = {
   entryIds: string[];
 };
 
-const X_MAX = 260;
-const FB_MAX = 700;
+const X_MAX = 240;
+const TITLE_SHORT_MAX = 80;
+const FB_MIN = 300;
+const FB_MAX = 520;
+
 export const DAILY_COUNT = 5;
+
+const MERAK_HOOK_PREFIXES = [
+  "Bu başlık boş değil:",
+  "Trabzon’da kimse bunu konuşmuyor:",
+  "Bu konu neden sessiz kaldı?",
+] as const;
+
+const PROVOKE_LINES = [
+  "Bunu biliyorsan yaz, bilmiyorsan öğren.",
+  "Bunu konuşmadan geçme.",
+  "Bu başlık boş değil.",
+  "Bu şehir bunu tartışmalı.",
+] as const;
+
+const FB_FILLERS = [
+  "Bağlam 61Larus’ta toparlandı; katkılarınla güçlenir.",
+  "Kent gündeminde sessiz kalması zor bir not.",
+  "Topluluk tarafında okunup tartışılmaya değer bir giriş.",
+] as const;
 
 export function publicEntryUrl(entryId: string, slug?: string | null): string {
   const seg = (slug && String(slug).trim()) || String(entryId).trim();
@@ -78,88 +100,89 @@ function shuffleInPlace<T>(arr: T[], rand: () => number): void {
   }
 }
 
-/** Sosyal metin için kısa, akıcı başlık (birebir uzun kopya değil). */
-export function socialSpotTitle(title: string, seed: number): string {
+/** Paylaşım için kısa başlık (max 80). */
+export function shortTitleForSocial(title: string): string {
   const t = title.replace(/\s+/g, " ").trim();
-  if (!t) return "Bu başlık";
-  const cut = t.split(/[—–:|]/)[0]?.trim() ?? t;
-  const words = cut.split(/\s+/).filter(Boolean);
-  const maxWords = 5 + (seed % 4);
-  let out = words.slice(0, maxWords).join(" ");
-  if (words.length > maxWords) out = `${out}…`;
-  const maxLen = 52 + (seed % 12);
-  if (out.length > maxLen) out = `${out.slice(0, maxLen - 1).trim()}…`;
-  return out || "Bu başlık";
+  if (t.length <= TITLE_SHORT_MAX) return t;
+  return `${t.slice(0, TITLE_SHORT_MAX - 1).trim()}…`;
 }
 
-type XPattern = "soru" | "iddia" | "eksik" | "merak" | "hafiza";
+function isQuestionTitle(title: string): boolean {
+  return /\?\s*$/.test(title.trim());
+}
 
-const X_PATTERNS: XPattern[] = ["soru", "iddia", "eksik", "merak", "hafiza"];
-
-function buildXText(entry: LarusEntry, url: string, pattern: XPattern, seed: number): string {
-  const spot = socialSpotTitle(entry.title, seed);
-  const lines: string[] = [];
-  switch (pattern) {
-    case "soru":
-      lines.push(`Trabzon’da bu konu neden bu kadar az konuşuldu?`);
-      lines.push("");
-      lines.push(`61Larus’ta “${spot}” başlığı açıldı.`);
-      lines.push(`Bilmiyorsan öğren, biliyorsan yorumlarınla katkı kat:`);
-      lines.push(url);
-      break;
-    case "iddia":
-      lines.push(`Bu başlıkta eksik kalan iddia: kent bunu konuşmadan geçmemeli.`);
-      lines.push("");
-      lines.push(`61Larus’ta “${spot}” notu açıldı.`);
-      lines.push(`Sen ne düşünüyorsun?`);
-      lines.push(url);
-      break;
-    case "eksik":
-      lines.push(`Genelde özeti kaçırılan bir parça var — burada toplanmış.`);
-      lines.push("");
-      lines.push(`61Larus: “${spot}”`);
-      lines.push(`Okumadan geçme:`);
-      lines.push(url);
-      break;
-    case "merak":
-      lines.push(`Merak uyandıran bir başlık: “${spot}”`);
-      lines.push("");
-      lines.push(`61Larus’ta açıldı; bakışını yaz:`);
-      lines.push(url);
-      break;
-    case "hafiza":
-      lines.push(`Şehir hafızasında yer bulması gereken bir konu.`);
-      lines.push("");
-      lines.push(`61Larus’ta “${spot}” başlığı işleniyor.`);
-      lines.push(`Katıl:`);
-      lines.push(url);
-      break;
+function buildXText(entry: LarusEntry, url: string, seed: number): string {
+  const raw = entry.title.replace(/\s+/g, " ").trim();
+  const shortT = shortTitleForSocial(raw);
+  const isQ = isQuestionTitle(raw);
+  let hookLine = isQ
+    ? raw
+    : MERAK_HOOK_PREFIXES[seed % MERAK_HOOK_PREFIXES.length]!;
+  if (hookLine.length > 96) {
+    hookLine = `${hookLine.slice(0, 94).trim()}…`;
   }
-  let text = lines.join("\n").trim();
-  if (!text.includes(url)) text = `${text}\n${url}`;
-  if (text.length > X_MAX) text = text.slice(0, X_MAX - 1).trim() + "…";
+  const provoke = PROVOKE_LINES[(seed >>> 3) % PROVOKE_LINES.length]!;
+  const mid = `61Larus’ta “${shortT}” konusu açıldı.`;
+
+  const assemble = (st: string, hk: string, prLine: string) =>
+    `${hk}\n\n61Larus’ta “${st}” konusu açıldı.\n\n${prLine}\n\n${url}`;
+
+  let st = shortT;
+  let hk: string = hookLine;
+  let pr: string = provoke;
+  let text = assemble(st, hk, pr);
+  while (text.length > X_MAX && st.length > 20) {
+    st = `${st.slice(0, Math.max(20, st.length - 8)).trim()}…`;
+    text = assemble(st, hk, pr);
+  }
+  if (text.length > X_MAX) {
+    hk = hk.length > 48 ? `${hk.slice(0, 46)}…` : hk;
+    text = assemble(st, hk, pr);
+  }
+  if (text.length > X_MAX) {
+    pr = pr.length > 28 ? `${pr.slice(0, 26)}…` : pr;
+    text = assemble(st, hk, pr);
+  }
+  if (text.length > X_MAX) {
+    text = `${hk}\n\n${mid}\n\n${url}`;
+  }
+  if (text.length > X_MAX) {
+    text = `${mid}\n\n${url}`;
+  }
+  if (text.length > X_MAX) {
+    text = `${mid.slice(0, X_MAX - url.length - 2).trim()}…\n${url}`;
+  }
   return text;
 }
 
 function buildFacebookText(entry: LarusEntry, url: string, seed: number): string {
-  const spot = socialSpotTitle(entry.title, seed + 11);
-  const intros = [
-    `Trabzon’un hafızasında bu başlık önemli bir yere sahip.`,
-    `Bu konu, kentin gündeminde sessiz kalmaması gereken notlardan.`,
-    `Topluluk tarafında paylaşılmaya değer bir 61Larus girişi.`,
-    `Kısa ama yoğun: bu madde 61Larus’ta bağlamıyla birlikte duruyor.`,
-    `Okuyunca “buraya da el atılmalı” dedirten bir başlık.`,
-  ];
-  const h = hashSeed(`${entry.id}::fb::${seed}`);
-  const intro = intros[h % intros.length]!;
-  const body = `${intro}
+  const shortT = shortTitleForSocial(entry.title);
+  const filler = FB_FILLERS[seed % FB_FILLERS.length]!;
+  let body = `Trabzon’da konuşulması gereken bir konu:
 
-61Larus’ta “${spot}” konulu entry açıldı.
-Bu konuyu bilmiyorsan öğrenebilir, biliyorsan yorumlarınla katkı katabilirsin:
-${url}`.trim();
-  let text = body;
-  if (text.length > FB_MAX) text = text.slice(0, FB_MAX - 1).trim() + "…";
-  if (!text.includes(url)) text = `${text.slice(0, FB_MAX - url.length - 2).trim()}\n\n${url}`;
+“${shortT}”
+
+61Larus’ta bu başlık açıldı.
+Bu konuyu bilmiyorsan öğrenebilir, biliyorsan yorumlarınla katkı katabilirsin.
+
+${filler}`;
+
+  let text = `${body}\n\n${url}`;
+  if (text.length < FB_MIN) {
+    const extra =
+      "Bu tür başlıklar kent sohbetinde yer bulduğunda daha iyi okunur; sen de katıl.";
+    text = `${body}\n\n${extra}\n\n${url}`;
+  }
+  if (text.length > FB_MAX) {
+    const budget = FB_MAX - url.length - 4;
+    let core = text.slice(0, budget).trim();
+    const lastNl = core.lastIndexOf("\n");
+    if (lastNl > budget * 0.5) core = core.slice(0, lastNl).trim();
+    text = `${core}…\n\n${url}`;
+  }
+  if (!text.includes(url)) {
+    text = `${body.slice(0, FB_MAX - url.length - 4).trim()}…\n\n${url}`;
+  }
   return text;
 }
 
@@ -167,7 +190,6 @@ function newDraftId(platform: string): string {
   return `sd-${platform}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-/** Kalite sırasındaki üst dilim + karıştırma. */
 function orderedCandidates(pool: LarusEntry[], dateKey: string, salt: string): LarusEntry[] {
   const sorted = normalizePoolInMemory(pool);
   const take = Math.min(220, sorted.length);
@@ -178,17 +200,14 @@ function orderedCandidates(pool: LarusEntry[], dateKey: string, salt: string): L
 }
 
 /**
- * Günlük 5 entry: Paylaşılmış entry’ler asla; aynı gün set içi tekrar yok;
- * Vazgeçildi / Arşivlendi kalıcı engel değil (sadece metin tekrarı kontrolü).
+ * Günlük 5 entry: paylaşılmış entry’ler asla; forbidden seti sert dışlama.
  */
 export function pickEntriesForDailySet(
   pool: LarusEntry[],
   history: DistributionHistoryItem[],
   opts: {
     count: number;
-    /** Kesin dışlanacak (ör. paylaşılmış slotlar). */
     forbidden: Set<string>;
-    /** Mümkünse kaçınılacak (ör. yenilemede eski hazır set). */
     preferAvoid: Set<string>;
     dateKey: string;
     salt: string;
@@ -219,7 +238,7 @@ export function pickEntriesForDailySet(
 function makeXDrafts(
   entries: LarusEntry[],
   history: DistributionHistoryItem[],
-  startPatternIdx: number,
+  dateKey: string,
 ): SocialDraft[] {
   const now = new Date().toISOString();
   const drafts: SocialDraft[] = [];
@@ -227,16 +246,13 @@ function makeXDrafts(
     const e = entries[i]!;
     const url = publicEntryUrl(e.id, e.slug);
     let text = "";
-    for (let p = 0; p < X_PATTERNS.length; p++) {
-      const pattern = X_PATTERNS[(startPatternIdx + i + p) % X_PATTERNS.length]!;
-      const seed = (hashSeed(`${e.id}::x::${i}::${p}`) % 10_000) + p * 3;
-      text = buildXText(e, url, pattern, seed);
+    for (let v = 0; v < 16; v++) {
+      const seed = hashSeed(`${e.id}::x::${dateKey}::${i}::${v}`);
+      text = buildXText(e, url, seed);
       if (!hasProductionTextBeenUsedBefore(history, text)) break;
     }
     if (!text || hasProductionTextBeenUsedBefore(history, text)) {
-      const spot = socialSpotTitle(e.title, i);
-      text = `61Larus’ta “${spot}”\n\n${url}`.trim();
-      if (text.length > X_MAX) text = text.slice(0, X_MAX - 1).trim() + "…";
+      text = buildXText(e, url, hashSeed(`${e.id}::xfallback::${i}`));
     }
     drafts.push({
       id: newDraftId("x"),
@@ -252,22 +268,24 @@ function makeXDrafts(
   return drafts;
 }
 
-function makeFbDrafts(entries: LarusEntry[], history: DistributionHistoryItem[]): SocialDraft[] {
+function makeFbDrafts(
+  entries: LarusEntry[],
+  history: DistributionHistoryItem[],
+  dateKey: string,
+): SocialDraft[] {
   const now = new Date().toISOString();
   const drafts: SocialDraft[] = [];
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i]!;
     const url = publicEntryUrl(e.id, e.slug);
     let text = "";
-    for (let bump = 0; bump < 8; bump++) {
-      const seed = (hashSeed(`${e.id}::fb::${i}::${bump}`) % 10_000) + bump * 7;
+    for (let v = 0; v < 12; v++) {
+      const seed = hashSeed(`${e.id}::fb::${dateKey}::${i}::${v}`);
       text = buildFacebookText(e, url, seed);
       if (!hasProductionTextBeenUsedBefore(history, text)) break;
     }
     if (!text || hasProductionTextBeenUsedBefore(history, text)) {
-      const spot = socialSpotTitle(e.title, i + 3);
-      text = `61Larus’ta “${spot}” konulu entry.\n\nYorumlarınla katkı katabilirsin:\n${url}`.trim();
-      if (text.length > FB_MAX) text = text.slice(0, FB_MAX - 1).trim() + "…";
+      text = buildFacebookText(e, url, hashSeed(`${e.id}::fbfallback::${i}`));
     }
     drafts.push({
       id: newDraftId("facebook"),
@@ -288,11 +306,10 @@ export function buildDraftsFromEntries(
   history: DistributionHistoryItem[],
   dateKey: string,
 ): DailySocialDraftsPayload {
-  const patternStart = hashSeed(`${dateKey}::pat`) % X_PATTERNS.length;
   return {
     date: dateKey,
-    x: makeXDrafts(entries, history, patternStart),
-    facebook: makeFbDrafts(entries, history),
+    x: makeXDrafts(entries, history, dateKey),
+    facebook: makeFbDrafts(entries, history, dateKey),
   };
 }
 
@@ -376,9 +393,6 @@ export function isCompleteDailyPayload(p: DailySocialDraftsPayload): boolean {
   return true;
 }
 
-/**
- * Yeni gün / boş taslak: 5 entry seç, kaydet, üret.
- */
 export function generateFreshDailyDrafts(
   pool: LarusEntry[],
   history: DistributionHistoryItem[],
@@ -399,9 +413,6 @@ export function generateFreshDailyDrafts(
   return payload;
 }
 
-/**
- * Tamamlanmamış taslak: bugünün entry set’inden üret.
- */
 export function rebuildDraftsFromStoredEntrySet(
   pool: LarusEntry[],
   history: DistributionHistoryItem[],
@@ -420,7 +431,8 @@ export function rebuildDraftsFromStoredEntrySet(
 }
 
 /**
- * Hazır taslakları arşivle, paylaşılanlara dokunma, yeni entry + metin üret.
+ * Hazır taslakları arşivle; paylaşılan slotlar kalır; yeniler aynı index’te üretilir.
+ * Arşivlenen entry id’leri sert forbidden — bir daha seçilmez (havuz yeterliyse).
  */
 export function archiveReadyAndRegenerate(
   current: DailySocialDraftsPayload,
@@ -437,7 +449,7 @@ export function archiveReadyAndRegenerate(
     indicesToReplace.push(i);
   }
 
-  const preferAvoid = new Set<string>();
+  const rotatedOutIds = new Set<string>();
   for (const i of indicesToReplace) {
     const x = current.x[i]!;
     const f = current.facebook[i]!;
@@ -461,7 +473,7 @@ export function archiveReadyAndRegenerate(
         source: "draft",
       });
     }
-    preferAvoid.add(x.entryId);
+    rotatedOutIds.add(x.entryId);
   }
 
   const mustKeep = new Set<string>();
@@ -471,25 +483,24 @@ export function archiveReadyAndRegenerate(
     }
   }
 
-  const forbidden = new Set<string>(mustKeep);
+  const forbidden = new Set<string>([...mustKeep, ...rotatedOutIds]);
   const newEntries = pickEntriesForDailySet(pool, hist, {
     count: indicesToReplace.length,
     forbidden,
-    preferAvoid,
+    preferAvoid: new Set(),
     dateKey: current.date,
     salt: `refresh-${Date.now()}`,
   });
 
   const nextX = current.x.map((d) => ({ ...d }));
   const nextF = current.facebook.map((d) => ({ ...d }));
-  const patternStart = hashSeed(`${current.date}::refr`) % X_PATTERNS.length;
   let ni = 0;
   for (const i of indicesToReplace) {
     const e = newEntries[ni++];
     if (!e) continue;
     const url = publicEntryUrl(e.id, e.slug);
-    const xText = makeXDrafts([e], hist, patternStart + i)[0]!.text;
-    const fText = makeFbDrafts([e], hist)[0]!.text;
+    const xText = makeXDrafts([e], hist, `${current.date}::slot${i}`)[0]!.text;
+    const fText = makeFbDrafts([e], hist, `${current.date}::slot${i}`)[0]!.text;
     const now = new Date().toISOString();
     nextX[i] = {
       id: newDraftId("x"),
