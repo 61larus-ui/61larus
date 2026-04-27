@@ -2,13 +2,14 @@
  * Admin panel: entry `category` kolonunda saklanan yayın alanı slug’ları.
  */
 export const ADMIN_ENTRY_PUBLISH_SECTION_SLUGS = [
-  "today",
   "pending",
   "trending",
   "memory",
   "understand_trabzon",
   "waiting_to_read",
   "question_of_day",
+  /** Eski kayıtlar; yeni girişlerde kullanılmaz. */
+  "today",
 ] as const;
 
 export type AdminEntryPublishSectionSlug =
@@ -18,7 +19,6 @@ export const ADMIN_ENTRY_PUBLISH_SECTION_OPTIONS: readonly {
   readonly slug: AdminEntryPublishSectionSlug;
   readonly label: string;
 }[] = [
-  { slug: "today", label: "Gündem" },
   { slug: "pending", label: "Yazılmayı bekleyenler" },
   { slug: "trending", label: "Şu an en çok konuşulanlar" },
   { slug: "memory", label: "Hafızaya eklenenler" },
@@ -43,6 +43,7 @@ export function adminEntryPublishSectionLabel(
   slug: string | null | undefined
 ): string {
   if (!slug) return "—";
+  if (slug === "today" || slug === "memory") return "Hafızaya eklenenler";
   const o = ADMIN_ENTRY_PUBLISH_SECTION_OPTIONS.find((x) => x.slug === slug);
   return o?.label ?? slug;
 }

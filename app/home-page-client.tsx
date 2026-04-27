@@ -21,7 +21,6 @@ import { slugifyEntryTitle } from "@/lib/entry-slug";
 
 /** Ana sayfa blokları — admin `category` ile aynı sıra / slug seti. */
 const HOME_PUBLISH_SECTION_ORDER = [
-  "today",
   "pending",
   "trending",
   "memory",
@@ -32,10 +31,17 @@ const HOME_PUBLISH_SECTION_ORDER = [
 
 type HomePublishBlockSlug = (typeof HOME_PUBLISH_SECTION_ORDER)[number];
 
-const HOME_PUBLISH_SLUG_SET = new Set<string>(HOME_PUBLISH_SECTION_ORDER);
+/** DB’de kalan eski `today`; içerik olarak memory ile birleştirilir. */
+const HOME_LEGACY_CATEGORY_SLUGS = ["today"] as const;
+
+type HomeEntryCategorySlug = HomePublishBlockSlug | "today";
+
+const HOME_PUBLISH_SLUG_SET = new Set<string>([
+  ...HOME_PUBLISH_SECTION_ORDER,
+  ...HOME_LEGACY_CATEGORY_SLUGS,
+]);
 
 const HOME_BLOCK_MAX: Record<HomePublishBlockSlug, number> = {
-  today: 4,
   pending: 12,
   trending: 10,
   memory: 99_999,
@@ -46,11 +52,13 @@ const HOME_BLOCK_MAX: Record<HomePublishBlockSlug, number> = {
 
 function normalizeHomePublishSlug(
   raw: string | null | undefined
-): HomePublishBlockSlug | null {
+): HomeEntryCategorySlug | null {
   if (raw == null || typeof raw !== "string") return null;
   const t = raw.trim();
   if (!t) return null;
-  return HOME_PUBLISH_SLUG_SET.has(t) ? (t as HomePublishBlockSlug) : null;
+  if (!HOME_PUBLISH_SLUG_SET.has(t)) return null;
+  if (t === "today") return "today";
+  return t as HomePublishBlockSlug;
 }
 
 /** Admin yayın alanı slug’ı; yoksa legacy (eski kategori) kayıt. */
@@ -618,7 +626,6 @@ export default function HomePageClient({
     rightRailAwaitingFirstComment,
     mostCommentedEntries,
     shuffledMainFeedEntries,
-    todayDiscoveryEntries,
     waitingEntriesForExplore,
     starterEntries,
     dailyQuestionEntries,
@@ -651,7 +658,6 @@ export default function HomePageClient({
     const sortRanked = sortByEngagement;
 
     const blocks: Record<HomePublishBlockSlug, EntryItem[]> = {
-      today: [],
       pending: [],
       trending: [],
       memory: [],
@@ -678,7 +684,6 @@ export default function HomePageClient({
       const copy = [...rows];
       if (slug === "trending") copy.sort(sortByComments);
       else if (
-        slug === "today" ||
         slug === "understand_trabzon" ||
         slug === "question_of_day"
       ) {
@@ -692,7 +697,11 @@ export default function HomePageClient({
     for (const slug of HOME_PUBLISH_SECTION_ORDER) {
       const tagged = sortMetaForSlug(
         slug,
-        withCounts.filter((w) => entryPublishSlug(w.entry) === slug)
+        withCounts.filter((w) => {
+          const ps = entryPublishSlug(w.entry);
+          if (slug === "memory") return ps === "memory" || ps === "today";
+          return ps === slug;
+        })
       );
       for (const row of tagged) {
         tryAdd(slug, row.entry);
@@ -750,14 +759,12 @@ export default function HomePageClient({
 
     blocks.pending.sort(compareEntriesByNewest);
     blocks.trending = sortEntriesByComments(blocks.trending);
-    blocks.today = sortEntriesRanked(blocks.today);
     blocks.memory.sort(compareEntriesByNewest);
     blocks.understand_trabzon = sortEntriesRanked(blocks.understand_trabzon);
     blocks.waiting_to_read.sort(compareEntriesByNewest);
     blocks.question_of_day = sortEntriesRanked(blocks.question_of_day);
 
     return {
-      todayDiscoveryEntries: blocks.today,
       rightRailAwaitingFirstComment: blocks.pending,
       mostCommentedEntries: blocks.trending,
       shuffledMainFeedEntries: blocks.memory,
@@ -786,7 +793,6 @@ export default function HomePageClient({
         out.push(e);
       }
     };
-    take(todayDiscoveryEntries);
     take(shuffledMainFeedEntries);
     take(mostCommentedEntries);
     take(rightRailAwaitingFirstComment);
@@ -796,7 +802,6 @@ export default function HomePageClient({
     if (out.length < 22) take(centerEntries);
     return out;
   }, [
-    todayDiscoveryEntries,
     shuffledMainFeedEntries,
     mostCommentedEntries,
     rightRailAwaitingFirstComment,
@@ -1341,63 +1346,6 @@ export default function HomePageClient({
                 />
               </div>
             </div>
-            {todayDiscoveryEntries.length > 0 ? (
-              <section
-                className="today-strip today-discovery today-discovery--vitrin today-discovery--faz5 today-discovery--settled"
-                aria-labelledby="today-discovery-title"
-              >
-                <div className="today-discovery-head">
-                  <h2
-                    id="today-discovery-title"
-                    className="today-discovery-kicker m-0"
-                  >
-                    Bugün 61Larus’ta
-                  </h2>
-                </div>
-                <div
-                  className="today-discovery-grid"
-                  role="list"
-                  aria-label="Bugün vurgulanan yazılar"
-                >
-                  {todayDiscoveryEntries.map((entry, index) => {
-                    const num = String(index + 1).padStart(2, "0");
-                    const cc =
-                      commentsByEntryIdLive[entry.id]?.length ?? 0;
-                    return (
-                      <button
-                        key={entry.id}
-                        type="button"
-                        role="listitem"
-                        className="today-discovery-item"
-                        onClick={() => goToEntry(entry.id)}
-                        aria-label={`Aç: ${entry.title}, ${cc} yorum`}
-                      >
-                        <span
-                          className="today-discovery-number"
-                          aria-hidden
-                        >
-                          {num}
-                        </span>
-                        <span className="today-discovery-title">
-                          {entry.title}
-                        </span>
-                        <div
-                          className="today-discovery-item-foot"
-                          aria-hidden
-                        >
-                          <span className="today-discovery-item-stat">
-                            {cc} yorum
-                          </span>
-                          <span className="today-discovery-item-open">
-                            Yazıyı aç →
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            ) : null}
             {topTickerItems.length > 0 ? (
               <div
                 className="home-ticker home-ticker--divider"

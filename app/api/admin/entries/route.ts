@@ -13,13 +13,7 @@ import {
   type DisplayNameModePref,
 } from "@/lib/visible-name";
 import { countPublicLiveEntries } from "@/lib/entry-public-live-count";
-import {
-  DUPLICATE_TITLE_MESSAGE,
-  fetchAllEntryTitles,
-  isTitleTooSimilarToAny,
-} from "@/lib/entry-title-similarity";
 import { validateTitleQuality } from "@/lib/entry-title-rules";
-import { isPublishSectionLocked } from "@/lib/admin-entry-lock";
 
 type EntryListRow = {
   id: string;
@@ -261,13 +255,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: qualityError }, { status: 400 });
   }
 
-  if (isPublishSectionLocked(category)) {
-    return NextResponse.json(
-      { error: "Bu yayın alanı şu an yeni entry girişine kapalı." },
-      { status: 403 }
-    );
-  }
-
   const service = createSupabaseServiceClient();
   if (!service) {
     return NextResponse.json(
@@ -277,22 +264,6 @@ export async function POST(req: Request) {
       },
       { status: 503 }
     );
-  }
-
-  let existingTitles: string[];
-  try {
-    existingTitles = await fetchAllEntryTitles(service);
-  } catch (e) {
-    const msg =
-      e instanceof Error ? e.message : "Başlık benzerlik kontrolü başarısız.";
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
-
-  if (
-    category !== "today" &&
-    isTitleTooSimilarToAny(title, existingTitles)
-  ) {
-    return NextResponse.json({ error: DUPLICATE_TITLE_MESSAGE }, { status: 409 });
   }
 
   const newId = randomUUID();
