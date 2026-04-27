@@ -17,6 +17,7 @@ import {
 import { SILINMIS_KULLANICI_LABEL } from "@/lib/deleted-user-label";
 import { AdminShareCopyBlock } from "@/components/admin-share-copy-block";
 import { publicSiteEntryUrl } from "@/lib/public-site-entry-url";
+import { validateTitleQuality } from "@/lib/entry-title-rules";
 
 type EntryRow = {
   id: string;
@@ -239,6 +240,9 @@ export default function AdminPage() {
   const [listBanner, setListBanner] = useState<string | null>(null);
 
   const [draftTitle, setDraftTitle] = useState("");
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const titleCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleCheckSeqRef = useRef(0);
   const [draftContent, setDraftContent] = useState("");
   const [draftPublishSection, setDraftPublishSection] = useState("");
   /** Son yayınlanan entry: paylaşım linki ve metin; yeni taslak yazılmaya başlanınca temizlenir. */
@@ -354,6 +358,14 @@ export default function AdminPage() {
     if (sessionOk !== true) return;
     void loadEntries();
   }, [sessionOk, loadEntries]);
+
+  useEffect(() => {
+    return () => {
+      if (titleCheckTimerRef.current) {
+        clearTimeout(titleCheckTimerRef.current);
+      }
+    };
+  }, []);
 
   const ENTRY_LIST_PAGE_SIZE = 20;
   const sortedEntryRows = useMemo(() => {
@@ -735,6 +747,7 @@ export default function AdminPage() {
     }
 
     setDraftTitle("");
+    setTitleError(null);
     setDraftContent("");
     setDraftPublishSection("");
     setIsComposeModalOpen(false);
@@ -1002,6 +1015,66 @@ export default function AdminPage() {
     const title = (justPublishedEntry.title ?? "").trim();
     return `${title}\n\n${justPublishedLiveUrl}\n\n61larus.com`;
   }, [justPublishedEntry, justPublishedLiveUrl]);
+
+  const onDraftTitleInputChange = useCallback((raw: string) => {
+    setJustPublishedEntry(null);
+    setDraftTitle(raw);
+
+    const qualityErr = validateTitleQuality(raw);
+    if (qualityErr) {
+      if (titleCheckTimerRef.current) {
+        clearTimeout(titleCheckTimerRef.current);
+        titleCheckTimerRef.current = null;
+      }
+      titleCheckSeqRef.current += 1;
+      setTitleError(qualityErr);
+      return;
+    }
+
+    setTitleError(null);
+
+    if (titleCheckTimerRef.current) {
+      clearTimeout(titleCheckTimerRef.current);
+      titleCheckTimerRef.current = null;
+    }
+
+    const seqAtSchedule = ++titleCheckSeqRef.current;
+    titleCheckTimerRef.current = setTimeout(() => {
+      titleCheckTimerRef.current = null;
+      const trimmed = raw.trim();
+      if (!trimmed) {
+        if (seqAtSchedule === titleCheckSeqRef.current) setTitleError(null);
+        return;
+      }
+      void (async () => {
+        try {
+          const res = await fetch("/api/admin/check-title", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ title: trimmed }),
+          });
+          const data = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            tooSimilar?: boolean;
+          };
+          if (seqAtSchedule !== titleCheckSeqRef.current) return;
+          if (!res.ok) {
+            setTitleError(data.error ?? "Başlık kontrolü yapılamadı.");
+            return;
+          }
+          if (data.tooSimilar) {
+            setTitleError("Benzer bir başlık zaten var");
+          } else {
+            setTitleError(null);
+          }
+        } catch {
+          if (seqAtSchedule !== titleCheckSeqRef.current) return;
+          setTitleError("Başlık kontrolü yapılamadı.");
+        }
+      })();
+    }, 300);
+  }, []);
 
   const applyTemplate = (text: string) => {
     setJustPublishedEntry(null);
@@ -1945,13 +2018,15 @@ export default function AdminPage() {
                 <span className="admin-label">Başlık</span>
                 <input
                   value={draftTitle}
-                  onChange={(e) => {
-                    setJustPublishedEntry(null);
-                    setDraftTitle(e.target.value);
-                  }}
+                  onChange={(e) => onDraftTitleInputChange(e.target.value)}
                   maxLength={161}
                   className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
                 />
+                {titleError ? (
+                  <p className="admin-msg-error mt-1 text-sm text-red-300">
+                    {titleError}
+                  </p>
+                ) : null}
               </label>
               <label className="block">
                 <span className="admin-label">Yayın alanı</span>
@@ -2041,7 +2116,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !!titleError}
                   className="admin-btn-text admin-btn-text--emph rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-500 disabled:opacity-50"
                 >
                   {submitting ? "Kaydediliyor…" : "Yayınla"}
