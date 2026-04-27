@@ -7183,6 +7183,33 @@ aside[aria-label="Yayın paneli"] .right-block {
   color: rgba(0, 0, 0, 0.35);
 }
 
+/* Slogan ile Atatürk sözü aynı sol hiza; Tailwind/legacy offset sıfırlanır */
+.site-header [class*="quote"],
+.site-header [class*="ataturk"],
+.site-header [class*="slogan"] + *,
+.site-header [class*="tagline"] + *,
+.site-header .headerCenterText,
+.home-page-header [class*="quote"],
+.home-page-header [class*="ataturk"],
+.home-page-header [class*="slogan"] + *,
+.home-page-header [class*="tagline"] + *,
+.home-page-header .headerCenterText {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  text-indent: 0 !important;
+  transform: none !important;
+  align-self: flex-start !important;
+  text-align: left !important;
+  justify-content: flex-start !important;
+}
+
+.site-header,
+.home-page-header {
+  text-align: left;
+}
+
 .headerBar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
