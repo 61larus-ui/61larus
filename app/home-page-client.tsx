@@ -21,6 +21,7 @@ import { resolveVisibleName } from "@/lib/visible-name";
 import { normalizeEntryCategory } from "@/lib/entry-category";
 import { normalizeEntrySlug } from "@/lib/slug";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
+import type { SearchEntryResult } from "@/app/api/search-entries/route";
 
 /** Ana sayfa blokları — admin `category` ile aynı sıra / slug seti. */
 const HOME_PUBLISH_SECTION_ORDER = [
@@ -84,26 +85,6 @@ function getEntryDedupeKey(entry: EntryItem): string {
 
 import { FeedEntryCard } from "./feed-entry-card";
 
-const HOME_TITLE_SEARCH_MAX = 8;
-
-function normalizeTrSearchText(s: string): string {
-  return s.toLocaleLowerCase("tr-TR");
-}
-
-/**
- * Sorgu boşlukla ayrılmış kelimelere bölünür; her kelime başlıkta (Türkçe
- * büyük/küçük duyarsız) geçmeli.
- */
-function titleMatchesSearchWords(title: string, rawQuery: string): boolean {
-  const t = title ?? "";
-  const q = rawQuery.trim();
-  if (!q) return false;
-  const titleN = normalizeTrSearchText(t);
-  const words = q.split(/\s+/).filter((w) => w.length > 0);
-  if (words.length === 0) return false;
-  return words.every((w) => titleN.includes(normalizeTrSearchText(w)));
-}
-
 /** Yayın alanı etiketi — yalnızca admin kategorisi bilinen kayıtlar. */
 function publishSectionLabelTr(entry: EntryItem): string | null {
   const slug = entryPublishSlug(entry);
@@ -118,18 +99,6 @@ function publishSectionLabelTr(entry: EntryItem): string | null {
     question_of_day: "Günün soruları",
   };
   return map[slug] ?? null;
-}
-
-function dedupeEntriesById(lists: readonly EntryItem[][]): EntryItem[] {
-  const map = new Map<string, EntryItem>();
-  for (const list of lists) {
-    for (const e of list) {
-      const id = e.id?.trim();
-      if (!id || map.has(id)) continue;
-      map.set(id, e);
-    }
-  }
-  return Array.from(map.values());
 }
 
 const LS_PENDING_ENTRY = "pendingEntryId";
@@ -326,8 +295,14 @@ export default function HomePageClient({
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestOpen, setSearchSuggestOpen] = useState(false);
+  const [homeSearchApiResults, setHomeSearchApiResults] = useState<
+    SearchEntryResult[]
+  >([]);
+  const [homeSearchLoading, setHomeSearchLoading] = useState(false);
   const homeSearchListboxId = useId();
   const searchSuggestRootRef = useRef<HTMLDivElement>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchReqSeqRef = useRef(0);
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [accountDeleteStep, setAccountDeleteStep] = useState<"idle" | "confirm">(
@@ -523,13 +498,28 @@ export default function HomePageClient({
     []
   );
 
-  const goToEntry = useCallback((id: string) => {
+  const goToEntry = useCallback(
+    (id: string, pathHint?: { title?: string; slug?: string | null }) => {
     if (process.env.NODE_ENV === "development") {
       console.time("goToEntry:navigate");
     }
     writePendingReturn(id, "comment");
     const item = entriesByIdRef.current.find((e) => e.id === id);
-    const path = entryHrefPath(item, id);
+    const forPath: EntryItem | undefined =
+      item ??
+      (pathHint
+        ? {
+            id,
+            title: pathHint.title ?? "",
+            content: "",
+            created_at: "",
+            slug: pathHint.slug ?? null,
+            authorName: null,
+            bio61: null,
+            category: null,
+          }
+        : undefined);
+    const path = entryHrefPath(forPath, id);
     const href = `/${encodeURI(path)}`;
     const r = routerRef.current;
     if (typeof r.prefetch === "function") {
@@ -543,13 +533,15 @@ export default function HomePageClient({
         void r.push(href);
       }, 0);
     });
-  }, []);
+  },
+    []
+  );
 
   const onPickHomeSearchSuggestion = useCallback(
-    (entry: EntryItem) => {
-      setSearchQuery(entry.title);
+    (row: SearchEntryResult) => {
+      setSearchQuery(row.title);
       setSearchSuggestOpen(false);
-      goToEntry(entry.id);
+      goToEntry(row.id, { title: row.title });
     },
     [goToEntry]
   );
@@ -659,6 +651,46 @@ export default function HomePageClient({
     return () => document.removeEventListener("mousedown", onDocMouseDown, true);
   }, [searchSuggestOpen]);
 
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+        searchDebounceRef.current = null;
+      }
+      searchReqSeqRef.current += 1;
+      setHomeSearchLoading(false);
+      setHomeSearchApiResults([]);
+      return;
+    }
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    searchDebounceRef.current = setTimeout(() => {
+      searchDebounceRef.current = null;
+      const mySeq = (searchReqSeqRef.current += 1);
+      setHomeSearchLoading(true);
+      const url = `/api/search-entries?q=${encodeURIComponent(q)}`;
+      void fetch(url)
+        .then((r) => r.json() as Promise<{ results?: SearchEntryResult[] }>)
+        .then((body) => {
+          if (mySeq !== searchReqSeqRef.current) return;
+          setHomeSearchApiResults(body.results ?? []);
+          setHomeSearchLoading(false);
+        })
+        .catch(() => {
+          if (mySeq !== searchReqSeqRef.current) return;
+          setHomeSearchApiResults([]);
+          setHomeSearchLoading(false);
+        });
+    }, 300);
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+        searchDebounceRef.current = null;
+      }
+    };
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -912,42 +944,6 @@ export default function HomePageClient({
     }
     return { topTickerItems: top, bottomTickerItems: bottom };
   }, [homeExploreTickerEntries]);
-
-  const allEntriesForTitleSearch = useMemo(
-    () =>
-      dedupeEntriesById([
-        centerEntries,
-        leftEntries,
-        rightEntries,
-        rightRailAwaitingFirstComment,
-        mostCommentedEntries,
-        shuffledMainFeedEntries,
-        waitingEntriesForExplore,
-        starterEntries,
-        dailyQuestionEntries,
-      ]),
-    [
-      centerEntries,
-      leftEntries,
-      rightEntries,
-      rightRailAwaitingFirstComment,
-      mostCommentedEntries,
-      shuffledMainFeedEntries,
-      waitingEntriesForExplore,
-      starterEntries,
-      dailyQuestionEntries,
-    ]
-  );
-
-  const homeSearchSuggestions = useMemo(() => {
-    const q = searchQuery.trim();
-    if (q.length < 2) return [];
-    const matches = allEntriesForTitleSearch.filter(
-      (e) => e.title?.trim() && titleMatchesSearchWords(e.title, q)
-    );
-    matches.sort(compareEntriesByNewest);
-    return matches.slice(0, HOME_TITLE_SEARCH_MAX);
-  }, [allEntriesForTitleSearch, searchQuery]);
 
   const showTitleSearchPanel =
     searchSuggestOpen && searchQuery.trim().length >= 2;
@@ -1471,23 +1467,33 @@ export default function HomePageClient({
                     aria-label="Başlık önerileri"
                     className="absolute left-0 right-0 top-full z-10 mt-1 max-h-[min(22rem,50dvh)] min-w-0 w-full max-w-full overflow-y-auto overflow-x-hidden overscroll-contain border border-[color:var(--divide)] bg-[var(--bg-secondary)] py-1 shadow-[var(--shadow-modal)]"
                   >
-                    {homeSearchSuggestions.length === 0 ? (
+                    {homeSearchLoading ? (
                       <li className="px-3 py-2.5 text-left text-sm text-[color:var(--text-tertiary)]">
-                        Sonuç bulunamadı
+                        Aranıyor…
+                      </li>
+                    ) : homeSearchApiResults.length === 0 ? (
+                      <li className="px-3 py-2.5 text-left text-sm text-[color:var(--text-tertiary)]">
+                        Sonuç bulunamadı.
                       </li>
                     ) : (
-                      homeSearchSuggestions.map((entry) => {
-                        const area = publishSectionLabelTr(entry);
+                      homeSearchApiResults.map((row) => {
+                        const area = publishSectionLabelTr({
+                          id: row.id,
+                          title: row.title,
+                          content: "",
+                          created_at: row.created_at,
+                          category: row.category,
+                        });
                         return (
-                          <li key={entry.id} role="option" className="min-w-0 p-0">
+                          <li key={row.id} role="option" className="min-w-0 p-0">
                             <button
                               type="button"
                               className="home-title-search-suggest__row flex w-full min-w-0 max-w-full cursor-pointer flex-col items-stretch border-0 bg-transparent px-3 py-2.5 text-left transition-colors hover:bg-[color:var(--bg-tertiary)]"
                               onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => onPickHomeSearchSuggestion(entry)}
+                              onClick={() => onPickHomeSearchSuggestion(row)}
                             >
                               <span className="min-w-0 truncate text-sm text-[color:var(--text-primary)]">
-                                {entry.title}
+                                {row.title}
                               </span>
                               {area ? (
                                 <span className="mt-0.5 block min-w-0 text-[11px] leading-tight text-[color:var(--text-tertiary)]">
