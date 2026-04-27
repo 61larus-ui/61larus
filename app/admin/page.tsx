@@ -247,6 +247,11 @@ export default function AdminPage() {
     publishSection: draftPublishSection,
   });
   const [draftContent, setDraftContent] = useState("");
+  const [composeTitleSuggestions, setComposeTitleSuggestions] = useState<
+    string[]
+  >([]);
+  const [composeTitleSuggestLoading, setComposeTitleSuggestLoading] =
+    useState(false);
   /** Son yayınlanan entry: paylaşım linki ve metin; yeni taslak yazılmaya başlanınca temizlenir. */
   const [justPublishedEntry, setJustPublishedEntry] = useState<{
     id: string;
@@ -581,6 +586,7 @@ export default function AdminPage() {
     if (sessionOk !== true || adminRole !== "editor_admin") return;
     if (editorComposeAutoOpenedRef.current) return;
     editorComposeAutoOpenedRef.current = true;
+    setComposeTitleSuggestions([]);
     setIsComposeModalOpen(true);
   }, [sessionOk, adminRole]);
 
@@ -677,6 +683,40 @@ export default function AdminPage() {
     }
   }, []);
 
+  async function requestComposeTitleSuggestions() {
+    const topic = composeTitle.draftTitle.trim();
+    if (!topic) {
+      window.alert("Önce konu gir");
+      return;
+    }
+    setComposeTitleSuggestLoading(true);
+    try {
+      const res = await fetch("/api/admin/suggest-titles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ topic }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        suggestions?: string[];
+        error?: string;
+      };
+      if (!res.ok) {
+        window.alert(data.error ?? "Öneri alınamadı.");
+        setComposeTitleSuggestions([]);
+        return;
+      }
+      setComposeTitleSuggestions(
+        Array.isArray(data.suggestions) ? data.suggestions : []
+      );
+    } catch {
+      window.alert("Ağ hatası.");
+      setComposeTitleSuggestions([]);
+    } finally {
+      setComposeTitleSuggestLoading(false);
+    }
+  }
+
   async function onSubmitNew(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitError(null);
@@ -741,6 +781,7 @@ export default function AdminPage() {
     }
 
     composeTitle.reset();
+    setComposeTitleSuggestions([]);
     setDraftContent("");
     setDraftPublishSection("");
     setIsComposeModalOpen(false);
@@ -1683,6 +1724,7 @@ export default function AdminPage() {
               type="button"
               onClick={() => {
                 setPublishNotice(null);
+                setComposeTitleSuggestions([]);
                 setIsComposeModalOpen(true);
               }}
               className="admin-btn-text admin-btn-text--emph rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-500"
@@ -1933,7 +1975,10 @@ export default function AdminPage() {
               </h3>
               <button
                 type="button"
-                onClick={() => setIsComposeModalOpen(false)}
+                onClick={() => {
+                  setComposeTitleSuggestions([]);
+                  setIsComposeModalOpen(false);
+                }}
                 className="shrink-0 rounded-md border border-slate-600 px-2 py-1 text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                 aria-label="Kapat"
               >
@@ -1947,9 +1992,12 @@ export default function AdminPage() {
               onSubmit={(e) => void onSubmitNew(e)}
               className="mt-4 space-y-4"
             >
-              <label className="block">
-                <span className="admin-label">Başlık</span>
+              <div className="block">
+                <label className="block" htmlFor="admin-compose-title-input">
+                  <span className="admin-label">Başlık</span>
+                </label>
                 <input
+                  id="admin-compose-title-input"
                   value={composeTitle.draftTitle}
                   onChange={(e) => {
                     setJustPublishedEntry(null);
@@ -1971,7 +2019,36 @@ export default function AdminPage() {
                     {COMPOSE_TITLE_CHECKING_LABEL}
                   </p>
                 ) : null}
-              </label>
+                <div className="mt-2 space-y-2">
+                  <button
+                    type="button"
+                    disabled={composeTitleSuggestLoading}
+                    onClick={() => void requestComposeTitleSuggestions()}
+                    className="rounded-md border border-slate-600 bg-slate-900/80 px-2.5 py-1 text-xs text-slate-400 hover:border-slate-500 hover:bg-slate-800 hover:text-slate-300 disabled:opacity-50"
+                  >
+                    {composeTitleSuggestLoading
+                      ? "Öneriler hazırlanıyor…"
+                      : "Başlık öner"}
+                  </button>
+                  {composeTitleSuggestions.length > 0 ? (
+                    <div className="flex flex-col gap-1.5">
+                      {composeTitleSuggestions.map((s, idx) => (
+                        <button
+                          key={`${idx}-${s.slice(0, 24)}`}
+                          type="button"
+                          onClick={() => {
+                            setJustPublishedEntry(null);
+                            composeTitle.onTitleChange(s);
+                          }}
+                          className="rounded-md border border-slate-700/90 bg-slate-950/50 px-2.5 py-2 text-left text-xs leading-snug text-slate-400 hover:border-slate-600 hover:bg-slate-900 hover:text-slate-300"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
               <label className="block">
                 <span className="admin-label">Yayın alanı</span>
                 <select
@@ -2055,7 +2132,10 @@ export default function AdminPage() {
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => setIsComposeModalOpen(false)}
+                  onClick={() => {
+                    setComposeTitleSuggestions([]);
+                    setIsComposeModalOpen(false);
+                  }}
                   className="admin-btn-text rounded-lg border border-slate-600 px-3 py-2 text-slate-300"
                 >
                   Vazgeç
