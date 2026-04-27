@@ -242,9 +242,11 @@ export default function AdminPage() {
   const [userActionId, setUserActionId] = useState<string | null>(null);
   const [listBanner, setListBanner] = useState<string | null>(null);
 
-  const composeTitle = useAdminComposeTitle();
-  const [draftContent, setDraftContent] = useState("");
   const [draftPublishSection, setDraftPublishSection] = useState("");
+  const composeTitle = useAdminComposeTitle({
+    publishSection: draftPublishSection,
+  });
+  const [draftContent, setDraftContent] = useState("");
   /** Son yayınlanan entry: paylaşım linki ve metin; yeni taslak yazılmaya başlanınca temizlenir. */
   const [justPublishedEntry, setJustPublishedEntry] = useState<{
     id: string;
@@ -1958,6 +1960,10 @@ export default function AdminPage() {
                 />
                 {composeTitle.validation.phase === "blocked" ? (
                   <p className="admin-msg-error mt-1 text-sm text-red-300">
+                    {composeTitle.validation.message}
+                  </p>
+                ) : composeTitle.validation.phase === "warning" ? (
+                  <p className="mt-1 text-sm text-amber-200/90">
                     {composeTitle.validation.message}
                   </p>
                 ) : composeTitle.validation.phase === "checking" ? (

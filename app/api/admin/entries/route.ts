@@ -280,7 +280,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 
-  if (isTitleTooSimilarToAny(title, existingTitles)) {
+  if (
+    category !== "today" &&
+    isTitleTooSimilarToAny(title, existingTitles)
+  ) {
     return NextResponse.json({ error: DUPLICATE_TITLE_MESSAGE }, { status: 409 });
   }
 
