@@ -17,7 +17,10 @@ import {
 import { SILINMIS_KULLANICI_LABEL } from "@/lib/deleted-user-label";
 import { AdminShareCopyBlock } from "@/components/admin-share-copy-block";
 import { publicSiteEntryUrl } from "@/lib/public-site-entry-url";
-import { validateTitleQuality } from "@/lib/entry-title-rules";
+import {
+  COMPOSE_TITLE_CHECKING_LABEL,
+  useAdminComposeTitle,
+} from "@/hooks/use-admin-compose-title";
 
 type EntryRow = {
   id: string;
@@ -239,10 +242,7 @@ export default function AdminPage() {
   const [userActionId, setUserActionId] = useState<string | null>(null);
   const [listBanner, setListBanner] = useState<string | null>(null);
 
-  const [draftTitle, setDraftTitle] = useState("");
-  const [titleError, setTitleError] = useState<string | null>(null);
-  const titleCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const titleCheckSeqRef = useRef(0);
+  const composeTitle = useAdminComposeTitle();
   const [draftContent, setDraftContent] = useState("");
   const [draftPublishSection, setDraftPublishSection] = useState("");
   /** Son yayınlanan entry: paylaşım linki ve metin; yeni taslak yazılmaya başlanınca temizlenir. */
@@ -358,14 +358,6 @@ export default function AdminPage() {
     if (sessionOk !== true) return;
     void loadEntries();
   }, [sessionOk, loadEntries]);
-
-  useEffect(() => {
-    return () => {
-      if (titleCheckTimerRef.current) {
-        clearTimeout(titleCheckTimerRef.current);
-      }
-    };
-  }, []);
 
   const ENTRY_LIST_PAGE_SIZE = 20;
   const sortedEntryRows = useMemo(() => {
@@ -688,7 +680,7 @@ export default function AdminPage() {
     setSubmitError(null);
     setPublishNotice(null);
 
-    const title = draftTitle.trim();
+    const title = composeTitle.draftTitle.trim();
     const content = draftContent.trim();
     const section = draftPublishSection.trim();
     if (!PUBLISH_SECTION_VALUE_SET.has(section)) {
@@ -746,8 +738,7 @@ export default function AdminPage() {
       return;
     }
 
-    setDraftTitle("");
-    setTitleError(null);
+    composeTitle.reset();
     setDraftContent("");
     setDraftPublishSection("");
     setIsComposeModalOpen(false);
@@ -1015,66 +1006,6 @@ export default function AdminPage() {
     const title = (justPublishedEntry.title ?? "").trim();
     return `${title}\n\n${justPublishedLiveUrl}\n\n61larus.com`;
   }, [justPublishedEntry, justPublishedLiveUrl]);
-
-  const onDraftTitleInputChange = useCallback((raw: string) => {
-    setJustPublishedEntry(null);
-    setDraftTitle(raw);
-
-    const qualityErr = validateTitleQuality(raw);
-    if (qualityErr) {
-      if (titleCheckTimerRef.current) {
-        clearTimeout(titleCheckTimerRef.current);
-        titleCheckTimerRef.current = null;
-      }
-      titleCheckSeqRef.current += 1;
-      setTitleError(qualityErr);
-      return;
-    }
-
-    setTitleError(null);
-
-    if (titleCheckTimerRef.current) {
-      clearTimeout(titleCheckTimerRef.current);
-      titleCheckTimerRef.current = null;
-    }
-
-    const seqAtSchedule = ++titleCheckSeqRef.current;
-    titleCheckTimerRef.current = setTimeout(() => {
-      titleCheckTimerRef.current = null;
-      const trimmed = raw.trim();
-      if (!trimmed) {
-        if (seqAtSchedule === titleCheckSeqRef.current) setTitleError(null);
-        return;
-      }
-      void (async () => {
-        try {
-          const res = await fetch("/api/admin/check-title", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ title: trimmed }),
-          });
-          const data = (await res.json().catch(() => ({}))) as {
-            error?: string;
-            tooSimilar?: boolean;
-          };
-          if (seqAtSchedule !== titleCheckSeqRef.current) return;
-          if (!res.ok) {
-            setTitleError(data.error ?? "Başlık kontrolü yapılamadı.");
-            return;
-          }
-          if (data.tooSimilar) {
-            setTitleError("Benzer bir başlık zaten var");
-          } else {
-            setTitleError(null);
-          }
-        } catch {
-          if (seqAtSchedule !== titleCheckSeqRef.current) return;
-          setTitleError("Başlık kontrolü yapılamadı.");
-        }
-      })();
-    }, 300);
-  }, []);
 
   const applyTemplate = (text: string) => {
     setJustPublishedEntry(null);
@@ -2017,14 +1948,21 @@ export default function AdminPage() {
               <label className="block">
                 <span className="admin-label">Başlık</span>
                 <input
-                  value={draftTitle}
-                  onChange={(e) => onDraftTitleInputChange(e.target.value)}
+                  value={composeTitle.draftTitle}
+                  onChange={(e) => {
+                    setJustPublishedEntry(null);
+                    composeTitle.onTitleChange(e.target.value);
+                  }}
                   maxLength={161}
                   className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
                 />
-                {titleError ? (
+                {composeTitle.validation.phase === "blocked" ? (
                   <p className="admin-msg-error mt-1 text-sm text-red-300">
-                    {titleError}
+                    {composeTitle.validation.message}
+                  </p>
+                ) : composeTitle.validation.phase === "checking" ? (
+                  <p className="mt-1 text-sm text-slate-500">
+                    {COMPOSE_TITLE_CHECKING_LABEL}
                   </p>
                 ) : null}
               </label>
@@ -2098,7 +2036,9 @@ export default function AdminPage() {
               </label>
               <AdminShareCopyBlock
                 title={
-                  justPublishedEntry ? justPublishedEntry.title : draftTitle
+                  justPublishedEntry
+                    ? justPublishedEntry.title
+                    : composeTitle.draftTitle
                 }
                 content={
                   justPublishedEntry ? justPublishedEntry.content : draftContent
@@ -2116,7 +2056,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting || !!titleError}
+                  disabled={submitting || !composeTitle.canPublish}
                   className="admin-btn-text admin-btn-text--emph rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-500 disabled:opacity-50"
                 >
                   {submitting ? "Kaydediliyor…" : "Yayınla"}

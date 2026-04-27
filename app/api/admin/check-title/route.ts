@@ -5,6 +5,7 @@ import {
   fetchAllEntryTitles,
   isTitleTooSimilarToAny,
 } from "@/lib/entry-title-similarity";
+import { validateTitleQuality } from "@/lib/entry-title-rules";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,10 @@ export async function POST(req: Request) {
   }
 
   const title = typeof body.title === "string" ? body.title.trim() : "";
+
+  if (validateTitleQuality(title)) {
+    return NextResponse.json({ tooSimilar: false });
+  }
 
   const service = createSupabaseServiceClient();
   if (!service) {
