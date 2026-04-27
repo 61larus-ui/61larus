@@ -6,10 +6,33 @@ export const runtime = "nodejs";
 
 const MAX_Q_LEN = 200;
 const MAX_RESULTS = 8;
+/** B sorgusunda, A ile çakışma sonrası 8 doldurabilmek için yeterli satır. */
+const B_FETCH_CAP = 32;
 
 /** ILIKE wildcards — user input should not control pattern shape. */
 function sanitizeIlikeToken(w: string): string {
   return w.replace(/[%_\\]/g, "");
+}
+
+/** Tüm cümle için prefix pattern’i (boşluklar korunur, wildcard metinleri silinir). */
+function prefixPatternFromCapped(capped: string): string {
+  return capped.replace(/[%_\\]/g, "");
+}
+
+type EntryRow = {
+  id: string;
+  title: string | null;
+  category: string | null;
+  created_at: string;
+};
+
+function mapToResult(r: EntryRow) {
+  return {
+    id: r.id,
+    title: typeof r.title === "string" ? r.title : "",
+    category: r.category,
+    created_at: r.created_at,
+  };
 }
 
 export type SearchEntryResult = {
@@ -41,37 +64,53 @@ export async function GET(req: Request) {
   const client = createSupabaseServiceClient() ?? supabase;
 
   try {
-    let query = client
-      .from("entries")
-      .select("id, title, category, created_at")
-      .order("created_at", { ascending: false })
-      .limit(MAX_RESULTS);
+    const prefixCapped = prefixPatternFromCapped(capped);
+    const hasPrefix = prefixCapped.length > 0;
 
-    for (const w of words) {
-      query = query.ilike("title", `%${w}%`);
+    function withWordIlikes(needLimit: number) {
+      let qb = client
+        .from("entries")
+        .select("id, title, category, created_at")
+        .order("created_at", { ascending: false })
+        .limit(needLimit);
+      for (const w of words) {
+        qb = qb.ilike("title", `%${w}%`);
+      }
+      return qb;
     }
 
-    const { data, error } = await query;
+    const bLimit = hasPrefix ? B_FETCH_CAP : MAX_RESULTS;
 
-    if (error) {
-      console.error("[search-entries]", error);
+    const [resA, resB] = await Promise.all([
+      hasPrefix
+        ? withWordIlikes(MAX_RESULTS).ilike("title", `${prefixCapped}%`)
+        : Promise.resolve({ data: [] as EntryRow[], error: null }),
+      withWordIlikes(bLimit),
+    ]);
+
+    if (resA.error) {
+      console.error("[search-entries]", resA.error);
+      return NextResponse.json({ results: [] as SearchEntryResult[] });
+    }
+    if (resB.error) {
+      console.error("[search-entries]", resB.error);
       return NextResponse.json({ results: [] as SearchEntryResult[] });
     }
 
-    const rows = data ?? [];
-    const results: SearchEntryResult[] = rows.map(
-      (r: {
-        id: string;
-        title: string | null;
-        category: string | null;
-        created_at: string;
-      }) => ({
-        id: r.id,
-        title: typeof r.title === "string" ? r.title : "",
-        category: r.category,
-        created_at: r.created_at,
-      })
-    );
+    const rowsA: EntryRow[] = (resA.data ?? []) as EntryRow[];
+    const rowsB: EntryRow[] = (resB.data ?? []) as EntryRow[];
+    const aIds = new Set(rowsA.map((r) => r.id));
+    const merged: EntryRow[] = [];
+    for (const r of rowsA) {
+      if (merged.length >= MAX_RESULTS) break;
+      merged.push(r);
+    }
+    for (const r of rowsB) {
+      if (merged.length >= MAX_RESULTS) break;
+      if (aIds.has(r.id)) continue;
+      merged.push(r);
+    }
+    const results: SearchEntryResult[] = merged.map((r) => mapToResult(r));
     return NextResponse.json({ results });
   } catch (e) {
     console.error("[search-entries]", e);
