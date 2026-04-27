@@ -219,7 +219,7 @@ export default function XPanelPage() {
   }, [daily, pool.length]);
 
   return (
-    <div className="xpanel-root text-zinc-100">
+    <div className="xpanel-root">
       {copyToast ? (
         <div className="xpanel-toast" role="status">
           {copyToast}
@@ -249,7 +249,7 @@ export default function XPanelPage() {
             { label: "Facebook taslak", value: fbDraftCount },
             { label: "Paylaşılan", value: sharedToday },
           ].map((item) => (
-            <div key={item.label} className="xpanel-stat">
+            <div key={item.label} className="xpanel-stat card">
               <div className="xpanel-stat-label">{item.label}</div>
               <div className="xpanel-stat-value">{item.value}</div>
             </div>
@@ -264,7 +264,7 @@ export default function XPanelPage() {
             {(daily?.x ?? []).map((draft) => (
               <li
                 key={draft.id}
-                className="xpanel-card"
+                className="xpanel-card card"
                 data-status={draft.status}
               >
                 <div className="xpanel-card-top">
@@ -308,7 +308,7 @@ export default function XPanelPage() {
             {(daily?.facebook ?? []).map((draft) => (
               <li
                 key={draft.id}
-                className="xpanel-card"
+                className="xpanel-card card"
                 data-status={draft.status}
               >
                 <div className="xpanel-card-top">
