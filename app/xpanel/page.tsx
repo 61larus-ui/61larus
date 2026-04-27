@@ -167,11 +167,8 @@ export default function XPanelPage() {
       <header className="shrink-0 border-b border-zinc-800/80 bg-zinc-950/95 px-4 py-2.5 backdrop-blur sm:px-6 sm:py-3">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-2">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-wide text-sky-400/90">
+            <h2 className="text-base font-semibold text-zinc-100">
               61Larus X Dağıtım Motoru
-            </p>
-            <h2 className="mt-0.5 text-base font-semibold text-zinc-100">
-              Trafik odaklı paylaşım
             </h2>
             <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">
               61Larus içeriklerinden X için trafik odaklı paylaşım taslakları üretir.
