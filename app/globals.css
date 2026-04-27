@@ -212,6 +212,7 @@ html {
 }
 
 html {
+  padding-bottom: 0 !important;
   background: #f0ebe3;
   /* Wordmark + kolon/entry başlıkları: serif; tüm açıklama, meta, etiket, input: sans */
   --font-ui: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI",
@@ -225,6 +226,7 @@ html {
 body {
   margin: 0;
   padding: 0;
+  padding-bottom: 0 !important;
   color: var(--text-primary);
   font-family: var(--font-ui);
   min-height: 100vh;
@@ -1013,6 +1015,7 @@ main > header .site-header-tagline--manifesto {
   max-width: var(--home-container-max);
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 0 !important;
   box-sizing: border-box;
   padding-left: var(--home-container-px);
   padding-right: var(--home-container-px);
@@ -4060,13 +4063,19 @@ aside[aria-label="Yayın paneli"] nav button.group {
   /* FAZ 3: açık yüzeyden ayrılan çok ince hat (footer içeriğine dokunmaz) */
   border-top: 1px solid rgba(255, 255, 255, 0.055);
   padding-top: 2.1rem !important;
-  padding-bottom: 2.25rem !important;
+  padding-bottom: 32px !important;
+  margin-bottom: 0 !important;
+}
+
+.footer {
+  margin-bottom: 0 !important;
+  padding-bottom: 32px !important;
 }
 
 @media (min-width: 768px) {
   .site-footer {
     padding-top: 2.5rem !important;
-    padding-bottom: 2.6rem !important;
+    padding-bottom: 32px !important;
   }
 }
 
@@ -6881,7 +6890,8 @@ aside[aria-label="Yayın paneli"] .right-block {
   .site-footer,
   footer#site-footer {
     margin-top: 48px !important;
-    padding: 28px 0 60px 0 !important;
+    margin-bottom: 0 !important;
+    padding: 28px 0 28px 0 !important;
     text-align: center !important;
     background: transparent !important;
     border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
@@ -7159,6 +7169,20 @@ aside[aria-label="Yayın paneli"] .right-block {
   }
 }
 
+/* Marka + slogan + Atatürk sözü: mobilde dikey grup; masaüstünde üç sütunlu grid korunur */
+.header-text-group {
+  display: contents;
+}
+
+.header-quote,
+.ataturk-quote {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: rgba(0, 0, 0, 0.35);
+}
+
 .headerBar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
@@ -7205,11 +7229,18 @@ aside[aria-label="Yayın paneli"] .right-block {
 }
 
 @media (max-width: 768px) {
-  /* İki satır: [marka + slogan | giriş] / [Atatürk sözü tam genişlik] */
+  /* Tek satır: [marka + slogan + Atatürk sözü | giriş] */
+  .header-text-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
   .headerBar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(2.75rem, max-content);
-    grid-template-rows: auto auto;
+    grid-template-rows: auto;
     column-gap: 0.5rem;
     row-gap: 0.5rem;
     align-items: start;
@@ -7239,8 +7270,6 @@ aside[aria-label="Yayın paneli"] .right-block {
   }
 
   .headerCenterText {
-    grid-column: 1 / -1;
-    grid-row: 2;
     display: block;
     text-align: left;
     margin-top: 0;

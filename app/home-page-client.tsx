@@ -1148,35 +1148,37 @@ export default function HomePageClient({
       <header className="site-header relative z-20 shrink-0">
         <div className="headerBlock home-page-container">
           <div className="headerBar min-w-0">
-            <div className="flex min-w-0 flex-col gap-2 lg:max-w-[min(21rem,100%)]">
-              <h1 className="m-0 p-0">
-                <button
-                  type="button"
-                  onClick={goToBrandHome}
-                  className="site-wordmark max-w-full border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-88"
-                  style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
-                  aria-label="Ana sayfa — Akış"
+            <div className="header-text-group">
+              <div className="flex min-w-0 flex-col gap-2 lg:max-w-[min(21rem,100%)]">
+                <h1 className="m-0 p-0">
+                  <button
+                    type="button"
+                    onClick={goToBrandHome}
+                    className="site-wordmark max-w-full border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-88"
+                    style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
+                    aria-label="Ana sayfa — Akış"
+                  >
+                    61Larus
+                  </button>
+                </h1>
+                <p className="site-header-tagline m-0 site-header-tagline--manifesto">
+                  TRABZON&apos;UN GÜNDEMİ, LAFI VE HAFIZASI
+                </p>
+              </div>
+              <div
+                className="headerCenterText site-header-editorial header-quote ataturk-quote"
+                aria-live="polite"
+                aria-atomic="true"
+                aria-label="Atatürk sözleri"
+              >
+                <p
+                  key={headerEditorialIdx}
+                  className="site-header-editorial-text m-0"
                 >
-                  61Larus
-                </button>
-              </h1>
-              <p className="site-header-tagline m-0 site-header-tagline--manifesto">
-                TRABZON&apos;UN GÜNDEMİ, LAFI VE HAFIZASI
-              </p>
+                  {HEADER_ATATURK_QUOTES[headerEditorialIdx]}
+                </p>
+              </div>
             </div>
-          <div
-            className="headerCenterText site-header-editorial"
-            aria-live="polite"
-            aria-atomic="true"
-            aria-label="Atatürk sözleri"
-          >
-            <p
-              key={headerEditorialIdx}
-              className="site-header-editorial-text m-0"
-            >
-              {HEADER_ATATURK_QUOTES[headerEditorialIdx]}
-            </p>
-          </div>
           <div className="headerUserName site-header-aux min-w-0 justify-self-end gap-x-3 pl-1 sm:gap-x-4 lg:shrink-0 lg:gap-x-4 lg:pl-2 lg:pr-3">
             {!isAuthenticated ? (
                 <Link
