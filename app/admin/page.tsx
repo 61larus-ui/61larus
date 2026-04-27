@@ -1996,58 +1996,58 @@ export default function AdminPage() {
                 <label className="block" htmlFor="admin-compose-title-input">
                   <span className="admin-label">Başlık</span>
                 </label>
-                <input
-                  id="admin-compose-title-input"
-                  value={composeTitle.draftTitle}
-                  onChange={(e) => {
-                    setJustPublishedEntry(null);
-                    composeTitle.onTitleChange(e.target.value);
-                  }}
-                  maxLength={161}
-                  className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
-                />
-                {composeTitle.validation.phase === "blocked" ? (
-                  <p className="admin-msg-error mt-1 text-sm text-red-300">
-                    {composeTitle.validation.message}
-                  </p>
-                ) : composeTitle.validation.phase === "warning" ? (
-                  <p className="mt-1 text-sm text-amber-200/90">
-                    {composeTitle.validation.message}
-                  </p>
-                ) : composeTitle.validation.phase === "checking" ? (
-                  <p className="mt-1 text-sm text-slate-500">
-                    {COMPOSE_TITLE_CHECKING_LABEL}
-                  </p>
-                ) : null}
-                <div className="mt-2 space-y-2">
+                <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+                  <input
+                    id="admin-compose-title-input"
+                    value={composeTitle.draftTitle}
+                    onChange={(e) => {
+                      setJustPublishedEntry(null);
+                      composeTitle.onTitleChange(e.target.value);
+                    }}
+                    maxLength={161}
+                    className="admin-field min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+                  />
                   <button
                     type="button"
                     disabled={composeTitleSuggestLoading}
                     onClick={() => void requestComposeTitleSuggestions()}
-                    className="rounded-md border border-slate-600 bg-slate-900/80 px-2.5 py-1 text-xs text-slate-400 hover:border-slate-500 hover:bg-slate-800 hover:text-slate-300 disabled:opacity-50"
+                    className="shrink-0 rounded-md border border-slate-600 bg-slate-900/80 px-2.5 py-2 text-xs text-slate-400 hover:border-slate-500 hover:bg-slate-800 hover:text-slate-300 disabled:opacity-50 sm:py-1.5"
                   >
                     {composeTitleSuggestLoading
                       ? "Öneriler hazırlanıyor…"
                       : "Başlık öner"}
                   </button>
-                  {composeTitleSuggestions.length > 0 ? (
-                    <div className="flex flex-col gap-1.5">
-                      {composeTitleSuggestions.map((s, idx) => (
-                        <button
-                          key={`${idx}-${s.slice(0, 24)}`}
-                          type="button"
-                          onClick={() => {
-                            setJustPublishedEntry(null);
-                            composeTitle.onTitleChange(s);
-                          }}
-                          className="rounded-md border border-slate-700/90 bg-slate-950/50 px-2.5 py-2 text-left text-xs leading-snug text-slate-400 hover:border-slate-600 hover:bg-slate-900 hover:text-slate-300"
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
                 </div>
+                {composeTitle.validation.phase === "blocked" ? (
+                  <p className="admin-msg-error mt-2 text-sm text-red-300">
+                    {composeTitle.validation.message}
+                  </p>
+                ) : composeTitle.validation.phase === "warning" ? (
+                  <p className="mt-2 text-sm text-amber-200/90">
+                    {composeTitle.validation.message}
+                  </p>
+                ) : composeTitle.validation.phase === "checking" ? (
+                  <p className="mt-2 text-sm text-slate-500">
+                    {COMPOSE_TITLE_CHECKING_LABEL}
+                  </p>
+                ) : null}
+                {composeTitleSuggestions.length > 0 ? (
+                  <div className="mt-2 flex flex-col gap-1.5">
+                    {composeTitleSuggestions.map((s, idx) => (
+                      <button
+                        key={`${idx}-${s.slice(0, 24)}`}
+                        type="button"
+                        onClick={() => {
+                          setJustPublishedEntry(null);
+                          composeTitle.onTitleChange(s);
+                        }}
+                        className="rounded-md border border-slate-700/90 bg-slate-950/50 px-2.5 py-2 text-left text-xs leading-snug text-slate-400 hover:border-slate-600 hover:bg-slate-900 hover:text-slate-300"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <label className="block">
                 <span className="admin-label">Yayın alanı</span>
@@ -2117,18 +2117,6 @@ export default function AdminPage() {
                   className="admin-field mt-1 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
                 />
               </label>
-              <AdminShareCopyBlock
-                title={
-                  justPublishedEntry
-                    ? justPublishedEntry.title
-                    : composeTitle.draftTitle
-                }
-                content={
-                  justPublishedEntry ? justPublishedEntry.content : draftContent
-                }
-                entryId={justPublishedEntry?.id ?? null}
-                entrySlug={justPublishedEntry?.slug ?? null}
-              />
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
