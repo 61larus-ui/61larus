@@ -3,9 +3,12 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
+  type ChangeEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
 import Link from "next/link";
@@ -81,16 +84,52 @@ function getEntryDedupeKey(entry: EntryItem): string {
 
 import { FeedEntryCard } from "./feed-entry-card";
 
-function entryMatchesSearch(entry: EntryItem, rawQuery: string): boolean {
+const HOME_TITLE_SEARCH_MAX = 8;
+
+function normalizeTrSearchText(s: string): string {
+  return s.toLocaleLowerCase("tr-TR");
+}
+
+/**
+ * Sorgu boşlukla ayrılmış kelimelere bölünür; her kelime başlıkta (Türkçe
+ * büyük/küçük duyarsız) geçmeli.
+ */
+function titleMatchesSearchWords(title: string, rawQuery: string): boolean {
+  const t = title ?? "";
   const q = rawQuery.trim();
-  if (!q) return true;
-  const ql = q.toLocaleLowerCase("tr-TR");
-  const parts: string[] = [
-    entry.title ?? "",
-    entry.content ?? "",
-    entry.authorName ?? "",
-  ];
-  return parts.some((s) => s.toLocaleLowerCase("tr-TR").includes(ql));
+  if (!q) return false;
+  const titleN = normalizeTrSearchText(t);
+  const words = q.split(/\s+/).filter((w) => w.length > 0);
+  if (words.length === 0) return false;
+  return words.every((w) => titleN.includes(normalizeTrSearchText(w)));
+}
+
+/** Yayın alanı etiketi — yalnızca admin kategorisi bilinen kayıtlar. */
+function publishSectionLabelTr(entry: EntryItem): string | null {
+  const slug = entryPublishSlug(entry);
+  if (!slug) return null;
+  const map: Record<HomeEntryCategorySlug, string> = {
+    pending: "Yazılmayı bekleyenler",
+    trending: "Çok konuşulanlar",
+    memory: "Hafızaya eklenenler",
+    today: "Hafızaya eklenenler",
+    understand_trabzon: "Trabzon'u anlamak için",
+    waiting_to_read: "Okunmayı bekleyenler",
+    question_of_day: "Günün soruları",
+  };
+  return map[slug] ?? null;
+}
+
+function dedupeEntriesById(lists: readonly EntryItem[][]): EntryItem[] {
+  const map = new Map<string, EntryItem>();
+  for (const list of lists) {
+    for (const e of list) {
+      const id = e.id?.trim();
+      if (!id || map.has(id)) continue;
+      map.set(id, e);
+    }
+  }
+  return Array.from(map.values());
 }
 
 const LS_PENDING_ENTRY = "pendingEntryId";
@@ -286,6 +325,9 @@ export default function HomePageClient({
   const [centerMode, setCenterMode] = useState<CenterMode>("feed");
   const [feedVisibleCount, setFeedVisibleCount] = useState(FEED_PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchSuggestOpen, setSearchSuggestOpen] = useState(false);
+  const homeSearchListboxId = useId();
+  const searchSuggestRootRef = useRef<HTMLDivElement>(null);
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [accountDeleteStep, setAccountDeleteStep] = useState<"idle" | "confirm">(
@@ -453,6 +495,34 @@ export default function HomePageClient({
     };
   }, [isAuthenticated, authUserId]);
 
+  const onHomeSearchInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value;
+      setSearchQuery(v);
+      if (v.trim().length >= 2) {
+        setSearchSuggestOpen(true);
+      } else {
+        setSearchSuggestOpen(false);
+      }
+    },
+    []
+  );
+
+  const onHomeSearchInputFocus = useCallback(() => {
+    if (searchQuery.trim().length >= 2) {
+      setSearchSuggestOpen(true);
+    }
+  }, [searchQuery]);
+
+  const onHomeSearchKeyDown = useCallback(
+    (e: ReactKeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Escape") {
+        setSearchSuggestOpen(false);
+      }
+    },
+    []
+  );
+
   const goToEntry = useCallback((id: string) => {
     if (process.env.NODE_ENV === "development") {
       console.time("goToEntry:navigate");
@@ -475,9 +545,19 @@ export default function HomePageClient({
     });
   }, []);
 
+  const onPickHomeSearchSuggestion = useCallback(
+    (entry: EntryItem) => {
+      setSearchQuery(entry.title);
+      setSearchSuggestOpen(false);
+      goToEntry(entry.id);
+    },
+    [goToEntry]
+  );
+
   /** Tam yazı akışı: arama kapalı, ana sayfaya dön. */
   const resetToWritingsFeed = useCallback(() => {
     setSearchQuery("");
+    setSearchSuggestOpen(false);
     void router.push("/");
   }, [router]);
 
@@ -568,8 +648,17 @@ export default function HomePageClient({
   }, [isUserMenuOpen]);
 
   useEffect(() => {
-    setFeedVisibleCount(FEED_PAGE_SIZE);
-  }, [searchQuery]);
+    if (!searchSuggestOpen) return;
+    const onDocMouseDown = (e: MouseEvent) => {
+      const root = searchSuggestRootRef.current;
+      if (root && !root.contains(e.target as Node)) {
+        setSearchSuggestOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocMouseDown, true);
+    return () => document.removeEventListener("mousedown", onDocMouseDown, true);
+  }, [searchSuggestOpen]);
+
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -824,22 +913,52 @@ export default function HomePageClient({
     return { topTickerItems: top, bottomTickerItems: bottom };
   }, [homeExploreTickerEntries]);
 
-  const feedEntriesSearchFiltered = useMemo(() => {
-    let list = shuffledMainFeedEntries;
-    if (searchQuery.trim()) {
-      list = list.filter((e) => entryMatchesSearch(e, searchQuery));
-    }
-    return list;
-  }, [shuffledMainFeedEntries, searchQuery]);
+  const allEntriesForTitleSearch = useMemo(
+    () =>
+      dedupeEntriesById([
+        centerEntries,
+        leftEntries,
+        rightEntries,
+        rightRailAwaitingFirstComment,
+        mostCommentedEntries,
+        shuffledMainFeedEntries,
+        waitingEntriesForExplore,
+        starterEntries,
+        dailyQuestionEntries,
+      ]),
+    [
+      centerEntries,
+      leftEntries,
+      rightEntries,
+      rightRailAwaitingFirstComment,
+      mostCommentedEntries,
+      shuffledMainFeedEntries,
+      waitingEntriesForExplore,
+      starterEntries,
+      dailyQuestionEntries,
+    ]
+  );
+
+  const homeSearchSuggestions = useMemo(() => {
+    const q = searchQuery.trim();
+    if (q.length < 2) return [];
+    const matches = allEntriesForTitleSearch.filter(
+      (e) => e.title?.trim() && titleMatchesSearchWords(e.title, q)
+    );
+    matches.sort(compareEntriesByNewest);
+    return matches.slice(0, HOME_TITLE_SEARCH_MAX);
+  }, [allEntriesForTitleSearch, searchQuery]);
+
+  const showTitleSearchPanel =
+    searchSuggestOpen && searchQuery.trim().length >= 2;
 
   const mainColumnDisplayEntries = useMemo(() => {
-    const list = feedEntriesSearchFiltered;
-    return list.slice(0, feedVisibleCount);
-  }, [feedEntriesSearchFiltered, feedVisibleCount]);
+    return shuffledMainFeedEntries.slice(0, feedVisibleCount);
+  }, [shuffledMainFeedEntries, feedVisibleCount]);
 
   const feedHasMore = useMemo(
-    () => feedVisibleCount < feedEntriesSearchFiltered.length,
-    [feedVisibleCount, feedEntriesSearchFiltered.length]
+    () => feedVisibleCount < shuffledMainFeedEntries.length,
+    [feedVisibleCount, shuffledMainFeedEntries.length]
   );
 
   async function onAgreementSuccess() {
@@ -927,19 +1046,11 @@ export default function HomePageClient({
         </div>
       );
     }
-    if (feedEntriesSearchFiltered.length === 0) {
-      const hasSearch = searchQuery.trim().length > 0;
+    if (shuffledMainFeedEntries.length === 0) {
       return (
         <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-0 py-16 text-center md:py-20">
           <p className="feed-search-empty-title m-0">
-            {hasSearch
-              ? "Aramana uygun yazı yok."
-              : "Aramana uygun bir yazı bulunamadı."}
-          </p>
-          <p className="feed-search-empty-hint m-0 mt-3 max-w-[22rem] mx-auto">
-            {hasSearch
-              ? "Farklı bir kelime veya ifade dene; aramayı boşaltıp tüm yazılara dön."
-              : "Farklı bir kelime deneyebilirsin."}
+            Bu alanda henüz listelenen yazı yok.
           </p>
         </div>
       );
@@ -1324,9 +1435,10 @@ export default function HomePageClient({
             ) : null}
             <div className="home-page-editorial home-page-editorial--section-stack">
             <div
-              className="home-manifesto home-manifesto--bridge home-search-bridge home-manifesto-inner--bridge home-search-field min-w-0 w-full max-w-full"
+              ref={searchSuggestRootRef}
+              className="home-manifesto home-manifesto--bridge home-search-bridge home-manifesto-inner--bridge home-search-field relative z-50 min-w-0 w-full max-w-full"
             >
-              <div className="home-manifesto-search">
+              <div className="home-manifesto-search relative w-full min-w-0 max-w-full">
                 <label
                   htmlFor="feed-search-input"
                   className="sr-only"
@@ -1337,13 +1449,58 @@ export default function HomePageClient({
                   id="feed-search-input"
                   name="q"
                   type="search"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={showTitleSearchPanel}
+                  aria-controls={
+                    showTitleSearchPanel ? homeSearchListboxId : undefined
+                  }
                   className="home-manifesto-input home-manifesto-input--premium"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={onHomeSearchInputChange}
+                  onFocus={onHomeSearchInputFocus}
+                  onKeyDown={onHomeSearchKeyDown}
                   placeholder="Başlık ara..."
                   autoComplete="off"
                   spellCheck={false}
                 />
+                {showTitleSearchPanel ? (
+                  <ul
+                    id={homeSearchListboxId}
+                    role="listbox"
+                    aria-label="Başlık önerileri"
+                    className="absolute left-0 right-0 top-full z-10 mt-1 max-h-[min(22rem,50dvh)] min-w-0 w-full max-w-full overflow-y-auto overflow-x-hidden overscroll-contain border border-[color:var(--divide)] bg-[var(--bg-secondary)] py-1 shadow-[var(--shadow-modal)]"
+                  >
+                    {homeSearchSuggestions.length === 0 ? (
+                      <li className="px-3 py-2.5 text-left text-sm text-[color:var(--text-tertiary)]">
+                        Sonuç bulunamadı
+                      </li>
+                    ) : (
+                      homeSearchSuggestions.map((entry) => {
+                        const area = publishSectionLabelTr(entry);
+                        return (
+                          <li key={entry.id} role="option" className="min-w-0 p-0">
+                            <button
+                              type="button"
+                              className="home-title-search-suggest__row flex w-full min-w-0 max-w-full cursor-pointer flex-col items-stretch border-0 bg-transparent px-3 py-2.5 text-left transition-colors hover:bg-[color:var(--bg-tertiary)]"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => onPickHomeSearchSuggestion(entry)}
+                            >
+                              <span className="min-w-0 truncate text-sm text-[color:var(--text-primary)]">
+                                {entry.title}
+                              </span>
+                              {area ? (
+                                <span className="mt-0.5 block min-w-0 text-[11px] leading-tight text-[color:var(--text-tertiary)]">
+                                  {area}
+                                </span>
+                              ) : null}
+                            </button>
+                          </li>
+                        );
+                      })
+                    )}
+                  </ul>
+                ) : null}
               </div>
             </div>
             {topTickerItems.length > 0 ? (
