@@ -12,6 +12,8 @@ export type LarusEntry = {
   content: string;
   created_at: string;
   category?: string;
+  /** Varsa genelde kamuya açık URL yolu (61larus). */
+  slug?: string;
   usedCount: number;
   lastUsedAt?: string;
   isEvergreen?: boolean;
@@ -19,24 +21,247 @@ export type LarusEntry = {
 
 const INGEST_BASE = "/__larus_ingest";
 
-/** Arama sorguları: sonuçları birleştirip benzersiz id üretir. */
+/**
+ * Geniş arama sözlüğü: tek “kategoriye” sıkışmadan 61Larus aramasından örneklem.
+ * Her çekimde karıştırılarak farklı sıra denenir.
+ */
 const SEARCH_TERMS = [
   "trabzon",
+  "rize",
+  "artvin",
+  "giresun",
+  "gümüşhane",
+  "bayburt",
+  "erzurum",
+  "ordu",
+  "samsun",
+  "sinop",
+  "kastamonu",
+  "bolu",
+  "sakarya",
+  "kocaeli",
+  "istanbul",
+  "ankara",
+  "izmir",
+  "bursa",
+  "antalya",
+  "adana",
+  "gaziantep",
+  "diyarbakır",
+  "mardin",
+  "van",
+  "erzincan",
+  "muş",
+  "ağrı",
+  "kars",
+  "ardahan",
+  "batman",
+  "siirt",
+  "şırnak",
+  "hakkari",
   "tarih",
   "gündem",
-  "kadın",
+  "siyaset",
+  "ekonomi",
   "spor",
+  "kültür",
+  "sanat",
+  "eğitim",
+  "sağlık",
+  "çevre",
+  "ulaşım",
+  "enerji",
+  "imar",
+  "belediye",
   "mahalle",
+  "köy",
+  "şehir",
+  "bölge",
   "karadeniz",
+  "akdeniz",
+  "ege",
+  "marmara",
+  "iç anadolu",
+  "doğu anadolu",
+  "güneydoğu",
+  "kadın",
+  "çocuk",
+  "gençlik",
+  "emek",
+  "işçi",
+  "işsizlik",
+  "asgari ücret",
+  "sendika",
+  "grev",
+  "miting",
+  "protesto",
+  "trabzonspor",
+  "futbol",
+  "basketbol",
+  "voleybol",
+  "maraton",
+  "stad",
+  "taraftar",
   "hafıza",
+  "anı",
+  "arşiv",
+  "belge",
+  "müze",
+  "kitap",
+  "yazar",
+  "şiir",
+  "tiyatro",
+  "sinema",
+  "müzik",
+  "festival",
+  "hukuk",
+  "adalet",
+  "mahkeme",
+  "polis",
+  "itfaiye",
+  "afad",
+  "deprem",
+  "sel",
+  "yangın",
+  "güvenlik",
+  "liman",
+  "havalimanı",
+  "otoyol",
+  "köprü",
+  "tünel",
+  "metro",
+  "tramvay",
+  "otobüs",
+  "feribot",
+  "üniversite",
+  "okul",
+  "hastane",
+  "aile hekimi",
+  "aşı",
+  "pandemi",
+  "ormancılık",
+  "balıkçılık",
+  "tarım",
+  "çay",
+  "fındık",
+  "limon",
+  "zeytin",
+  "hayvancılık",
+  "turizm",
+  "otel",
+  "pansiyon",
+  "restoran",
+  "kafe",
+  "meydan",
+  "cami",
+  "kilise",
+  "sinagog",
+  "imar planı",
+  "parsel",
+  "tapu",
+  "kentsel dönüşüm",
+  "toki",
+  "konut",
+  "kira",
+  "seçim",
+  "meclis",
+  "parti",
+  "oy",
+  "anket",
+  "yorum",
+  "analiz",
+  "röportaj",
+  "basın",
+  "teknoloji",
+  "internet",
+  "dijital",
+  "yapay zeka",
+  "veri",
+  "startup",
+  "iklim",
+  "geri dönüşüm",
+  "atık",
+  "su",
+  "elektrik",
+  "doğalgaz",
+  "yenilenebilir",
+  "61larus",
+  "larus",
+  "entry",
+  "not",
+  "günlük",
+  "katkı",
+  "topluluk",
+  "of ilçe",
+  "sürmene",
+  "akçaabat",
+  "araklı",
+  "tonya",
+  "yomra",
+  "çarşıbaşı",
+  "şalpazarı",
+  "düzköy",
+  "hayrat",
+  "köprübaşı",
+  "dernekpazarı",
+  "maçka",
+  "osmanlı",
+  "cumhuriyet",
+  "kurtuluş",
+  "göç",
+  "mübadele",
+  "nostalji",
+  "kent belleği",
+  "şehir hikayesi",
+  "gönüllü",
+  "stk",
+  "dernek",
+  "vakıf",
+  "kooperatif",
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "f",
+  "g",
+  "h",
+  "i",
+  "j",
+  "k",
+  "l",
+  "m",
+  "n",
+  "o",
+  "p",
+  "q",
+  "r",
+  "s",
+  "t",
+  "u",
+  "v",
+  "w",
+  "x",
+  "y",
+  "z",
+  "0",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
 ] as const;
-
 const MIN_CONTENT_LEN = 100;
-const MAX_STUBS_TO_FETCH = 40;
-const DETAIL_CONCURRENCY = 5;
+/** Üst sınır: ayrıntı sayfası çekimi maliyetli; havuz 500’e kadar büyüyebilir. */
+const MAX_STUBS_TO_FETCH = 320;
+const DETAIL_CONCURRENCY = 6;
 
 /** Havuzda tutulacak üst sınır (normalize + localStorage). */
-export const MAX_POOL_ENTRIES = 200;
+export const MAX_POOL_ENTRIES = 1000;
 
 /** Sadece sıralama için; modele yazılmaz. */
 function entryQualityScore(e: LarusEntry): number {
@@ -82,8 +307,10 @@ function dedupeById(entries: LarusEntry[]): LarusEntry[] {
       m.set(e.id, e);
       continue;
     }
+    const slug = e.slug?.trim() || x.slug?.trim();
     m.set(e.id, {
       ...e,
+      ...(slug ? { slug } : {}),
       usedCount: Math.max(x.usedCount, e.usedCount),
       lastUsedAt: pickLaterLastUsed(x.lastUsedAt, e.lastUsedAt),
       isEvergreen: x.isEvergreen ?? e.isEvergreen,
@@ -93,7 +320,7 @@ function dedupeById(entries: LarusEntry[]): LarusEntry[] {
 }
 
 /**
- * Tekilleştir → kalite + tarih sırasına göre sırala → ilk 200.
+ * Tekilleştir → kalite + tarih sırasına göre sırala → üst sınır (MAX_POOL_ENTRIES).
  * localStorage ve state için ortak çıktı.
  */
 export function normalizePoolInMemory(entries: LarusEntry[]): LarusEntry[] {
@@ -107,6 +334,8 @@ export function mergeFreshIntoPrior(
   fresh: LarusEntry,
   prior?: LarusEntry,
 ): LarusEntry {
+  const slug =
+    (fresh.slug?.trim() || prior?.slug?.trim() || undefined) ?? undefined;
   if (!prior) {
     return {
       id: fresh.id,
@@ -117,6 +346,7 @@ export function mergeFreshIntoPrior(
       usedCount: fresh.usedCount,
       lastUsedAt: fresh.lastUsedAt,
       isEvergreen: fresh.isEvergreen,
+      ...(slug ? { slug } : {}),
     };
   }
   return {
@@ -128,6 +358,7 @@ export function mergeFreshIntoPrior(
     usedCount: prior.usedCount,
     lastUsedAt: prior.lastUsedAt,
     isEvergreen: prior.isEvergreen ?? fresh.isEvergreen,
+    ...(slug ? { slug } : {}),
   };
 }
 
@@ -206,6 +437,20 @@ async function fetchEntryPageHtml(id: string): Promise<string> {
   return res.text();
 }
 
+function shuffleArray<T>(arr: T[], seed = Date.now()): T[] {
+  const out = [...arr];
+  let s = seed >>> 0;
+  const rand = () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    return (s >>> 0) / 4294967296;
+  };
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
+}
+
 async function mapWithConcurrency<T, R>(
   items: T[],
   limit: number,
@@ -229,15 +474,70 @@ async function mapWithConcurrency<T, R>(
   return out;
 }
 
+function parseApiEntriesPayload(json: unknown): LarusEntry[] | null {
+  if (!json || typeof json !== "object" || !("entries" in json)) return null;
+  const raw = (json as { entries: unknown }).entries;
+  if (!Array.isArray(raw)) return null;
+  const out: LarusEntry[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue;
+    const o = row as Record<string, unknown>;
+    if (typeof o.id !== "string" || typeof o.title !== "string") continue;
+    if (typeof o.content !== "string" || typeof o.created_at !== "string")
+      continue;
+    const title = o.title.trim();
+    const content = o.content.trim();
+    if (!title || content.length < MIN_CONTENT_LEN) continue;
+    const used =
+      typeof o.usedCount === "number" && !Number.isNaN(o.usedCount)
+        ? o.usedCount
+        : 0;
+    out.push({
+      id: o.id,
+      title,
+      content,
+      created_at: o.created_at,
+      usedCount: used,
+      ...(typeof o.category === "string" && o.category.trim()
+        ? { category: o.category.trim() }
+        : {}),
+      ...(typeof o.slug === "string" && o.slug.trim()
+        ? { slug: o.slug.trim() }
+        : {}),
+    });
+  }
+  return dedupeById(out);
+}
+
 /**
- * 61larus veri kaynağından girişleri çeker; boş / kısa içeriği eler.
- * İçerik metni, madde sayfasındaki og:description özetinden gelir (≥100 karakter).
+ * Önce `/xpanel/api/entries` (Supabase); başarısız veya boşsa arama/proxy scrape.
  */
-export async function fetchEntries(): Promise<LarusEntry[]> {
+async function fetchEntriesFromDatabaseApi(): Promise<LarusEntry[] | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch("/xpanel/api/entries", { cache: "no-store" });
+    if (!res.ok) return null;
+    const json: unknown = await res.json();
+    const parsed = parseApiEntriesPayload(json);
+    if (!parsed || parsed.length === 0) return null;
+    return parsed;
+  } catch (e) {
+    console.warn("[fetchEntries] API atlandı:", e);
+    return null;
+  }
+}
+
+/**
+ * Arama + madde HTML’sinden og:description ile içerik (fallback).
+ */
+async function fetchEntriesViaScrape(): Promise<LarusEntry[]> {
   const seen = new Set<string>();
   const stubs: SearchRow[] = [];
+  const terms = shuffleArray([
+    ...new Set(SEARCH_TERMS as unknown as string[]),
+  ]);
 
-  for (const term of SEARCH_TERMS) {
+  for (const term of terms) {
     let rows: SearchRow[] = [];
     try {
       rows = await searchEntriesRaw(term);
@@ -277,6 +577,15 @@ export async function fetchEntries(): Promise<LarusEntry[]> {
   return dedupeById(built);
 }
 
+/**
+ * 61Larus entry havuzu: önce veritabanı API’si, yoksa scrape.
+ */
+export async function fetchEntries(): Promise<LarusEntry[]> {
+  const fromDb = await fetchEntriesFromDatabaseApi();
+  if (fromDb && fromDb.length > 0) return fromDb;
+  return fetchEntriesViaScrape();
+}
+
 function isLarusEntry(x: unknown): x is LarusEntry {
   if (!x || typeof x !== "object") return false;
   const o = x as Record<string, unknown>;
@@ -284,6 +593,7 @@ function isLarusEntry(x: unknown): x is LarusEntry {
   if (typeof o.content !== "string" || typeof o.created_at !== "string")
     return false;
   if (typeof o.usedCount !== "number" || Number.isNaN(o.usedCount)) return false;
+  if ("slug" in o && o.slug != null && typeof o.slug !== "string") return false;
   return true;
 }
 
