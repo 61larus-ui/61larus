@@ -1,11 +1,6 @@
 export function validateTitleQuality(title: string) {
   const t = title.trim();
 
-  // minimum uzunluk
-  if (t.length < 30) {
-    return "Başlık çok kısa. Daha açıklayıcı yaz.";
-  }
-
   // yasaklı başlangıçlar
   const forbiddenStarts = ["ne zaman", "nasıl", "kimdir", "nedir"];
 
