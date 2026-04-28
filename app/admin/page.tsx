@@ -2130,7 +2130,12 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting || !composeTitle.canPublish}
+                  disabled={
+                    submitting ||
+                    !composeTitle.canPublish ||
+                    !draftContent.trim() ||
+                    !PUBLISH_SECTION_VALUE_SET.has(draftPublishSection.trim())
+                  }
                   className="admin-btn-text admin-btn-text--emph rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-500 disabled:opacity-50"
                 >
                   {submitting ? "Kaydediliyor…" : "Yayınla"}
