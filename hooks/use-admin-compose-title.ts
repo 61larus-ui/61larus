@@ -11,7 +11,12 @@ export type ComposeTitleValidation =
   | { phase: "checking" }
   | { phase: "warning"; message: string };
 
+const TITLE_REQUIRED_MESSAGE = "Başlık gerekli.";
+
 function validationFromQuality(raw: string): ComposeTitleValidation {
+  if (!raw.trim()) {
+    return { phase: "blocked", message: TITLE_REQUIRED_MESSAGE };
+  }
   const message = validateTitleQuality(raw);
   return message ? { phase: "blocked", message } : { phase: "checking" };
 }
@@ -47,6 +52,19 @@ export function useAdminComposeTitle() {
 
   const onTitleChange = useCallback((raw: string) => {
     setDraftTitle(raw);
+
+    if (!raw.trim()) {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      seqRef.current += 1;
+      setValidation({
+        phase: "blocked",
+        message: TITLE_REQUIRED_MESSAGE,
+      });
+      return;
+    }
 
     const message = validateTitleQuality(raw);
     if (message) {

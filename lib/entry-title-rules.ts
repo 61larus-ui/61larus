@@ -1,7 +1,10 @@
-export function validateTitleQuality(title: string) {
+/** Başlık kalitesi: yasaklı başlangıçlar (boş başlık burada değil, "Başlık gerekli." ile ayrı). */
+export function validateTitleQuality(title: string): string | null {
   const t = title.trim();
+  if (!t) {
+    return null;
+  }
 
-  // yasaklı başlangıçlar
   const forbiddenStarts = ["ne zaman", "nasıl", "kimdir", "nedir"];
 
   const lower = t.toLocaleLowerCase("tr-TR");
@@ -10,11 +13,6 @@ export function validateTitleQuality(title: string) {
     if (lower.startsWith(f)) {
       return "Bu başlık tarzı yasaklı (ne zaman / nasıl / kimdir). Daha özgün yaz.";
     }
-  }
-
-  // soru formatı zorunlu
-  if (!t.includes("?")) {
-    return "Başlık soru formatında olmalı.";
   }
 
   return null;

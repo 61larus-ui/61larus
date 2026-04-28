@@ -233,11 +233,11 @@ export async function POST(req: Request) {
       : null;
   const category = normalizeAdminEntryPublishSection(categoryTrim);
 
-  if (!title || !content) {
-    return NextResponse.json(
-      { error: "Başlık ve içerik zorunludur." },
-      { status: 400 }
-    );
+  if (!title) {
+    return NextResponse.json({ error: "Başlık gerekli." }, { status: 400 });
+  }
+  if (!content) {
+    return NextResponse.json({ error: "İçerik gerekli." }, { status: 400 });
   }
 
   if (!category) {

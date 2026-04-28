@@ -22,8 +22,13 @@ export async function POST(req: Request) {
 
   const title = typeof body.title === "string" ? body.title.trim() : "";
 
-  if (validateTitleQuality(title)) {
-    return NextResponse.json({ tooSimilar: false });
+  if (!title) {
+    return NextResponse.json({ error: "Başlık gerekli." }, { status: 400 });
+  }
+
+  const qualityError = validateTitleQuality(title);
+  if (qualityError) {
+    return NextResponse.json({ error: qualityError }, { status: 400 });
   }
 
   const service = createSupabaseServiceClient();
