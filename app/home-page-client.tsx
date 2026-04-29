@@ -22,6 +22,7 @@ import { normalizeEntryCategory } from "@/lib/entry-category";
 import { normalizeEntrySlug } from "@/lib/slug";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import type { SearchEntryResult } from "@/app/api/search-entries/route";
+import { FeedEntryCard } from "./feed-entry-card";
 
 /** Ana sayfa blokları — admin `category` ile aynı sıra / slug seti. */
 const HOME_PUBLISH_SECTION_ORDER = [
@@ -83,7 +84,68 @@ function getEntryDedupeKey(entry: EntryItem): string {
   return `t:${t}`;
 }
 
-import { FeedEntryCard } from "./feed-entry-card";
+/** Deterministic PRNG — seeded shuffle için (SSR ile uyum: seed null iken kullanılmaz). */
+function mulberry32(seed: number) {
+  let a = seed >>> 0;
+  return function random() {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), a | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededShuffle<T>(items: readonly T[], seed: number): T[] {
+  const rng = mulberry32(seed >>> 0);
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const tmp = copy[i]!;
+    copy[i] = copy[j]!;
+    copy[j] = tmp;
+  }
+  return copy;
+}
+
+/** Aynı sıralama anahtarına sahip komşu öğeleri tek tek karıştırır (sıra korunur). */
+function shuffleContiguousRunsByKey<T>(
+  ordered: T[],
+  keyFn: (item: T) => string | number,
+  seed: number
+): T[] {
+  if (ordered.length <= 1) return ordered;
+  const rng = mulberry32(seed >>> 0);
+  const out: T[] = [];
+  let runStart = 0;
+  const flushRun = (end: number) => {
+    const run = ordered.slice(runStart, end);
+    if (run.length <= 1) {
+      out.push(...run);
+      return;
+    }
+    const order = run.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const tmp = order[i]!;
+      order[i] = order[j]!;
+      order[j] = tmp;
+    }
+    for (const idx of order) {
+      out.push(run[idx]!);
+    }
+  };
+  for (let i = 1; i <= ordered.length; i++) {
+    if (
+      i === ordered.length ||
+      keyFn(ordered[i]!) !== keyFn(ordered[i - 1]!)
+    ) {
+      flushRun(i);
+      runStart = i;
+    }
+  }
+  return out;
+}
 
 /** Yayın alanı etiketi — yalnızca admin kategorisi bilinen kayıtlar. */
 function publishSectionLabelTr(entry: EntryItem): string | null {
@@ -196,6 +258,258 @@ export type CommentItem = {
   authorLabel: string;
   bio61?: string | null;
 };
+
+function slugMixSeed(base: number, slug: string): number {
+  let h = base >>> 0;
+  for (let i = 0; i < slug.length; i++) {
+    h = Math.imul(h ^ slug.charCodeAt(i), 0x01000193);
+  }
+  return (h >>> 0) ^ (base >>> 0);
+}
+
+/**
+ * Ana sayfa yayın blokları — admin slug eşlemesi + legacy fallback + karışık yedek havuz.
+ * shuffleSeed null: SSR/hidrasyon ile uyumlu deterministik sıra.
+ * shuffleSeed dolu: istemci mount sonrası; havuz karışımı ve blok içi sıra yenilenir.
+ */
+function computeHomePublishDistribution(
+  centerEntries: EntryItem[],
+  commentsByEntryIdLive: Record<string, CommentItem[]>,
+  shuffleSeed: number | null
+): {
+  rightRailAwaitingFirstComment: EntryItem[];
+  mostCommentedEntries: EntryItem[];
+  shuffledMainFeedEntries: EntryItem[];
+  waitingEntriesForExplore: EntryItem[];
+  starterEntries: EntryItem[];
+  dailyQuestionEntries: EntryItem[];
+} {
+  type Row = {
+    entry: EntryItem;
+    commentCount: number;
+  };
+
+  const withCounts: Row[] = centerEntries.map((entry) => ({
+    entry,
+    commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
+  }));
+
+  const sortByComments = (a: Row, b: Row) => {
+    if (b.commentCount !== a.commentCount) {
+      return b.commentCount - a.commentCount;
+    }
+    return compareEntriesByNewest(a.entry, b.entry);
+  };
+
+  const sortByEngagement = (a: Row, b: Row) => {
+    if (b.commentCount !== a.commentCount) {
+      return b.commentCount - a.commentCount;
+    }
+    return compareEntriesByNewest(a.entry, b.entry);
+  };
+
+  const sortRanked = sortByEngagement;
+
+  const blocks: Record<HomePublishBlockSlug, EntryItem[]> = {
+    pending: [],
+    trending: [],
+    memory: [],
+    understand_trabzon: [],
+    waiting_to_read: [],
+    question_of_day: [],
+  };
+
+  const usedKeys = new Set<string>();
+
+  function tryAdd(slug: HomePublishBlockSlug, entry: EntryItem): boolean {
+    if (blocks[slug].length >= HOME_BLOCK_MAX[slug]) return false;
+    const key = getEntryDedupeKey(entry);
+    if (usedKeys.has(key)) return false;
+    usedKeys.add(key);
+    blocks[slug].push(entry);
+    return true;
+  }
+
+  function sortMetaForSlug(slug: HomePublishBlockSlug, rows: Row[]): Row[] {
+    const copy = [...rows];
+    if (slug === "trending") copy.sort(sortByComments);
+    else if (slug === "understand_trabzon" || slug === "question_of_day") {
+      copy.sort(sortRanked);
+    } else {
+      copy.sort((a, b) => compareEntriesByNewest(a.entry, b.entry));
+    }
+    return copy;
+  }
+
+  function prepareTaggedRows(
+    slug: HomePublishBlockSlug,
+    tagged: Row[]
+  ): Row[] {
+    const sorted = sortMetaForSlug(slug, tagged);
+    if (shuffleSeed == null) return sorted;
+    if (
+      slug === "trending" ||
+      slug === "understand_trabzon" ||
+      slug === "question_of_day"
+    ) {
+      return shuffleContiguousRunsByKey(
+        sorted,
+        (w) => w.commentCount,
+        slugMixSeed(shuffleSeed, `tag-${slug}`)
+      );
+    }
+    return seededShuffle(sorted, slugMixSeed(shuffleSeed, `tag-${slug}`));
+  }
+
+  for (const slug of HOME_PUBLISH_SECTION_ORDER) {
+    const tagged = prepareTaggedRows(
+      slug,
+      withCounts.filter((w) => {
+        const ps = entryPublishSlug(w.entry);
+        if (slug === "memory") return ps === "memory" || ps === "today";
+        return ps === slug;
+      })
+    );
+    for (const row of tagged) {
+      tryAdd(slug, row.entry);
+    }
+  }
+
+  function fallbackSort(a: Row, b: Row): number {
+    const qScore = (e: EntryItem) => (e.title.includes("?") ? 2 : 0);
+    const gScore = (e: EntryItem) =>
+      normalizeEntryCategory(e.category) === "gundem" ? 1 : 0;
+    const sa = qScore(a.entry) + gScore(a.entry);
+    const sb = qScore(b.entry) + gScore(b.entry);
+    if (sb !== sa) return sb - sa;
+    return compareEntriesByNewest(a.entry, b.entry);
+  }
+
+  let fallbackRows = withCounts
+    .filter((w) => !hasAdminPublishSection(w.entry))
+    .sort(fallbackSort);
+
+  if (shuffleSeed != null) {
+    fallbackRows = seededShuffle(
+      fallbackRows,
+      slugMixSeed(shuffleSeed, "legacy-fallback")
+    );
+  }
+
+  let rr =
+    shuffleSeed == null
+      ? 0
+      : (shuffleSeed >>> 0) % HOME_PUBLISH_SECTION_ORDER.length;
+
+  for (const row of fallbackRows) {
+    const key = getEntryDedupeKey(row.entry);
+    if (usedKeys.has(key)) continue;
+    for (let i = 0; i < HOME_PUBLISH_SECTION_ORDER.length; i++) {
+      const slug =
+        HOME_PUBLISH_SECTION_ORDER[
+          (rr + i) % HOME_PUBLISH_SECTION_ORDER.length
+        ];
+      if (tryAdd(slug, row.entry)) {
+        rr = (rr + 1) % HOME_PUBLISH_SECTION_ORDER.length;
+        break;
+      }
+    }
+  }
+
+  const surplusRows = withCounts.filter(
+    (w) => !usedKeys.has(getEntryDedupeKey(w.entry))
+  );
+
+  const poolOrdered =
+    shuffleSeed == null
+      ? [...surplusRows].sort((a, b) =>
+          compareEntriesByNewest(a.entry, b.entry)
+        )
+      : seededShuffle(surplusRows, slugMixSeed(shuffleSeed, "surplus-pool"));
+
+  let rrTop =
+    shuffleSeed == null
+      ? 0
+      : slugMixSeed(shuffleSeed, "surplus-rr") %
+        HOME_PUBLISH_SECTION_ORDER.length;
+
+  for (const row of poolOrdered) {
+    const key = getEntryDedupeKey(row.entry);
+    if (usedKeys.has(key)) continue;
+    for (let i = 0; i < HOME_PUBLISH_SECTION_ORDER.length; i++) {
+      const slug =
+        HOME_PUBLISH_SECTION_ORDER[
+          (rrTop + i) % HOME_PUBLISH_SECTION_ORDER.length
+        ];
+      if (tryAdd(slug, row.entry)) {
+        rrTop = (rrTop + 1) % HOME_PUBLISH_SECTION_ORDER.length;
+        break;
+      }
+    }
+  }
+
+  const sortEntriesByComments = (list: EntryItem[]) =>
+    [...list].sort((a, b) => {
+      const ca = commentsByEntryIdLive[a.id]?.length ?? 0;
+      const cb = commentsByEntryIdLive[b.id]?.length ?? 0;
+      if (cb !== ca) return cb - ca;
+      return compareEntriesByNewest(a, b);
+    });
+
+  const sortEntriesRanked = (list: EntryItem[]) =>
+    [...list].sort((a, b) => {
+      const ca = commentsByEntryIdLive[a.id]?.length ?? 0;
+      const cb = commentsByEntryIdLive[b.id]?.length ?? 0;
+      if (cb !== ca) return cb - ca;
+      return compareEntriesByNewest(a, b);
+    });
+
+  blocks.pending.sort(compareEntriesByNewest);
+  blocks.trending = sortEntriesByComments(blocks.trending);
+  blocks.memory.sort(compareEntriesByNewest);
+  blocks.understand_trabzon = sortEntriesRanked(blocks.understand_trabzon);
+  blocks.waiting_to_read.sort(compareEntriesByNewest);
+  blocks.question_of_day = sortEntriesRanked(blocks.question_of_day);
+
+  if (shuffleSeed != null) {
+    blocks.pending = seededShuffle(
+      blocks.pending,
+      slugMixSeed(shuffleSeed, "final-pending")
+    );
+    blocks.trending = shuffleContiguousRunsByKey(
+      blocks.trending,
+      (e) => commentsByEntryIdLive[e.id]?.length ?? 0,
+      slugMixSeed(shuffleSeed, "final-trending")
+    );
+    blocks.memory = seededShuffle(
+      blocks.memory,
+      slugMixSeed(shuffleSeed, "final-memory")
+    );
+    blocks.understand_trabzon = shuffleContiguousRunsByKey(
+      blocks.understand_trabzon,
+      (e) => commentsByEntryIdLive[e.id]?.length ?? 0,
+      slugMixSeed(shuffleSeed, "final-understand")
+    );
+    blocks.waiting_to_read = seededShuffle(
+      blocks.waiting_to_read,
+      slugMixSeed(shuffleSeed, "final-waiting")
+    );
+    blocks.question_of_day = shuffleContiguousRunsByKey(
+      blocks.question_of_day,
+      (e) => commentsByEntryIdLive[e.id]?.length ?? 0,
+      slugMixSeed(shuffleSeed, "final-questions")
+    );
+  }
+
+  return {
+    rightRailAwaitingFirstComment: blocks.pending,
+    mostCommentedEntries: blocks.trending,
+    shuffledMainFeedEntries: blocks.memory,
+    waitingEntriesForExplore: blocks.waiting_to_read,
+    starterEntries: blocks.understand_trabzon,
+    dailyQuestionEntries: blocks.question_of_day,
+  };
+}
 
 export type CenterMode = "feed" | "entry" | "auth" | "agreement";
 
@@ -316,6 +630,18 @@ export default function HomePageClient({
   const [footerInfoOpen, setFooterInfoOpen] = useState<FooterInfoId | null>(
     null
   );
+
+  /**
+   * Ana sayfa blok karışımı — yalnızca istemci mount sonrası (hidratasyon uyumu).
+   * Tam sayfa yenilemede her seferinde yeni tohum üretilir.
+   */
+  const [homeShuffleSeed, setHomeShuffleSeed] = useState<number | null>(null);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setHomeShuffleSeed(Math.floor(Math.random() * 0x100000000) >>> 0);
+    });
+  }, []);
 
   const commentsPropsFingerprint = useMemo(
     () =>
@@ -744,9 +1070,9 @@ export default function HomePageClient({
   }, [centerEntries]);
 
   /**
-   * Tüm yayın blokları: yeni `category` slug’ı → yalnız o blok; boş/eski kategori
-   * → fallback havuzu HOME_PUBLISH_SECTION_ORDER üzerinden round-robin.
-   * Aynı entry (id veya başlık anahtarı) yalnız bir blokta.
+   * Tüm yayın blokları: admin slug → blok; legacy round-robin; fazladakiler karışık havuzdan.
+   * homeShuffleSeed null: SSR/hidrasyon ile uyumlu deterministik sıra.
+   * Mount sonrası: karışık havuz ve blok içi sıra yenilenir (aynı entry iki blokta olmaz).
    */
   const {
     rightRailAwaitingFirstComment,
@@ -755,150 +1081,15 @@ export default function HomePageClient({
     waitingEntriesForExplore,
     starterEntries,
     dailyQuestionEntries,
-  } = useMemo(() => {
-    const withCounts = centerEntries.map((entry) => ({
-      entry,
-      commentCount: commentsByEntryIdLive[entry.id]?.length ?? 0,
-    }));
-
-    const sortByComments = (
-      a: (typeof withCounts)[0],
-      b: (typeof withCounts)[0]
-    ) => {
-      if (b.commentCount !== a.commentCount) {
-        return b.commentCount - a.commentCount;
-      }
-      return compareEntriesByNewest(a.entry, b.entry);
-    };
-
-    const sortByEngagement = (
-      a: (typeof withCounts)[0],
-      b: (typeof withCounts)[0]
-    ) => {
-      if (b.commentCount !== a.commentCount) {
-        return b.commentCount - a.commentCount;
-      }
-      return compareEntriesByNewest(a.entry, b.entry);
-    };
-
-    const sortRanked = sortByEngagement;
-
-    const blocks: Record<HomePublishBlockSlug, EntryItem[]> = {
-      pending: [],
-      trending: [],
-      memory: [],
-      understand_trabzon: [],
-      waiting_to_read: [],
-      question_of_day: [],
-    };
-
-    const usedKeys = new Set<string>();
-
-    function tryAdd(slug: HomePublishBlockSlug, entry: EntryItem): boolean {
-      if (blocks[slug].length >= HOME_BLOCK_MAX[slug]) return false;
-      const key = getEntryDedupeKey(entry);
-      if (usedKeys.has(key)) return false;
-      usedKeys.add(key);
-      blocks[slug].push(entry);
-      return true;
-    }
-
-    function sortMetaForSlug(
-      slug: HomePublishBlockSlug,
-      rows: (typeof withCounts)[0][]
-    ): (typeof withCounts)[0][] {
-      const copy = [...rows];
-      if (slug === "trending") copy.sort(sortByComments);
-      else if (
-        slug === "understand_trabzon" ||
-        slug === "question_of_day"
-      ) {
-        copy.sort(sortRanked);
-      } else {
-        copy.sort((a, b) => compareEntriesByNewest(a.entry, b.entry));
-      }
-      return copy;
-    }
-
-    for (const slug of HOME_PUBLISH_SECTION_ORDER) {
-      const tagged = sortMetaForSlug(
-        slug,
-        withCounts.filter((w) => {
-          const ps = entryPublishSlug(w.entry);
-          if (slug === "memory") return ps === "memory" || ps === "today";
-          return ps === slug;
-        })
-      );
-      for (const row of tagged) {
-        tryAdd(slug, row.entry);
-      }
-    }
-
-    function fallbackSort(
-      a: (typeof withCounts)[0],
-      b: (typeof withCounts)[0]
-    ): number {
-      const qScore = (e: EntryItem) => (e.title.includes("?") ? 2 : 0);
-      const gScore = (e: EntryItem) =>
-        normalizeEntryCategory(e.category) === "gundem" ? 1 : 0;
-      const sa = qScore(a.entry) + gScore(a.entry);
-      const sb = qScore(b.entry) + gScore(b.entry);
-      if (sb !== sa) return sb - sa;
-      return compareEntriesByNewest(a.entry, b.entry);
-    }
-
-    const fallbackRows = withCounts
-      .filter((w) => !hasAdminPublishSection(w.entry))
-      .sort(fallbackSort);
-
-    let rr = 0;
-    for (const row of fallbackRows) {
-      const key = getEntryDedupeKey(row.entry);
-      if (usedKeys.has(key)) continue;
-      for (let i = 0; i < HOME_PUBLISH_SECTION_ORDER.length; i++) {
-        const slug =
-          HOME_PUBLISH_SECTION_ORDER[
-            (rr + i) % HOME_PUBLISH_SECTION_ORDER.length
-          ];
-        if (tryAdd(slug, row.entry)) {
-          rr = (rr + 1) % HOME_PUBLISH_SECTION_ORDER.length;
-          break;
-        }
-      }
-    }
-
-    const sortEntriesByComments = (list: EntryItem[]) =>
-      [...list].sort((a, b) => {
-        const ca = commentsByEntryIdLive[a.id]?.length ?? 0;
-        const cb = commentsByEntryIdLive[b.id]?.length ?? 0;
-        if (cb !== ca) return cb - ca;
-        return compareEntriesByNewest(a, b);
-      });
-
-    const sortEntriesRanked = (list: EntryItem[]) =>
-      [...list].sort((a, b) => {
-        const ca = commentsByEntryIdLive[a.id]?.length ?? 0;
-        const cb = commentsByEntryIdLive[b.id]?.length ?? 0;
-        if (cb !== ca) return cb - ca;
-        return compareEntriesByNewest(a, b);
-      });
-
-    blocks.pending.sort(compareEntriesByNewest);
-    blocks.trending = sortEntriesByComments(blocks.trending);
-    blocks.memory.sort(compareEntriesByNewest);
-    blocks.understand_trabzon = sortEntriesRanked(blocks.understand_trabzon);
-    blocks.waiting_to_read.sort(compareEntriesByNewest);
-    blocks.question_of_day = sortEntriesRanked(blocks.question_of_day);
-
-    return {
-      rightRailAwaitingFirstComment: blocks.pending,
-      mostCommentedEntries: blocks.trending,
-      shuffledMainFeedEntries: blocks.memory,
-      waitingEntriesForExplore: blocks.waiting_to_read,
-      starterEntries: blocks.understand_trabzon,
-      dailyQuestionEntries: blocks.question_of_day,
-    };
-  }, [centerEntries, commentsByEntryIdLive]);
+  } = useMemo(
+    () =>
+      computeHomePublishDistribution(
+        centerEntries,
+        commentsByEntryIdLive,
+        homeShuffleSeed
+      ),
+    [centerEntries, commentsByEntryIdLive, homeShuffleSeed]
+  );
 
   const hasHomeExplore =
     starterEntries.length > 0 ||
