@@ -96,54 +96,85 @@ type DbClient = Exclude<
 >;
 
 /**
- * Slug / UUID / başliga göre entry satırı. Sıra: doğrudan slug → UUID id → başlık normalizasyonu (limit 1500).
+ * Slug / UUID / başlığa göre entry satırı. Sıra: slug eşleşmesi → UUID id → başlık normalize (limit 1500).
+ * Ara adımda hata olursa loglanır; bir sonraki adıma geçilir.
  */
 export async function getEntryByResolvedSlug(
   supabase: DbClient,
   slug: string
 ): Promise<EntryRow | null> {
-  const { data: bySlug } = await supabase
+  const { data: bySlug, error: slugErr } = await supabase
     .from("entries")
     .select("id,title,content,slug,created_at,user_id")
     .eq("slug", slug)
     .maybeSingle();
 
+  if (slugErr) {
+    console.warn("[entry-resolve] slug.eq:", slugErr.message);
+  }
   if (bySlug) return bySlug as EntryRow;
 
   const isUUID = /^[0-9a-f-]{36}$/i.test(slug);
 
   if (isUUID) {
-    const { data: byId } = await supabase
+    const { data: byId, error: idErr } = await supabase
       .from("entries")
       .select("id,title,content,slug,created_at,user_id")
       .eq("id", slug)
       .maybeSingle();
 
+    if (idErr) {
+      console.warn("[entry-resolve] id.eq:", idErr.message);
+    }
     if (byId) return byId as EntryRow;
   }
 
-  const { data: candidates } = await supabase
+  const { data: candidates, error: candErr } = await supabase
     .from("entries")
     .select("id,title,slug")
     .limit(1500);
 
-  if (candidates) {
+  if (candErr) {
+    console.warn("[entry-resolve] candidates:", candErr.message);
+    return null;
+  }
+
+  if (candidates?.length) {
+    const slugNorm = normalizeEntrySlug(slug);
     const found = candidates.find(
-      (e) => normalizeEntrySlug(String(e.title ?? "")) === slug
+      (e) => normalizeEntrySlug(String(e.title ?? "")) === slugNorm
     );
 
     if (found) {
-      const { data: full } = await supabase
+      const { data: full, error: fullErr } = await supabase
         .from("entries")
         .select("id,title,content,slug,created_at,user_id")
         .eq("id", found.id)
         .maybeSingle();
 
+      if (fullErr) {
+        console.warn("[entry-resolve] full row:", fullErr.message);
+      }
       if (full) return full as EntryRow;
     }
   }
 
   return null;
+}
+
+/** Entry detail: cache yok; metadata ve page aynı yolu kullanır. */
+export async function loadEntryPageShell(
+  pathSegment: string
+): Promise<{ entry: EntryItem; row: EntryRow } | null> {
+  unstable_noStore();
+  const trimmed = pathSegment.trim();
+  if (!trimmed) return null;
+  const supabase = await createSupabaseServerClient();
+  const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
+  const row = await getEntryByResolvedSlug(client, trimmed);
+  if (!row) return null;
+  const entry = await buildEntryItemFast(supabase, row);
+  return { entry, row };
 }
 
 /** Slug/UUID → entry satırı (sayfa aşaması). */

@@ -1,39 +1,18 @@
 import type { Metadata } from "next";
-import { unstable_noStore } from "next/cache";
-import { Suspense, cache } from "react";
+import { Suspense } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
 import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
 import { EntryDetailCommentsRsc } from "@/components/entry-detail-comments-rsc";
 import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
 import { getCommentAuth } from "@/lib/comment-auth";
-import {
-  buildEntryItemFast,
-  getEntryByResolvedSlug,
-} from "@/lib/entry-route-data";
+import { loadEntryPageShell } from "@/lib/entry-route-data";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
-import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import { normalizeEntrySlug } from "@/lib/slug";
 
-/** Entry slug: doğrudan slug → UUID → başlık normalizasyonu (getEntryByResolvedSlug). */
-
-type DbClient = NonNullable<
-  Awaited<ReturnType<typeof createSupabaseServerClient>>
->;
-
-const loadEntryPageData = cache(async (raw: string) => {
-  unstable_noStore();
-  const pathSegment = decodeEntryPathSegment(raw);
-  if (!pathSegment) return null;
-  const supabase = await createSupabaseServerClient();
-  const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
-  const row = await getEntryByResolvedSlug(client, pathSegment);
-  if (!row) return null;
-  const entry = await buildEntryItemFast(supabase, row);
-  return { entry, row };
-});
+/** Entry slug: loadEntryPageShell → slug / UUID / başlık fallback (entry-route-data). */
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -42,13 +21,17 @@ export const runtime = "nodejs";
 
 const SITE = "https://61larus.com";
 
-type PageProps = { params: Promise<{ slug: string }> };
+type PageParams = { slug?: string | string[] };
+type PageProps = { params: Promise<PageParams> };
 
-function decodeEntryPathSegment(raw: string): string {
+function pathSegmentFromParams(p: PageParams): string | null {
+  const rawSlug = Array.isArray(p.slug) ? p.slug[0] : p.slug;
   try {
-    return decodeURIComponent(raw.trim()).trim();
+    const pathSegment = decodeURIComponent(rawSlug ?? "").trim();
+    return pathSegment.length > 0 ? pathSegment : null;
   } catch {
-    return raw.trim();
+    const pathSegment = String(rawSlug ?? "").trim();
+    return pathSegment.length > 0 ? pathSegment : null;
   }
 }
 
@@ -61,15 +44,15 @@ function EntryDetailCommentsFallback() {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug: raw } = await params;
-  const pathSegment = decodeEntryPathSegment(raw);
+  const p = await params;
+  const pathSegment = pathSegmentFromParams(p);
   if (!pathSegment) {
-    return { robots: { index: false, follow: true } };
+    return { title: SITE_BRAND };
   }
 
-  const shell = await loadEntryPageData(raw);
+  const shell = await loadEntryPageShell(pathSegment);
   if (!shell) {
-    return { robots: { index: false, follow: true } };
+    return { title: SITE_BRAND };
   }
 
   const data = shell.entry;
@@ -83,9 +66,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     (typeof data.title === "string" ? data.title : "").trim()
   );
   const canonicalSlug =
-    (typeof s === "string" && s.trim().length > 0
-      ? s.trim()
-      : fromTitle) ||
+    (typeof s === "string" && s.trim().length > 0 ? s.trim() : fromTitle) ||
     slugifyEntryTitle(
       typeof data.title === "string" ? data.title : "",
       data.id
@@ -102,15 +83,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function EntrySlugPage({ params }: PageProps) {
-  const { slug: raw } = await params;
-  const pathSegment = decodeEntryPathSegment(raw);
+  const p = await params;
+  const pathSegment = pathSegmentFromParams(p);
   if (!pathSegment) {
     notFound();
   }
 
   const [shell, auth, headerAuthUser] = await Promise.all([
-    // loadEntryPageData: React.cache ile generateMetadata ile aynı istekte tek kez çalışır
-    loadEntryPageData(raw),
+    loadEntryPageShell(pathSegment),
     getCommentAuth(),
     (async () => {
       const supabase = await createSupabaseServerClient();
@@ -133,6 +113,7 @@ export default async function EntrySlugPage({ params }: PageProps) {
   }
 
   const { entry, row: entryRow } = shell;
+
   const dbSlug =
     typeof entry.slug === "string" && entry.slug.trim().length > 0
       ? entry.slug.trim()
