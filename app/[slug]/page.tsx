@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
 import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
@@ -34,14 +33,6 @@ function pathSegmentFromParams(p: PageParams): string | null {
     const pathSegment = String(rawSlug ?? "").trim();
     return pathSegment.length > 0 ? pathSegment : null;
   }
-}
-
-function EntryDetailCommentsFallback() {
-  return (
-    <section className="entry-comments-section" aria-label="Yorumlar" aria-busy>
-      <p className="entry-detail-loading m-0">Yorumlar yükleniyor…</p>
-    </section>
-  );
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -184,11 +175,7 @@ export default async function EntrySlugPage({ params }: PageProps) {
                 initialAgreementDone: auth.agreementAccepted,
                 initialPlatformAccessSuspended: auth.isSuspended,
               }}
-              commentsSlot={
-                <Suspense fallback={<EntryDetailCommentsFallback />}>
-                  <EntryDetailCommentsRsc row={entryRow} />
-                </Suspense>
-              }
+              commentsSlot={<EntryDetailCommentsRsc row={entryRow} />}
             />
           </div>
         </div>

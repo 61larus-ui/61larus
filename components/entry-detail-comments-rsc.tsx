@@ -9,11 +9,18 @@ function formatDate(value: string) {
 
 export async function EntryDetailCommentsRsc({ row }: { row: EntryRow }) {
   const supabase = await createSupabaseServerClient();
-  const commentList = await getCommentItemsForEntryRow(supabase, row);
+  const { items: commentList, loadFailed } = await getCommentItemsForEntryRow(
+    supabase,
+    row
+  );
 
   return (
     <section className="entry-comments-section" aria-label="Yorumlar">
-      {commentList.length === 0 ? (
+      {loadFailed ? (
+        <div className="entry-comments-empty" role="alert">
+          Yorumlar yüklenemedi
+        </div>
+      ) : commentList.length === 0 ? (
         <div className="entry-comments-empty">ilk yorumu sen yaz</div>
       ) : (
         <div className="flex flex-col">

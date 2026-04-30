@@ -25,7 +25,7 @@ export function EntryDetailBodyRsc({
     initialAgreementDone: boolean;
     initialPlatformAccessSuspended: boolean;
   };
-  /** Suspense sınırı: yorum listesi ayrı RSC */
+  /** Entry detail yorum listesi (RSC) */
   commentsSlot: ReactNode;
 }) {
   const authorName = entry.authorName?.trim() || "61Larus";

@@ -289,88 +289,99 @@ export async function buildEntryItemFast(
 export async function getCommentItemsForEntryRow(
   supabase: SupabaseForEntry,
   row: EntryRow
-): Promise<CommentItem[]> {
-  const { data: commentsData, error: commentsError } = await supabase
-    .from("comments")
-    .select(
-      "id, entry_id, user_id, content, created_at, parent_comment_id, reply_to_user_id, reply_to_username"
-    )
-    .eq("entry_id", row.id)
-    .order("created_at", { ascending: true });
-
-  if (commentsError) {
-    console.warn("[entry-route] comments", commentsError.message);
-  }
-
-  const commentsChrono = [...(commentsData ?? [])].sort(
-    (a, b) =>
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  );
-  const entryAuthorUserIdByEntryId = new Map<string, string>();
-  for (const c of commentsChrono) {
-    if (!entryAuthorUserIdByEntryId.has(c.entry_id)) {
-      entryAuthorUserIdByEntryId.set(c.entry_id, c.user_id);
-    }
-  }
-
-  const commentUserIds = [
-    ...new Set((commentsData ?? []).map((c) => c.user_id).filter(Boolean)),
-  ] as string[];
-
-  const entryUid: string | null = null;
-  const fallbackUid = entryAuthorUserIdByEntryId.get(row.id) ?? null;
-  const userIdsForAuthor = [
-    ...new Set(
-      [entryUid, fallbackUid, ...commentUserIds].filter(
-        (u): u is string => typeof u === "string" && u.length > 0
-      )
-    ),
-  ];
-
-  const authorInfoByUserId = new Map<
-    string,
-    {
-      authorLabel: string;
-      nicknameOrFullName: string | null;
-      bio61: string | null;
-    }
-  >();
-
-  if (userIdsForAuthor.length > 0) {
-    const userLookupClient = (createSupabaseServiceClient() ??
-      supabase) as typeof supabase;
-    const { data: usersRows } = await userLookupClient
-      .from("users")
+): Promise<{ items: CommentItem[]; loadFailed: boolean }> {
+  try {
+    const { data: commentsData, error: commentsError } = await supabase
+      .from("comments")
       .select(
-        "id, nickname, first_name, last_name, display_name_mode, email, bio_61"
+        "id, entry_id, user_id, content, created_at, parent_comment_id, reply_to_user_id, reply_to_username"
       )
-      .in("id", userIdsForAuthor);
-    for (const u of usersRows ?? []) {
-      if (typeof u.id === "string") {
-        const rawBio = u.bio_61;
-        const bio61 =
-          typeof rawBio === "string" && rawBio.trim().length > 0
-            ? rawBio.trim()
-            : null;
-        authorInfoByUserId.set(u.id, {
-          authorLabel: authorLabelFromUserRow(u),
-          nicknameOrFullName: authorNameNicknameOrFullName(u),
-          bio61,
-        });
+      .eq("entry_id", row.id)
+      .order("created_at", { ascending: true });
+
+    if (commentsError) {
+      console.warn("[entry-route] comments", commentsError.message);
+      return { items: [], loadFailed: true };
+    }
+
+    const commentsChrono = [...(commentsData ?? [])].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    const entryAuthorUserIdByEntryId = new Map<string, string>();
+    for (const c of commentsChrono) {
+      if (!entryAuthorUserIdByEntryId.has(c.entry_id)) {
+        entryAuthorUserIdByEntryId.set(c.entry_id, c.user_id);
       }
     }
-  }
 
-  return (commentsData ?? []).map((c) => {
-    const info = authorInfoByUserId.get(c.user_id);
-    const authorLabel = info?.authorLabel ?? SILINMIS_KULLANICI_LABEL;
-    const bio61 = info?.bio61 ?? null;
-    return {
-      ...c,
-      authorLabel,
-      bio61,
-    } as CommentItem;
-  });
+    const commentUserIds = [
+      ...new Set((commentsData ?? []).map((c) => c.user_id).filter(Boolean)),
+    ] as string[];
+
+    const entryUid: string | null = null;
+    const fallbackUid = entryAuthorUserIdByEntryId.get(row.id) ?? null;
+    const userIdsForAuthor = [
+      ...new Set(
+        [entryUid, fallbackUid, ...commentUserIds].filter(
+          (u): u is string => typeof u === "string" && u.length > 0
+        )
+      ),
+    ];
+
+    const authorInfoByUserId = new Map<
+      string,
+      {
+        authorLabel: string;
+        nicknameOrFullName: string | null;
+        bio61: string | null;
+      }
+    >();
+
+    if (userIdsForAuthor.length > 0) {
+      const userLookupClient = (createSupabaseServiceClient() ??
+        supabase) as typeof supabase;
+      const { data: usersRows, error: usersErr } = await userLookupClient
+        .from("users")
+        .select(
+          "id, nickname, first_name, last_name, display_name_mode, email, bio_61"
+        )
+        .in("id", userIdsForAuthor);
+      if (usersErr) {
+        console.warn("[entry-route] comment authors", usersErr.message);
+        return { items: [], loadFailed: true };
+      }
+      for (const u of usersRows ?? []) {
+        if (typeof u.id === "string") {
+          const rawBio = u.bio_61;
+          const bio61 =
+            typeof rawBio === "string" && rawBio.trim().length > 0
+              ? rawBio.trim()
+              : null;
+          authorInfoByUserId.set(u.id, {
+            authorLabel: authorLabelFromUserRow(u),
+            nicknameOrFullName: authorNameNicknameOrFullName(u),
+            bio61,
+          });
+        }
+      }
+    }
+
+    const items = (commentsData ?? []).map((c) => {
+      const info = authorInfoByUserId.get(c.user_id);
+      const authorLabel = info?.authorLabel ?? SILINMIS_KULLANICI_LABEL;
+      const bio61 = info?.bio61 ?? null;
+      return {
+        ...c,
+        authorLabel,
+        bio61,
+      } as CommentItem;
+    });
+    return { items, loadFailed: false };
+  } catch (e) {
+    console.warn("[entry-route] comments", e);
+    return { items: [], loadFailed: true };
+  }
 }
 
 async function buildDetailFromRow(
