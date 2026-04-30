@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "backfill-entry-slugs": "ts-node scripts/backfill-entry-slugs.ts"
+    "backfill-entry-slugs": "ts-node scripts/backfill-entry-slugs.ts",
+    "fix-slugs": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/fix-entry-slugs.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.0",
@@ -24,6 +25,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "dotenv": "^16.4.5",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5"
