@@ -102,16 +102,56 @@ export async function getEntryByResolvedSlug(
   supabase: DbClient,
   slug: string
 ): Promise<EntryRow | null> {
-  const { data: bySlug, error: slugErr } = await supabase
-    .from("entries")
-    .select("id,title,content,slug,created_at,category")
-    .eq("slug", slug)
-    .maybeSingle();
-
-  if (slugErr) {
-    console.warn("[entry-resolve] slug.eq:", slugErr.message);
+  let decodedTry = slug;
+  try {
+    decodedTry = decodeURIComponent(slug);
+  } catch {
+    decodedTry = slug;
   }
-  if (bySlug) return bySlug as EntryRow;
+  const slugVariants = [
+    slug,
+    decodedTry,
+    slug.trim(),
+    decodedTry.trim(),
+  ];
+  const triedSlug = new Set<string>();
+  for (const s of slugVariants) {
+    if (!s || triedSlug.has(s)) continue;
+    triedSlug.add(s);
+    const { data: bySlug, error: slugErr } = await supabase
+      .from("entries")
+      .select("id,title,content,slug,created_at,category")
+      .eq("slug", s)
+      .maybeSingle();
+    if (slugErr) {
+      console.warn("[entry-resolve] slug.eq:", slugErr.message);
+    }
+    if (bySlug) return bySlug as EntryRow;
+  }
+
+  const slugPrefix = slug.split("-").slice(0, 4).join("-");
+  if (slugPrefix.length > 0) {
+    const { data: ilikeCandidates, error: ilikeErr } = await supabase
+      .from("entries")
+      .select("id,title,slug")
+      .ilike("slug", `%${slugPrefix}%`)
+      .limit(1);
+    if (ilikeErr) {
+      console.warn("[entry-resolve] slug.ilike:", ilikeErr.message);
+    }
+    const ilikeHit = ilikeCandidates?.[0];
+    if (ilikeHit) {
+      const { data: fullFromIlike, error: fullIlikeErr } = await supabase
+        .from("entries")
+        .select("id,title,content,slug,created_at,category")
+        .eq("id", ilikeHit.id)
+        .maybeSingle();
+      if (fullIlikeErr) {
+        console.warn("[entry-resolve] full row (ilike):", fullIlikeErr.message);
+      }
+      if (fullFromIlike) return fullFromIlike as EntryRow;
+    }
+  }
 
   const isUUID = /^[0-9a-f-]{36}$/i.test(slug);
 
