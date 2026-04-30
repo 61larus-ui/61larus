@@ -171,10 +171,25 @@ export async function loadEntryPageShell(
   if (!trimmed) return null;
   const supabase = await createSupabaseServerClient();
   const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
-  const row = await getEntryByResolvedSlug(client, trimmed);
-  if (!row) return null;
-  const entry = await buildEntryItemFast(supabase, row);
-  return { entry, row };
+  const resolvedEntry = await getEntryByResolvedSlug(client, trimmed);
+  if (!resolvedEntry) {
+    console.log("[entry-route-live-debug]", {
+      pathSegment: trimmed,
+      resolvedEntryId: null,
+      shellEntryId: null,
+      shellExists: false,
+    });
+    return null;
+  }
+  const entry = await buildEntryItemFast(supabase, resolvedEntry);
+  const shell = { entry, row: resolvedEntry };
+  console.log("[entry-route-live-debug]", {
+    pathSegment: trimmed,
+    resolvedEntryId: resolvedEntry.id ?? null,
+    shellEntryId: shell.entry?.id ?? null,
+    shellExists: Boolean(shell),
+  });
+  return shell;
 }
 
 /** Slug/UUID → entry satırı (sayfa aşaması). */

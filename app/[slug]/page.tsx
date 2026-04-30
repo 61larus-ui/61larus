@@ -6,6 +6,7 @@ import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
 import { EntryDetailCommentsRsc } from "@/components/entry-detail-comments-rsc";
 import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
 import { getCommentAuth } from "@/lib/comment-auth";
+import type { EntryItem } from "@/app/home-page-client";
 import { loadEntryPageShell } from "@/lib/entry-route-data";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
@@ -114,15 +115,43 @@ export default async function EntrySlugPage({ params }: PageProps) {
 
   const { entry, row: entryRow } = shell;
 
+  const rowSlug =
+    typeof entryRow.slug === "string" && entryRow.slug.trim().length > 0
+      ? entryRow.slug.trim()
+      : null;
+  const entrySafe: EntryItem = {
+    ...entry,
+    id: entry.id ?? entryRow.id,
+    title:
+      typeof entry.title === "string" && entry.title.trim().length > 0
+        ? entry.title
+        : typeof entryRow.title === "string"
+          ? entryRow.title
+          : "",
+    content:
+      typeof entry.content === "string"
+        ? entry.content
+        : typeof entryRow.content === "string"
+          ? entryRow.content
+          : "",
+    created_at:
+      typeof entry.created_at === "string" && entry.created_at.length > 0
+        ? entry.created_at
+        : typeof entryRow.created_at === "string"
+          ? entryRow.created_at
+          : "",
+    slug: entry.slug ?? rowSlug,
+  };
+
   const dbSlug =
-    typeof entry.slug === "string" && entry.slug.trim().length > 0
-      ? entry.slug.trim()
+    typeof entrySafe.slug === "string" && entrySafe.slug.trim().length > 0
+      ? entrySafe.slug.trim()
       : null;
   const titleNorm = normalizeEntrySlug(
-    (typeof entry.title === "string" ? entry.title : "").trim()
+    (typeof entrySafe.title === "string" ? entrySafe.title : "").trim()
   );
   const pathFromTitle =
-    titleNorm || slugifyEntryTitle(entry.title ?? "", entry.id);
+    titleNorm || slugifyEntryTitle(entrySafe.title ?? "", entrySafe.id);
   const canonicalPath = dbSlug ?? (pathFromTitle || null);
   if (canonicalPath && canonicalPath !== pathSegment) {
     permanentRedirect(`/${encodeURI(canonicalPath)}`);
@@ -130,10 +159,15 @@ export default async function EntrySlugPage({ params }: PageProps) {
 
   return (
     <>
+      <div style={{ display: "none" }} data-entry-detail-loaded="true">
+        {entrySafe.id}
+      </div>
       <EntryArticleJsonLd
-        title={entry.title}
-        content={entry.content}
-        createdAt={entry.created_at != null ? String(entry.created_at) : null}
+        title={entrySafe.title}
+        content={entrySafe.content}
+        createdAt={
+          entrySafe.created_at != null ? String(entrySafe.created_at) : null
+        }
       />
       <EntryRouteLayoutClient
         isAuthenticated={auth.isAuthenticated}
@@ -144,7 +178,7 @@ export default async function EntrySlugPage({ params }: PageProps) {
         <div className="entry-detail-page">
           <div className="entry-detail-page-inner">
             <EntryDetailBodyRsc
-              entry={entry}
+              entry={entrySafe}
               commentAuth={{
                 isAuthenticated: auth.isAuthenticated,
                 initialAgreementDone: auth.agreementAccepted,
