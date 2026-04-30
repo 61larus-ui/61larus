@@ -1,18 +1,39 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { unstable_noStore } from "next/cache";
+import { Suspense, cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
 import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
 import { EntryDetailCommentsRsc } from "@/components/entry-detail-comments-rsc";
 import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
 import { getCommentAuth } from "@/lib/comment-auth";
-import { getEntryShellBySlug } from "@/lib/entry-route-data";
+import {
+  buildEntryItemFast,
+  getEntryByResolvedSlug,
+} from "@/lib/entry-route-data";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import { normalizeEntrySlug } from "@/lib/slug";
 
-/** Entry slug: exact DB slug → normalized slug → UUID id → fallback scan (entry-route-data). */
+/** Entry slug: doğrudan slug → UUID → başlık normalizasyonu (getEntryByResolvedSlug). */
+
+type DbClient = NonNullable<
+  Awaited<ReturnType<typeof createSupabaseServerClient>>
+>;
+
+const loadEntryPageData = cache(async (raw: string) => {
+  unstable_noStore();
+  const pathSegment = decodeEntryPathSegment(raw);
+  if (!pathSegment) return null;
+  const supabase = await createSupabaseServerClient();
+  const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
+  const row = await getEntryByResolvedSlug(client, pathSegment);
+  if (!row) return null;
+  const entry = await buildEntryItemFast(supabase, row);
+  return { entry, row };
+});
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -46,7 +67,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { robots: { index: false, follow: true } };
   }
 
-  const shell = await getEntryShellBySlug(raw);
+  const shell = await loadEntryPageData(raw);
   if (!shell) {
     return { robots: { index: false, follow: true } };
   }
@@ -88,8 +109,8 @@ export default async function EntrySlugPage({ params }: PageProps) {
   }
 
   const [shell, auth, headerAuthUser] = await Promise.all([
-    // getEntryShellBySlug: React.cache ile generateMetadata ile aynı istekte tek kez çalışır
-    getEntryShellBySlug(raw),
+    // loadEntryPageData: React.cache ile generateMetadata ile aynı istekte tek kez çalışır
+    loadEntryPageData(raw),
     getCommentAuth(),
     (async () => {
       const supabase = await createSupabaseServerClient();

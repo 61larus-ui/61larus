@@ -1,5 +1,4 @@
 import { unstable_noStore } from "next/cache";
-import { cache } from "react";
 import { SILINMIS_KULLANICI_LABEL } from "@/lib/deleted-user-label";
 import {
   combinedFullNameFromParts,
@@ -10,7 +9,6 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { normalizeEntryCategory } from "@/lib/entry-category";
 import { normalizeEntrySlug } from "@/lib/slug";
-import { isRfc4122Uuid } from "@/lib/seo-entry-description";
 import type { CommentItem, EntryItem } from "@/app/home-page-client";
 
 function authorLabelFromUserRow(row: {
@@ -98,88 +96,50 @@ type DbClient = Exclude<
 >;
 
 /**
- * 1) `entries.slug` ile doğrudan eşleşme (önce URL segment’i, gerekirse normalize biçim).
- * Çok satır varsa ilk kayıt alınır.
+ * Slug / UUID / başliga göre entry satırı. Sıra: doğrudan slug → UUID id → başlık normalizasyonu (limit 1500).
  */
-async function loadEntryBySlugExact(
-  client: DbClient,
-  slugValue: string
+export async function getEntryByResolvedSlug(
+  supabase: DbClient,
+  slug: string
 ): Promise<EntryRow | null> {
-  const v = slugValue.trim();
-  if (!v) return null;
-
-  const res = await client
+  const { data: bySlug } = await supabase
     .from("entries")
-    .select(ENTRY_ROW_SELECT)
-    .eq("slug", v)
-    .limit(1);
+    .select("id,title,content,slug,created_at,user_id")
+    .eq("slug", slug)
+    .maybeSingle();
 
-  if (
-    res.error &&
-    /slug|column|schema|not exist/i.test(res.error.message ?? "")
-  ) {
-    return null;
-  }
-  if (res.error) {
-    console.warn("[entry-route] slug.eq lookup", res.error.message);
-    return null;
-  }
-  const row = res.data?.[0];
-  return row ? (row as EntryRow) : null;
-}
+  if (bySlug) return bySlug as EntryRow;
 
-/**
- * Slug çözüm sırası (404 yalnızca gerçekten yoksa):
- * 1. Tam slug eşleşmesi (decoded → normalize edilmiş, farklıysa ikinci deneme)
- * 2. Segment RFC UUID ise id eşleşmesi
- * 3. normalize(slug) / normalize(title) ile sınırlı tarama (eski/null slug kayıtları)
- */
-async function resolveEntryRowWithClient(
-  client: DbClient,
-  raw: string
-): Promise<EntryRow | null> {
-  const decodedSlug = decodeSlugSegment(raw);
-  if (!decodedSlug) return null;
+  const isUUID = /^[0-9a-f-]{36}$/i.test(slug);
 
-  const targetSlug = normalizeEntrySlug(decodedSlug);
+  if (isUUID) {
+    const { data: byId } = await supabase
+      .from("entries")
+      .select("id,title,content,slug,created_at,user_id")
+      .eq("id", slug)
+      .maybeSingle();
 
-  const byDecoded = await loadEntryBySlugExact(client, decodedSlug);
-  if (byDecoded) {
-    return byDecoded;
+    if (byId) return byId as EntryRow;
   }
 
-  if (targetSlug.length > 0 && targetSlug !== decodedSlug) {
-    const byNormalized = await loadEntryBySlugExact(client, targetSlug);
-    if (byNormalized) {
-      return byNormalized;
-    }
-  }
-
-  if (isRfc4122Uuid(decodedSlug)) {
-    const byId = await loadEntryRowById(client, decodedSlug);
-    if (byId) {
-      return byId;
-    }
-  }
-
-  const { data, error } = await client
+  const { data: candidates } = await supabase
     .from("entries")
-    .select(ENTRY_ROW_SELECT)
-    .order("created_at", { ascending: false })
-    .limit(2500);
+    .select("id,title,slug")
+    .limit(1500);
 
-  if (error) {
-    console.warn(
-      "[entry-route] resolveEntryRowWithClient fallback scan",
-      error.message
+  if (candidates) {
+    const found = candidates.find(
+      (e) => normalizeEntrySlug(String(e.title ?? "")) === slug
     );
-    return null;
-  }
 
-  for (const rowRaw of data ?? []) {
-    const row = rowRaw as EntryRow;
-    if (entryRowMatchesSlugResolution(row, targetSlug, decodedSlug)) {
-      return row;
+    if (found) {
+      const { data: full } = await supabase
+        .from("entries")
+        .select("id,title,content,slug,created_at,user_id")
+        .eq("id", found.id)
+        .maybeSingle();
+
+      if (full) return full as EntryRow;
     }
   }
 
@@ -193,7 +153,9 @@ export async function resolveEntryRowBySegment(
   unstable_noStore();
   const supabase = await createSupabaseServerClient();
   const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
-  return resolveEntryRowWithClient(client, raw);
+  const decoded = decodeSlugSegment(raw);
+  if (!decoded) return null;
+  return getEntryByResolvedSlug(client, decoded);
 }
 
 /**
@@ -312,24 +274,6 @@ export async function buildEntryItemFast(
   }
   return { ...base, slug: slugVal };
 }
-
-/** Giriş sayfası: slug → satır + EntryItem (yorum sorgusu yok). */
-async function getEntryShellBySlugUncached(
-  raw: string
-): Promise<{ entry: EntryItem; row: EntryRow } | null> {
-  unstable_noStore();
-  const supabase = await createSupabaseServerClient();
-  const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
-  const row = await resolveEntryRowWithClient(client, raw);
-  if (!row) {
-    return null;
-  }
-  const entry = await buildEntryItemFast(supabase, row);
-  return { entry, row };
-}
-
-/** Aynı istek içinde generateMetadata + page tek DB yolunu paylaşır. */
-export const getEntryShellBySlug = cache(getEntryShellBySlugUncached);
 
 /** Tüm yorum satırları + yazar etiketleri (ayrı Suspense aşaması). */
 export async function getCommentItemsForEntryRow(
@@ -572,30 +516,8 @@ function decodeSlugSegment(segment: string): string {
   }
 }
 
-function entryRowMatchesSlugResolution(
-  row: EntryRow,
-  targetSlug: string,
-  decodedSlug: string
-): boolean {
-  if (row.id === decodedSlug) return true;
-  if (
-    targetSlug.length > 0 &&
-    normalizeEntrySlug(row.slug ?? "") === targetSlug
-  ) {
-    return true;
-  }
-  if (
-    targetSlug.length > 0 &&
-    normalizeEntrySlug(row.title ?? "") === targetSlug
-  ) {
-    return true;
-  }
-  return false;
-}
-
 /**
  * Slug segment → tam satır + yorumlar (tekil sayfa içeriği).
- * Çözüm sırası: `resolveEntryRowWithClient` ile aynı (slug → UUID id → title/slug normalize tarama).
  */
 export async function getEntryDetailBySlug(
   segment: string
@@ -604,7 +526,9 @@ export async function getEntryDetailBySlug(
   const supabase = await createSupabaseServerClient();
   const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
 
-  const row = await resolveEntryRowWithClient(client, segment);
+  const decoded = decodeSlugSegment(segment);
+  if (!decoded) return null;
+  const row = await getEntryByResolvedSlug(client, decoded);
   if (!row) {
     return null;
   }
