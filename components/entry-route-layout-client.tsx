@@ -20,22 +20,38 @@ const HEADER_ATATURK_QUOTES = [
 
 type FooterInfoId = "about" | "rules" | "privacy" | "contact";
 
+function displayNameFromUserMetadata(
+  meta: Record<string, unknown> | null | undefined
+): string {
+  if (!meta) return "";
+  const full = meta["full_name"];
+  const name = meta["name"];
+  return (
+    (typeof full === "string" ? full.trim() : "") ||
+    (typeof name === "string" ? name.trim() : "") ||
+    ""
+  );
+}
+
 export function EntryRouteLayoutClient({
   children,
   isAuthenticated,
   userEmail,
+  userMetadata: userMetadataFromServer,
   initialPlatformAccessSuspended,
 }: {
   children: ReactNode;
   isAuthenticated: boolean;
   userEmail: string | null;
+  /** RSC sırasında `getUser().user_metadata`; istemci efektinde öncelikli ad kaynağı. */
+  userMetadata?: Record<string, unknown> | null;
   initialPlatformAccessSuspended: boolean;
 }) {
   const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [footerInfoOpen, setFooterInfoOpen] = useState<FooterInfoId | null>(
     null
   );
-  /** Çözümlenen hesap etiketi; entry route SSR `userEmail={null}` olduğunda istemci oturumu + users ile dolar. */
+  /** Sunucudan gelen e-posta + istemci profil çözümlemesi; resolved null iken e-posta öneği hemen gösterilir. */
   const [resolvedAccountLabel, setResolvedAccountLabel] = useState<
     string | null
   >(null);
@@ -69,6 +85,12 @@ export function EntryRouteLayoutClient({
     setResolvedAccountLabel(null);
     let cancelled = false;
     void (async () => {
+      const fromPropMeta = displayNameFromUserMetadata(userMetadataFromServer);
+      if (fromPropMeta) {
+        setResolvedAccountLabel(fromPropMeta);
+        return;
+      }
+
       const supabase = createSupabaseBrowserClient();
       const {
         data: { user },
@@ -79,15 +101,11 @@ export function EntryRouteLayoutClient({
         return;
       }
 
-      const meta = user.user_metadata as {
-        full_name?: unknown;
-        name?: unknown;
-      } | null;
-      const fromMeta =
-        (typeof meta?.full_name === "string" ? meta.full_name.trim() : "") ||
-        (typeof meta?.name === "string" ? meta.name.trim() : "");
-      if (fromMeta) {
-        setResolvedAccountLabel(fromMeta);
+      const fromSessionMeta = displayNameFromUserMetadata(
+        user.user_metadata as Record<string, unknown> | undefined
+      );
+      if (fromSessionMeta) {
+        setResolvedAccountLabel(fromSessionMeta);
         return;
       }
 
@@ -136,8 +154,8 @@ export function EntryRouteLayoutClient({
       }
 
       const local =
-        user.email?.split("@")[0]?.trim() ||
         userEmail?.split("@")[0]?.trim() ||
+        user.email?.split("@")[0]?.trim() ||
         "";
       setResolvedAccountLabel(local || "kullanıcı");
     })();
@@ -145,7 +163,7 @@ export function EntryRouteLayoutClient({
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, userEmail]);
+  }, [isAuthenticated, userEmail, userMetadataFromServer]);
 
   const headerDisplayName =
     !isAuthenticated

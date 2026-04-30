@@ -7,6 +7,7 @@ import { EntryDetailCommentsRsc } from "@/components/entry-detail-comments-rsc";
 import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
 import { getCommentAuth } from "@/lib/comment-auth";
 import { getEntryShellBySlug } from "@/lib/entry-route-data";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import { normalizeEntrySlug } from "@/lib/slug";
@@ -84,9 +85,23 @@ export default async function EntrySlugPage({ params }: PageProps) {
     notFound();
   }
 
-  const [shell, auth] = await Promise.all([
+  const [shell, auth, headerAuthUser] = await Promise.all([
     getEntryShellBySlug(raw),
     getCommentAuth(),
+    (async () => {
+      const supabase = await createSupabaseServerClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const meta = user?.user_metadata;
+      return {
+        email: user?.email ?? null,
+        userMetadata:
+          meta && typeof meta === "object" && !Array.isArray(meta)
+            ? (meta as Record<string, unknown>)
+            : null,
+      };
+    })(),
   ]);
 
   if (!shell) {
@@ -117,7 +132,8 @@ export default async function EntrySlugPage({ params }: PageProps) {
       />
       <EntryRouteLayoutClient
         isAuthenticated={auth.isAuthenticated}
-        userEmail={null}
+        userEmail={headerAuthUser.email}
+        userMetadata={headerAuthUser.userMetadata}
         initialPlatformAccessSuspended={auth.isSuspended}
       >
         <div className="entry-detail-page">
