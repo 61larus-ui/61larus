@@ -13,7 +13,7 @@ import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import { normalizeEntrySlug } from "@/lib/slug";
 
-/** Entry slug: loadEntryPageShell → slug / UUID / başlık fallback (entry-route-data). */
+/** Entry: loadEntryPageShell → decode+trim, tam slug eşlemesi veya UUID id (entry-route-data). */
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

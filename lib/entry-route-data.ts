@@ -8,7 +8,6 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { normalizeEntryCategory } from "@/lib/entry-category";
-import { normalizeEntrySlug } from "@/lib/slug";
 import type { CommentItem, EntryItem } from "@/app/home-page-client";
 
 function authorLabelFromUserRow(row: {
@@ -95,107 +94,38 @@ type DbClient = Exclude<
 >;
 
 /**
- * Slug / UUID / başlığa göre entry satırı. Sıra: slug eşleşmesi → UUID id → başlık normalize (limit 1500).
- * Ara adımda hata olursa loglanır; bir sonraki adıma geçilir.
+ * Path segment → entry satırı. Sıra: decode+trim → tam slug eşlemesi → UUID id.
  */
 export async function getEntryByResolvedSlug(
   supabase: DbClient,
-  slug: string
+  rawSegment: string
 ): Promise<EntryRow | null> {
-  let decodedTry = slug;
-  try {
-    decodedTry = decodeURIComponent(slug);
-  } catch {
-    decodedTry = slug;
-  }
-  const slugVariants = [
-    slug,
-    decodedTry,
-    slug.trim(),
-    decodedTry.trim(),
-  ];
-  const triedSlug = new Set<string>();
-  for (const s of slugVariants) {
-    if (!s || triedSlug.has(s)) continue;
-    triedSlug.add(s);
-    const { data: bySlug, error: slugErr } = await supabase
-      .from("entries")
-      .select("id,title,content,slug,created_at,category")
-      .eq("slug", s)
-      .maybeSingle();
-    if (slugErr) {
-      console.warn("[entry-resolve] slug.eq:", slugErr.message);
-    }
-    if (bySlug) return bySlug as EntryRow;
-  }
+  const segment = decodeSlugSegment(rawSegment);
+  if (!segment) return null;
 
-  const slugPrefix = slug.split("-").slice(0, 4).join("-");
-  if (slugPrefix.length > 0) {
-    const { data: ilikeCandidates, error: ilikeErr } = await supabase
-      .from("entries")
-      .select("id,title,slug")
-      .ilike("slug", `%${slugPrefix}%`)
-      .limit(1);
-    if (ilikeErr) {
-      console.warn("[entry-resolve] slug.ilike:", ilikeErr.message);
-    }
-    const ilikeHit = ilikeCandidates?.[0];
-    if (ilikeHit) {
-      const { data: fullFromIlike, error: fullIlikeErr } = await supabase
-        .from("entries")
-        .select("id,title,content,slug,created_at,category")
-        .eq("id", ilikeHit.id)
-        .maybeSingle();
-      if (fullIlikeErr) {
-        console.warn("[entry-resolve] full row (ilike):", fullIlikeErr.message);
-      }
-      if (fullFromIlike) return fullFromIlike as EntryRow;
-    }
+  const { data: bySlug, error: slugErr } = await supabase
+    .from("entries")
+    .select("id,title,content,slug,created_at,category")
+    .eq("slug", segment)
+    .maybeSingle();
+  if (slugErr) {
+    console.warn("[entry-resolve] slug.eq:", slugErr.message);
   }
+  if (bySlug) return bySlug as EntryRow;
 
-  const isUUID = /^[0-9a-f-]{36}$/i.test(slug);
+  const isUUID = /^[0-9a-f-]{36}$/i.test(segment);
 
   if (isUUID) {
     const { data: byId, error: idErr } = await supabase
       .from("entries")
       .select("id,title,content,slug,created_at,category")
-      .eq("id", slug)
+      .eq("id", segment)
       .maybeSingle();
 
     if (idErr) {
       console.warn("[entry-resolve] id.eq:", idErr.message);
     }
     if (byId) return byId as EntryRow;
-  }
-
-  const { data: candidates, error: candErr } = await supabase
-    .from("entries")
-    .select("id,title,slug")
-    .limit(1500);
-
-  if (candErr) {
-    console.warn("[entry-resolve] candidates:", candErr.message);
-    return null;
-  }
-
-  if (candidates?.length) {
-    const slugNorm = normalizeEntrySlug(slug);
-    const found = candidates.find(
-      (e) => normalizeEntrySlug(String(e.title ?? "")) === slugNorm
-    );
-
-    if (found) {
-      const { data: full, error: fullErr } = await supabase
-        .from("entries")
-        .select("id,title,content,slug,created_at,category")
-        .eq("id", found.id)
-        .maybeSingle();
-
-      if (fullErr) {
-        console.warn("[entry-resolve] full row:", fullErr.message);
-      }
-      if (full) return full as EntryRow;
-    }
   }
 
   return null;
@@ -238,9 +168,7 @@ export async function resolveEntryRowBySegment(
   unstable_noStore();
   const supabase = await createSupabaseServerClient();
   const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
-  const decoded = decodeSlugSegment(raw);
-  if (!decoded) return null;
-  return getEntryByResolvedSlug(client, decoded);
+  return getEntryByResolvedSlug(client, raw);
 }
 
 /**

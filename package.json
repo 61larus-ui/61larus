@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "backfill-entry-slugs": "ts-node scripts/backfill-entry-slugs.ts",
-    "fix-slugs": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/fix-entry-slugs.ts"
+    "fix-slugs": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/fix-entry-slugs.ts",
+    "repair-slugs": "ts-node scripts/repair-entry-slugs.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.0",

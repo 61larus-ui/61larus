@@ -66,22 +66,15 @@ export async function PATCH(req: Request, ctx: Ctx) {
     .eq("id", id)
     .maybeSingle();
 
-  let existingSlug: string | null = null;
-  if (!cur.error && cur.data) {
-    const s = (cur.data as { slug?: string | null }).slug;
-    if (typeof s === "string" && s.trim().length > 0) {
-      existingSlug = s.trim();
-    }
-  }
   const slugColumnMissing =
     cur.error && /slug|column|schema|not exist/i.test(cur.error.message ?? "");
 
-  const newSlugValue =
-    !slugColumnMissing && !existingSlug
-      ? await ensureUniqueEntrySlug(service, slugifyEntryTitle(title, id), {
-          excludeEntryId: id,
-        })
-      : null;
+  let nextSlug: string | null = null;
+  if (!slugColumnMissing) {
+    nextSlug = await ensureUniqueEntrySlug(service, slugifyEntryTitle(title, id), {
+      excludeEntryId: id,
+    });
+  }
 
   const basePatch: {
     title: string;
@@ -93,8 +86,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
     content,
     category,
   };
-  if (newSlugValue) {
-    basePatch.slug = newSlugValue;
+  if (nextSlug !== null) {
+    basePatch.slug = nextSlug;
   }
 
   let upd = await service.from("entries").update(basePatch).eq("id", id);
@@ -109,8 +102,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
     upd = await service
       .from("entries")
       .update(
-        newSlugValue
-          ? { title, content, slug: newSlugValue }
+        nextSlug !== null
+          ? { title, content, slug: nextSlug }
           : { title, content }
       )
       .eq("id", id);

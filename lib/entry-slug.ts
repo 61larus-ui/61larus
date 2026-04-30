@@ -1,25 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { normalizeEntrySlug } from "@/lib/slug";
+import { entrySlugRootFromBase } from "@/lib/slug";
 
-/**
- * Turkish-aware ASCII slug (ç→c, ğ→g, ı/İ→i, ö→o, ş→s, ü→u; lowercase;
- * non-alnum → single hyphen; trim). If empty, uses first 8 hex chars of id (no hyphens).
- */
-export function slugifyEntryTitle(
-  title: string,
-  idForFallback: string
-): string {
-  const s = normalizeEntrySlug(title);
-  if (s.length > 0) return s;
-  const compact = idForFallback
-    .replace(/-/g, "")
-    .slice(0, 8)
-    .toLowerCase();
-  if (/^[0-9a-f]+$/i.test(compact) && compact.length > 0) {
-    return compact;
-  }
-  return "entry";
-}
+export { slugifyEntryTitle } from "@/lib/slug";
 
 /**
  * Reserves a unique `entries.slug` by appending -2, -3, … on collision.
@@ -31,7 +13,7 @@ export async function ensureUniqueEntrySlug(
   options: { excludeEntryId?: string } = {}
 ): Promise<string> {
   const { excludeEntryId } = options;
-  const root = (baseSlug || "entry").replace(/^-+|-+$/g, "") || "entry";
+  const root = entrySlugRootFromBase(baseSlug);
   let n = 0;
   for (;;) {
     const candidate = n === 0 ? root : `${root}-${n + 1}`;

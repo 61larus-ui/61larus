@@ -29,3 +29,44 @@ export function normalizeEntrySlug(input: string): string {
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
+
+/**
+ * Canonical DB slug base from entry title. Uses {@link normalizeEntrySlug};
+ * if empty, falls back to first 8 hex chars of id, or `"entry"`.
+ */
+export function slugifyEntryTitle(title: string, idForFallback: string): string {
+  const s = normalizeEntrySlug(title);
+  if (s.length > 0) return s;
+  const compact = idForFallback
+    .replace(/-/g, "")
+    .slice(0, 8)
+    .toLowerCase();
+  if (/^[0-9a-f]+$/i.test(compact) && compact.length > 0) {
+    return compact;
+  }
+  return "entry";
+}
+
+/** Same root normalization as {@link ensureUniqueEntrySlug} in entry-slug. */
+export function entrySlugRootFromBase(baseSlug: string): string {
+  return (baseSlug || "entry").replace(/^-+|-+$/g, "") || "entry";
+}
+
+/**
+ * Next unique slug: `root`, then `root-2`, `root-3`, … (in-memory, matches DB resolver).
+ */
+export function allocateUniqueSlug(root: string, taken: Set<string>): string {
+  const r = entrySlugRootFromBase(root);
+  let n = 0;
+  for (;;) {
+    const candidate = n === 0 ? r : `${r}-${n + 1}`;
+    if (!taken.has(candidate)) {
+      taken.add(candidate);
+      return candidate;
+    }
+    n += 1;
+    if (n > 10_000) {
+      throw new Error("slug_allocation_exhausted");
+    }
+  }
+}
