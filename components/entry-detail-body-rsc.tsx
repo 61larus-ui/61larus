@@ -34,7 +34,7 @@ export function EntryDetailBodyRsc({
   return (
     <div className="relative z-0 max-w-none">
       <div className="entry-detail-back-row flex flex-col gap-0.5 md:flex-row md:items-center">
-        <Link href="/" scroll={false} className="entry-detail-back">
+        <Link href="/" prefetch scroll={false} className="entry-detail-back">
           ← Akışa dön
         </Link>
       </div>

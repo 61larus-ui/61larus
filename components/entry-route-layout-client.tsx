@@ -82,15 +82,16 @@ export function EntryRouteLayoutClient({
       setResolvedAccountLabel(null);
       return;
     }
+
+    const fromPropMeta = displayNameFromUserMetadata(userMetadataFromServer);
+    if (fromPropMeta) {
+      setResolvedAccountLabel(fromPropMeta);
+      return;
+    }
+
     setResolvedAccountLabel(null);
     let cancelled = false;
     void (async () => {
-      const fromPropMeta = displayNameFromUserMetadata(userMetadataFromServer);
-      if (fromPropMeta) {
-        setResolvedAccountLabel(fromPropMeta);
-        return;
-      }
-
       const supabase = createSupabaseBrowserClient();
       const {
         data: { user },
@@ -350,6 +351,7 @@ export function EntryRouteLayoutClient({
                 <h1 className="m-0 p-0">
                   <Link
                     href="/"
+                    prefetch
                     scroll={false}
                     className="site-wordmark max-w-full border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-88"
                     style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
@@ -380,6 +382,7 @@ export function EntryRouteLayoutClient({
               {!isAuthenticated ? (
                 <Link
                   href="/auth"
+                  prefetch
                   className="inline-flex shrink-0 items-center font-normal tracking-[0.04em] text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
                 >
                   Giriş
@@ -388,6 +391,7 @@ export function EntryRouteLayoutClient({
                 <div className="site-account-nav max-w-full min-w-0 justify-end">
                   <Link
                     href="/katkilarim"
+                    prefetch
                     scroll={false}
                     className="site-account-link shrink-0"
                   >
@@ -427,6 +431,7 @@ export function EntryRouteLayoutClient({
           <div className="home-page-container flex flex-col gap-7 md:flex-row md:items-baseline md:justify-between md:gap-8">
             <Link
               href="/"
+              prefetch
               scroll={false}
               className="site-wordmark border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-90"
             >
@@ -529,6 +534,7 @@ export function EntryRouteLayoutClient({
               © {new Date().getFullYear()}{" "}
               <Link
                 href="/"
+                prefetch
                 scroll={false}
                 className="inline cursor-pointer border-0 bg-transparent p-0 font-inherit text-inherit align-baseline transition-opacity duration-200 hover:opacity-100"
                 aria-label="Ana sayfa — Akış"

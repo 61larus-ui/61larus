@@ -868,6 +868,33 @@ export default function HomePageClient({
     []
   );
 
+  const prefetchEntryRoute = useCallback(
+    (id: string, pathHint?: { title?: string; slug?: string | null }) => {
+      const item = entriesByIdRef.current.find((e) => e.id === id);
+      const forPath: EntryItem | undefined =
+        item ??
+        (pathHint
+          ? {
+              id,
+              title: pathHint.title ?? "",
+              content: "",
+              created_at: "",
+              slug: pathHint.slug ?? null,
+              authorName: null,
+              bio61: null,
+              category: null,
+            }
+          : undefined);
+      const path = entryHrefPath(forPath, id);
+      const href = `/${encodeURI(path)}`;
+      const r = routerRef.current;
+      if (typeof r.prefetch === "function") {
+        void r.prefetch(href);
+      }
+    },
+    []
+  );
+
   const onPickHomeSearchSuggestion = useCallback(
     (row: SearchEntryResult) => {
       setSearchQuery(row.title);
@@ -1491,6 +1518,7 @@ export default function HomePageClient({
             {!isAuthenticated ? (
                 <Link
                   href="/auth"
+                  prefetch
                   className="inline-flex shrink-0 items-center font-normal tracking-[0.04em] text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
                 >
                   Giriş
@@ -1498,7 +1526,12 @@ export default function HomePageClient({
             ) : null}
             {isAuthenticated ? (
                 <div className="site-account-nav min-w-0 shrink-0">
-                <Link href="/katkilarim" className="site-account-link shrink-0">
+                <Link
+                  href="/katkilarim"
+                  prefetch
+                  scroll={false}
+                  className="site-account-link shrink-0"
+                >
                   Katkılarım
                 </Link>
                 <div
@@ -1730,6 +1763,9 @@ export default function HomePageClient({
                               type="button"
                               className="home-global-search__row"
                               onMouseDown={(e) => e.preventDefault()}
+                              onPointerEnter={() =>
+                                prefetchEntryRoute(row.id, { title: row.title })
+                              }
                               onClick={() => onPickHomeSearchSuggestion(row)}
                             >
                               <span className="home-global-search__title">
@@ -1760,6 +1796,7 @@ export default function HomePageClient({
                       key={`mid-${entry.id}`}
                       type="button"
                       className="home-ticker__item"
+                      onPointerEnter={() => prefetchEntryRoute(entry.id)}
                       onClick={() => goToEntry(entry.id)}
                       aria-label={`Aç: ${entry.title}`}
                     >
@@ -1801,6 +1838,7 @@ export default function HomePageClient({
                       <button
                         key={entry.id}
                         type="button"
+                        onPointerEnter={() => prefetchEntryRoute(entry.id)}
                         onClick={() => goToEntry(entry.id)}
                         className={`home-index-row group flex w-full items-start gap-2.5 border-0 border-b border-[color:var(--editorial-hairline)] py-2.5 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3 md:py-2.5 md:pl-1 ${
                           isActive
@@ -1848,6 +1886,7 @@ export default function HomePageClient({
                       <button
                         key={entry.id}
                         type="button"
+                        onPointerEnter={() => prefetchEntryRoute(entry.id)}
                         onClick={() => goToEntry(entry.id)}
                         className={`home-index-row group flex w-full items-start gap-2.5 border-0 border-b border-[color:var(--editorial-hairline)] py-2.5 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3 md:py-2.5 md:pl-1 ${
                           isActive
@@ -1917,6 +1956,7 @@ export default function HomePageClient({
                               key={`low-${entry.id}`}
                               type="button"
                               className="home-ticker__item"
+                              onPointerEnter={() => prefetchEntryRoute(entry.id)}
                               onClick={() => goToEntry(entry.id)}
                               aria-label={`Aç: ${entry.title}`}
                             >
@@ -1954,6 +1994,7 @@ export default function HomePageClient({
                                   <button
                                     type="button"
                                     className="home-explore-item"
+                                    onPointerEnter={() => prefetchEntryRoute(entry.id)}
                                     onClick={() => goToEntry(entry.id)}
                                     aria-label={`Aç: ${entry.title}`}
                                   >
@@ -1993,6 +2034,7 @@ export default function HomePageClient({
                                 <button
                                   type="button"
                                   className="home-explore-item"
+                                  onPointerEnter={() => prefetchEntryRoute(entry.id)}
                                   onClick={() => goToEntry(entry.id)}
                                   aria-label={`Aç: ${entry.title}`}
                                 >
@@ -2037,6 +2079,7 @@ export default function HomePageClient({
                                   type="button"
                                   role="listitem"
                                   className="home-explore-question home-explore-question--stack w-full max-w-full text-left"
+                                  onPointerEnter={() => prefetchEntryRoute(entry.id)}
                                   onClick={() => goToEntry(entry.id)}
                                   aria-label={`Aç: ${entry.title}`}
                                 >

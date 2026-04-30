@@ -167,6 +167,9 @@ export function KatkilarimChrome({
       setSearchSuggestOpen(false);
       const path = entryHrefPathFromSearch(row);
       const href = `/${encodeURI(path)}`;
+      if (typeof router.prefetch === "function") {
+        void router.prefetch(href);
+      }
       void router.push(href);
     },
     [router]
@@ -239,6 +242,7 @@ export function KatkilarimChrome({
                 <h1 className="m-0 p-0">
                   <Link
                     href="/"
+                    prefetch
                     scroll={false}
                     className="site-wordmark max-w-full border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-88"
                     style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
@@ -269,6 +273,7 @@ export function KatkilarimChrome({
               {!isAuthenticated ? (
                 <Link
                   href="/auth"
+                  prefetch
                   className="inline-flex shrink-0 items-center font-normal tracking-[0.04em] text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
                 >
                   Giriş

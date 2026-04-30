@@ -91,6 +91,7 @@ export default async function KatkilarimPage() {
             <p className="mt-5 m-0">
               <Link
                 href="/"
+                prefetch
                 scroll={false}
                 className="text-sm font-normal tracking-wide text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
               >
@@ -123,6 +124,7 @@ export default async function KatkilarimPage() {
             <p className="mt-5 m-0">
               <Link
                 href="/"
+                prefetch
                 scroll={false}
                 className="text-sm font-normal tracking-wide text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
               >
@@ -180,6 +182,7 @@ export default async function KatkilarimPage() {
             <p className="mt-5 m-0">
               <Link
                 href="/"
+                prefetch
                 scroll={false}
                 className="text-sm font-normal tracking-wide text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
               >
@@ -212,6 +215,7 @@ export default async function KatkilarimPage() {
             <p className="mt-5 m-0">
               <Link
                 href="/"
+                prefetch
                 scroll={false}
                 className="text-sm font-normal tracking-wide text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
               >
@@ -256,6 +260,7 @@ export default async function KatkilarimPage() {
                 <li key={entryId} className="m-0 p-0">
                   <Link
                     href={entryDetailHref(row)}
+                    prefetch
                     scroll={false}
                     className="my-comments-card"
                   >
@@ -285,6 +290,7 @@ export default async function KatkilarimPage() {
           <p className="mt-10 m-0">
             <Link
               href="/"
+              prefetch
               scroll={false}
               className="text-sm font-normal tracking-wide text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
             >

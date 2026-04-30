@@ -1,6 +1,8 @@
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import { normalizeEntrySlug } from "@/lib/slug";
 
+/** URL ve liste tipleri; Veri çekimi `app/katkilarim/page.tsx` içinde dar kolon select ile. */
+
 export function entryPathSegmentForUrl(
   slug: string | null | undefined,
   title: string | null | undefined,
