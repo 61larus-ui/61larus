@@ -8390,9 +8390,9 @@ footer#site-footer.home-page-footer .home-page-container {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   font-size: 0.6875rem;
   font-weight: 500;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: color-mix(in srgb, var(--text-tertiary) 82%, var(--text-secondary) 18%);
   line-height: 1.35;
 }
 
