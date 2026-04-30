@@ -62,6 +62,9 @@ export type EntryRow = {
   slug?: string | null;
 };
 
+const ENTRY_ROW_SELECT =
+  "id, title, content, created_at, category, user_id, slug" as const;
+
 async function loadEntryRowById(
   client: Exclude<
     ReturnType<typeof createSupabaseServiceClient> | Awaited<
@@ -73,7 +76,7 @@ async function loadEntryRowById(
 ): Promise<EntryRow | null> {
   const { data, error } = await client
     .from("entries")
-    .select("id, title, content, created_at, category, user_id, slug")
+    .select(ENTRY_ROW_SELECT)
     .eq("id", id)
     .maybeSingle();
   if (error || !data) return null;
@@ -94,6 +97,43 @@ type DbClient = Exclude<
   null
 >;
 
+/**
+ * 1) `entries.slug` ile doğrudan eşleşme (önce URL segment’i, gerekirse normalize biçim).
+ * Çok satır varsa ilk kayıt alınır.
+ */
+async function loadEntryBySlugExact(
+  client: DbClient,
+  slugValue: string
+): Promise<EntryRow | null> {
+  const v = slugValue.trim();
+  if (!v) return null;
+
+  const res = await client
+    .from("entries")
+    .select(ENTRY_ROW_SELECT)
+    .eq("slug", v)
+    .limit(1);
+
+  if (
+    res.error &&
+    /slug|column|schema|not exist/i.test(res.error.message ?? "")
+  ) {
+    return null;
+  }
+  if (res.error) {
+    console.warn("[entry-route] slug.eq lookup", res.error.message);
+    return null;
+  }
+  const row = res.data?.[0];
+  return row ? (row as EntryRow) : null;
+}
+
+/**
+ * Slug çözüm sırası (404 yalnızca gerçekten yoksa):
+ * 1. Tam slug eşleşmesi (decoded → normalize edilmiş, farklıysa ikinci deneme)
+ * 2. Segment RFC UUID ise id eşleşmesi
+ * 3. normalize(slug) / normalize(title) ile sınırlı tarama (eski/null slug kayıtları)
+ */
 async function resolveEntryRowWithClient(
   client: DbClient,
   raw: string
@@ -103,29 +143,30 @@ async function resolveEntryRowWithClient(
 
   const targetSlug = normalizeEntrySlug(decodedSlug);
 
-  const entryRowSelect =
-    "id, title, content, created_at, category, user_id, slug" as const;
-
-  const [bySlugCols, byId] = await Promise.all([
-    loadEntryBySlugInList(client, [decodedSlug, targetSlug]),
-    isRfc4122Uuid(decodedSlug)
-      ? loadEntryRowById(client, decodedSlug)
-      : Promise.resolve(null),
-  ]);
-
-  if (bySlugCols) {
-    return bySlugCols;
+  const byDecoded = await loadEntryBySlugExact(client, decodedSlug);
+  if (byDecoded) {
+    return byDecoded;
   }
 
-  if (byId) {
-    return byId;
+  if (targetSlug.length > 0 && targetSlug !== decodedSlug) {
+    const byNormalized = await loadEntryBySlugExact(client, targetSlug);
+    if (byNormalized) {
+      return byNormalized;
+    }
+  }
+
+  if (isRfc4122Uuid(decodedSlug)) {
+    const byId = await loadEntryRowById(client, decodedSlug);
+    if (byId) {
+      return byId;
+    }
   }
 
   const { data, error } = await client
     .from("entries")
-    .select(entryRowSelect)
+    .select(ENTRY_ROW_SELECT)
     .order("created_at", { ascending: false })
-    .limit(300);
+    .limit(2500);
 
   if (error) {
     console.warn(
@@ -552,39 +593,10 @@ function entryRowMatchesSlugResolution(
   return false;
 }
 
-async function loadEntryBySlugInList(
-  client: Exclude<
-    ReturnType<typeof createSupabaseServiceClient> | Awaited<
-      ReturnType<typeof createSupabaseServerClient>
-    >,
-    null
-  >,
-  candidates: string[]
-): Promise<EntryRow | null> {
-  const uniq = [...new Set(candidates.filter((s) => s.length > 0))];
-  if (uniq.length === 0) return null;
-
-  const res = await client
-    .from("entries")
-    .select("id, title, content, created_at, category, user_id, slug")
-    .in("slug", uniq)
-    .limit(1);
-
-  if (!res.error && res.data?.[0]) {
-    return res.data[0] as EntryRow;
-  }
-  if (
-    res.error &&
-    /slug|column|schema|not exist/i.test(res.error.message ?? "")
-  ) {
-    return null;
-  }
-  if (res.error) {
-    console.warn("[entry-route] slug.in lookup", res.error.message);
-  }
-  return null;
-}
-
+/**
+ * Slug segment → tam satır + yorumlar (tekil sayfa içeriği).
+ * Çözüm sırası: `resolveEntryRowWithClient` ile aynı (slug → UUID id → title/slug normalize tarama).
+ */
 export async function getEntryDetailBySlug(
   segment: string
 ): Promise<EntryRouteDetail | null> {
