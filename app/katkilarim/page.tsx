@@ -170,7 +170,7 @@ export default async function KatkilarimPage() {
       >
         <div className="my-comments-page my-comments-page-inner">
           <div className="home-page-container mx-auto w-full py-8 md:py-10">
-            <h1 className="my-comments-page-heading">Katkılarım</h1>
+            <h1 className="my-comments-heading">Katkılarım</h1>
             <p className="my-comments-meta my-comments-page-intro">
               Yorum yaptığın başlıklar; her biri bir kez listelenir.
             </p>
@@ -234,7 +234,7 @@ export default async function KatkilarimPage() {
     <KatkilarimChrome isAuthenticated headerDisplayName={headerLabel}>
       <div className="my-comments-page my-comments-page-inner">
         <div className="home-page-container mx-auto w-full py-8 md:py-10">
-          <h1 className="my-comments-page-heading">Katkılarım</h1>
+          <h1 className="my-comments-heading">Katkılarım</h1>
           <p className="my-comments-meta my-comments-page-intro">
             Yorum yaptığın başlıklar; her biri bir kez listelenir.
           </p>
