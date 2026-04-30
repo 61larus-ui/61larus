@@ -8379,6 +8379,31 @@ footer#site-footer.home-page-footer .home-page-container {
   min-height: min(70vh, 100%);
 }
 
+.my-comments-page-inner {
+  flex: 1;
+  width: 100%;
+  background: var(--bg-primary);
+}
+
+.my-comments-page-heading {
+  margin: 0;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  line-height: 1.35;
+}
+
+.my-comments-page-intro {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--text-tertiary);
+  max-width: 36rem;
+}
+
 .my-comments-card {
   display: block;
   text-decoration: none;
