@@ -1519,7 +1519,7 @@ export default function HomePageClient({
                     style={{ transition: "var(--transition)" }}
                   >
                     <span className="account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right">
-                      {userEmail?.split("@")[0] || "kullanıcı"}
+                      {headerDisplayName}
                     </span>
                   </div>
                 </button>

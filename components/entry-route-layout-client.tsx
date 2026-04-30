@@ -3,6 +3,13 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import {
+  combinedFullNameFromParts,
+  resolveVisibleName,
+  type DisplayNameModePref,
+} from "@/lib/visible-name";
+
 const HEADER_ATATURK_QUOTES = [
   "Ne mutlu Türküm diyene!",
   "Yurtta sulh, cihanda sulh.",
@@ -28,6 +35,10 @@ export function EntryRouteLayoutClient({
   const [footerInfoOpen, setFooterInfoOpen] = useState<FooterInfoId | null>(
     null
   );
+  /** Çözümlenen hesap etiketi; entry route SSR `userEmail={null}` olduğunda istemci oturumu + users ile dolar. */
+  const [resolvedAccountLabel, setResolvedAccountLabel] = useState<
+    string | null
+  >(null);
 
   const closeFooterInfo = useCallback(() => {
     setFooterInfoOpen(null);
@@ -49,6 +60,101 @@ export function EntryRouteLayoutClient({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [footerInfoOpen]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setResolvedAccountLabel(null);
+      return;
+    }
+    setResolvedAccountLabel(null);
+    let cancelled = false;
+    void (async () => {
+      const supabase = createSupabaseBrowserClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!user) {
+        setResolvedAccountLabel("kullanıcı");
+        return;
+      }
+
+      const meta = user.user_metadata as {
+        full_name?: unknown;
+        name?: unknown;
+      } | null;
+      const fromMeta =
+        (typeof meta?.full_name === "string" ? meta.full_name.trim() : "") ||
+        (typeof meta?.name === "string" ? meta.name.trim() : "");
+      if (fromMeta) {
+        setResolvedAccountLabel(fromMeta);
+        return;
+      }
+
+      const { data: row, error } = await supabase
+        .from("users")
+        .select("nickname, first_name, last_name, display_name_mode, email")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      const profile = !error && row ? row : null;
+      const dmRaw =
+        profile &&
+        typeof profile.display_name_mode === "string" &&
+        (profile.display_name_mode === "nickname" ||
+          profile.display_name_mode === "real_name")
+          ? profile.display_name_mode
+          : null;
+      const displayMode: DisplayNameModePref = dmRaw;
+      const nick =
+        profile && typeof profile.nickname === "string"
+          ? profile.nickname
+          : null;
+
+      const full = combinedFullNameFromParts(
+        profile?.first_name ?? null,
+        profile?.last_name ?? null
+      );
+      const emailFallback =
+        (profile &&
+        typeof profile.email === "string" &&
+        profile.email.length > 0
+          ? profile.email
+          : null) ?? user.email;
+
+      const fromProfile = resolveVisibleName({
+        fullName: full,
+        nickname: nick,
+        displayMode,
+        emailFallback,
+      });
+      if (fromProfile !== "Kullanıcı") {
+        setResolvedAccountLabel(fromProfile);
+        return;
+      }
+
+      const local =
+        user.email?.split("@")[0]?.trim() ||
+        userEmail?.split("@")[0]?.trim() ||
+        "";
+      setResolvedAccountLabel(local || "kullanıcı");
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, userEmail]);
+
+  const headerDisplayName =
+    !isAuthenticated
+      ? ""
+      : resolvedAccountLabel !== null
+        ? resolvedAccountLabel
+        : userEmail
+          ? userEmail.split("@")[0]?.trim() || "kullanıcı"
+          : "\u2026";
 
   function renderFooterInfoPanel() {
     if (!footerInfoOpen) return null;
@@ -262,7 +368,7 @@ export function EntryRouteLayoutClient({
                 </Link>
               ) : (
                 <span className="account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right text-[color:var(--text-tertiary)]">
-                  {userEmail?.split("@")[0] || "kullanıcı"}
+                  {headerDisplayName}
                 </span>
               )}
             </div>
