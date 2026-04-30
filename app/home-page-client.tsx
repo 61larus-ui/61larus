@@ -1497,6 +1497,13 @@ export default function HomePageClient({
                 </Link>
             ) : null}
             {isAuthenticated ? (
+                <div className="flex min-w-0 shrink-0 items-center gap-x-2 sm:gap-x-3">
+                <Link
+                  href="/katkilarim"
+                  className="shrink-0 text-[10px] font-normal tracking-[0.06em] text-[color:color-mix(in_srgb,var(--text-tertiary)_88%,transparent)] underline decoration-[color:transparent] underline-offset-[3px] transition-colors hover:text-[color:var(--text-secondary)] hover:decoration-[color:var(--divide-muted)] sm:text-[11px]"
+                >
+                  Katkılarım
+                </Link>
                 <div
                   className="relative z-30 min-w-0 shrink-0"
                   ref={accountMenuRef}
@@ -1581,6 +1588,7 @@ export default function HomePageClient({
                     ) : null}
                   </div>
                 ) : null}
+                </div>
                 </div>
             ) : null}
           </div>

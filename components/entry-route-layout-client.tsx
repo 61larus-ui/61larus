@@ -385,9 +385,18 @@ export function EntryRouteLayoutClient({
                   Giriş
                 </Link>
               ) : (
-                <span className="account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right text-[color:var(--text-tertiary)]">
-                  {headerDisplayName}
-                </span>
+                <div className="flex max-w-full min-w-0 items-center justify-end gap-x-2 sm:gap-x-3">
+                  <Link
+                    href="/katkilarim"
+                    scroll={false}
+                    className="shrink-0 text-[10px] font-normal tracking-[0.06em] text-[color:color-mix(in_srgb,var(--text-tertiary)_88%,transparent)] underline decoration-[color:transparent] underline-offset-[3px] transition-colors hover:text-[color:var(--text-secondary)] hover:decoration-[color:var(--divide-muted)] sm:text-[11px]"
+                  >
+                    Katkılarım
+                  </Link>
+                  <span className="account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right text-[color:var(--text-tertiary)]">
+                    {headerDisplayName}
+                  </span>
+                </div>
               )}
             </div>
           </div>

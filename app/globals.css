@@ -8370,3 +8370,51 @@ footer#site-footer.home-page-footer .home-page-container {
 .xpanel-root .xpanel-draft-link {
   color: #60a5fa;
 }
+
+/* === Katkılarım (üye yorumları) — yalnız bu scope === */
+.my-comments-page {
+  flex: 1;
+  width: 100%;
+  background: var(--bg-primary);
+  min-height: min(70vh, 100%);
+}
+
+.my-comments-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 6px;
+  border: 1px solid var(--divide-muted);
+  background: color-mix(in srgb, var(--bg-primary) 96%, #fff 4%);
+  padding: 1rem 1.1rem;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.my-comments-card:hover {
+  border-color: color-mix(in srgb, var(--divide) 82%, transparent);
+  background: color-mix(in srgb, var(--bg-primary) 92%, #fff 8%);
+}
+
+.my-comments-title {
+  margin: 0;
+  font-family: var(--font-libre-baskerville), ui-serif, Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(1.05rem, 2.2vw, 1.2rem);
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.my-comments-meta {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.my-comments-empty {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-libre-baskerville), ui-serif, Georgia, serif;
+}
