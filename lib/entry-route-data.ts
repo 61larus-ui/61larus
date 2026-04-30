@@ -56,12 +56,11 @@ export type EntryRow = {
   content: string;
   created_at: string;
   category?: string | null;
-  user_id?: string | null;
   slug?: string | null;
 };
 
 const ENTRY_ROW_SELECT =
-  "id, title, content, created_at, category, user_id, slug" as const;
+  "id, title, content, created_at, category, slug" as const;
 
 async function loadEntryRowById(
   client: Exclude<
@@ -105,7 +104,7 @@ export async function getEntryByResolvedSlug(
 ): Promise<EntryRow | null> {
   const { data: bySlug, error: slugErr } = await supabase
     .from("entries")
-    .select("id,title,content,slug,created_at,user_id")
+    .select("id,title,content,slug,created_at,category")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -119,7 +118,7 @@ export async function getEntryByResolvedSlug(
   if (isUUID) {
     const { data: byId, error: idErr } = await supabase
       .from("entries")
-      .select("id,title,content,slug,created_at,user_id")
+      .select("id,title,content,slug,created_at,category")
       .eq("id", slug)
       .maybeSingle();
 
@@ -148,7 +147,7 @@ export async function getEntryByResolvedSlug(
     if (found) {
       const { data: full, error: fullErr } = await supabase
         .from("entries")
-        .select("id,title,content,slug,created_at,user_id")
+        .select("id,title,content,slug,created_at,category")
         .eq("id", found.id)
         .maybeSingle();
 
@@ -212,10 +211,7 @@ export async function buildEntryItemFast(
   supabase: SupabaseForEntry,
   row: EntryRow
 ): Promise<EntryItem> {
-  const entryUid =
-    typeof row.user_id === "string" && row.user_id.length > 0
-      ? row.user_id
-      : null;
+  const entryUid: string | null = null;
 
   let fallbackUid: string | null = null;
   if (!entryUid) {
@@ -353,10 +349,7 @@ export async function getCommentItemsForEntryRow(
     ...new Set((commentsData ?? []).map((c) => c.user_id).filter(Boolean)),
   ] as string[];
 
-  const entryUid =
-    typeof row.user_id === "string" && row.user_id.length > 0
-      ? row.user_id
-      : null;
+  const entryUid: string | null = null;
   const fallbackUid = entryAuthorUserIdByEntryId.get(row.id) ?? null;
   const userIdsForAuthor = [
     ...new Set(
@@ -443,10 +436,7 @@ async function buildDetailFromRow(
     ...new Set((commentsData ?? []).map((c) => c.user_id).filter(Boolean)),
   ] as string[];
 
-  const entryUid =
-    typeof row.user_id === "string" && row.user_id.length > 0
-      ? row.user_id
-      : null;
+  const entryUid: string | null = null;
   const fallbackUid = entryAuthorUserIdByEntryId.get(row.id) ?? null;
   const userIdsForAuthor = [
     ...new Set(
