@@ -86,6 +86,7 @@ export default async function EntrySlugPage({ params }: PageProps) {
   }
 
   const [shell, auth, headerAuthUser] = await Promise.all([
+    // getEntryShellBySlug: React.cache ile generateMetadata ile aynı istekte tek kez çalışır
     getEntryShellBySlug(raw),
     getCommentAuth(),
     (async () => {

@@ -1766,6 +1766,9 @@ export default function HomePageClient({
                               onPointerEnter={() =>
                                 prefetchEntryRoute(row.id, { title: row.title })
                               }
+                              onFocus={() =>
+                                prefetchEntryRoute(row.id, { title: row.title })
+                              }
                               onClick={() => onPickHomeSearchSuggestion(row)}
                             >
                               <span className="home-global-search__title">
@@ -1797,6 +1800,7 @@ export default function HomePageClient({
                       type="button"
                       className="home-ticker__item"
                       onPointerEnter={() => prefetchEntryRoute(entry.id)}
+                      onFocus={() => prefetchEntryRoute(entry.id)}
                       onClick={() => goToEntry(entry.id)}
                       aria-label={`Aç: ${entry.title}`}
                     >
@@ -1839,6 +1843,7 @@ export default function HomePageClient({
                         key={entry.id}
                         type="button"
                         onPointerEnter={() => prefetchEntryRoute(entry.id)}
+                        onFocus={() => prefetchEntryRoute(entry.id)}
                         onClick={() => goToEntry(entry.id)}
                         className={`home-index-row group flex w-full items-start gap-2.5 border-0 border-b border-[color:var(--editorial-hairline)] py-2.5 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3 md:py-2.5 md:pl-1 ${
                           isActive
@@ -1887,6 +1892,7 @@ export default function HomePageClient({
                         key={entry.id}
                         type="button"
                         onPointerEnter={() => prefetchEntryRoute(entry.id)}
+                        onFocus={() => prefetchEntryRoute(entry.id)}
                         onClick={() => goToEntry(entry.id)}
                         className={`home-index-row group flex w-full items-start gap-2.5 border-0 border-b border-[color:var(--editorial-hairline)] py-2.5 pl-0.5 pr-1 text-left last:border-b-0 md:gap-3 md:py-2.5 md:pl-1 ${
                           isActive
@@ -1957,6 +1963,7 @@ export default function HomePageClient({
                               type="button"
                               className="home-ticker__item"
                               onPointerEnter={() => prefetchEntryRoute(entry.id)}
+                              onFocus={() => prefetchEntryRoute(entry.id)}
                               onClick={() => goToEntry(entry.id)}
                               aria-label={`Aç: ${entry.title}`}
                             >
@@ -1995,6 +2002,7 @@ export default function HomePageClient({
                                     type="button"
                                     className="home-explore-item"
                                     onPointerEnter={() => prefetchEntryRoute(entry.id)}
+                                    onFocus={() => prefetchEntryRoute(entry.id)}
                                     onClick={() => goToEntry(entry.id)}
                                     aria-label={`Aç: ${entry.title}`}
                                   >
@@ -2035,6 +2043,7 @@ export default function HomePageClient({
                                   type="button"
                                   className="home-explore-item"
                                   onPointerEnter={() => prefetchEntryRoute(entry.id)}
+                                  onFocus={() => prefetchEntryRoute(entry.id)}
                                   onClick={() => goToEntry(entry.id)}
                                   aria-label={`Aç: ${entry.title}`}
                                 >
@@ -2080,6 +2089,7 @@ export default function HomePageClient({
                                   role="listitem"
                                   className="home-explore-question home-explore-question--stack w-full max-w-full text-left"
                                   onPointerEnter={() => prefetchEntryRoute(entry.id)}
+                                  onFocus={() => prefetchEntryRoute(entry.id)}
                                   onClick={() => goToEntry(entry.id)}
                                   aria-label={`Aç: ${entry.title}`}
                                 >

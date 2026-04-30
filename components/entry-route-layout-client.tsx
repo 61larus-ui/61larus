@@ -51,10 +51,14 @@ export function EntryRouteLayoutClient({
   const [footerInfoOpen, setFooterInfoOpen] = useState<FooterInfoId | null>(
     null
   );
-  /** Sunucudan gelen e-posta + istemci profil çözümlemesi; resolved null iken e-posta öneği hemen gösterilir. */
+  /** Sunucu metadata + e-posta ile gösterim yeterliyse client profil çekilmez. */
   const [resolvedAccountLabel, setResolvedAccountLabel] = useState<
     string | null
-  >(null);
+  >(() => {
+    if (!isAuthenticated) return null;
+    const m = displayNameFromUserMetadata(userMetadataFromServer);
+    return m ? m : null;
+  });
 
   const closeFooterInfo = useCallback(() => {
     setFooterInfoOpen(null);
@@ -89,7 +93,10 @@ export function EntryRouteLayoutClient({
       return;
     }
 
-    setResolvedAccountLabel(null);
+    if (userEmail?.trim()) {
+      return;
+    }
+
     let cancelled = false;
     void (async () => {
       const supabase = createSupabaseBrowserClient();
@@ -107,6 +114,13 @@ export function EntryRouteLayoutClient({
       );
       if (fromSessionMeta) {
         setResolvedAccountLabel(fromSessionMeta);
+        return;
+      }
+
+      const emailLocal =
+        user.email?.split("@")[0]?.trim() || "";
+      if (emailLocal) {
+        setResolvedAccountLabel(emailLocal);
         return;
       }
 
@@ -154,11 +168,7 @@ export function EntryRouteLayoutClient({
         return;
       }
 
-      const local =
-        userEmail?.split("@")[0]?.trim() ||
-        user.email?.split("@")[0]?.trim() ||
-        "";
-      setResolvedAccountLabel(local || "kullanıcı");
+      setResolvedAccountLabel("kullanıcı");
     })();
 
     return () => {

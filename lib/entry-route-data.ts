@@ -1,4 +1,5 @@
 import { unstable_noStore } from "next/cache";
+import { cache } from "react";
 import { SILINMIS_KULLANICI_LABEL } from "@/lib/deleted-user-label";
 import {
   combinedFullNameFromParts,
@@ -102,26 +103,29 @@ async function resolveEntryRowWithClient(
 
   const targetSlug = normalizeEntrySlug(decodedSlug);
 
-  const bySlugCols = await loadEntryBySlugInList(client, [
-    decodedSlug,
-    targetSlug,
+  const entryRowSelect =
+    "id, title, content, created_at, category, user_id, slug" as const;
+
+  const [bySlugCols, byId] = await Promise.all([
+    loadEntryBySlugInList(client, [decodedSlug, targetSlug]),
+    isRfc4122Uuid(decodedSlug)
+      ? loadEntryRowById(client, decodedSlug)
+      : Promise.resolve(null),
   ]);
+
   if (bySlugCols) {
     return bySlugCols;
   }
 
-  if (isRfc4122Uuid(decodedSlug)) {
-    const byId = await loadEntryRowById(client, decodedSlug);
-    if (byId) {
-      return byId;
-    }
+  if (byId) {
+    return byId;
   }
 
   const { data, error } = await client
     .from("entries")
-    .select("*")
+    .select(entryRowSelect)
     .order("created_at", { ascending: false })
-    .limit(500);
+    .limit(300);
 
   if (error) {
     console.warn(
@@ -202,7 +206,7 @@ export async function buildEntryItemFast(
     const { data: usersRows } = await userLookupClient
       .from("users")
       .select(
-        "id, first_name, last_name, nickname, display_name_mode, email, bio_61"
+        "id, nickname, first_name, last_name, display_name_mode, email, bio_61"
       )
       .in("id", userIds);
     for (const u of usersRows ?? []) {
@@ -268,8 +272,8 @@ export async function buildEntryItemFast(
   return { ...base, slug: slugVal };
 }
 
-/** Giriş sayfası: slug → satır + EntryItem, tek istemci (yorum sorgusu yok). */
-export async function getEntryShellBySlug(
+/** Giriş sayfası: slug → satır + EntryItem (yorum sorgusu yok). */
+async function getEntryShellBySlugUncached(
   raw: string
 ): Promise<{ entry: EntryItem; row: EntryRow } | null> {
   unstable_noStore();
@@ -282,6 +286,9 @@ export async function getEntryShellBySlug(
   const entry = await buildEntryItemFast(supabase, row);
   return { entry, row };
 }
+
+/** Aynı istek içinde generateMetadata + page tek DB yolunu paylaşır. */
+export const getEntryShellBySlug = cache(getEntryShellBySlugUncached);
 
 /** Tüm yorum satırları + yazar etiketleri (ayrı Suspense aşaması). */
 export async function getCommentItemsForEntryRow(
@@ -343,7 +350,7 @@ export async function getCommentItemsForEntryRow(
     const { data: usersRows } = await userLookupClient
       .from("users")
       .select(
-        "id, first_name, last_name, nickname, display_name_mode, email, bio_61"
+        "id, nickname, first_name, last_name, display_name_mode, email, bio_61"
       )
       .in("id", userIdsForAuthor);
     for (const u of usersRows ?? []) {
@@ -433,7 +440,7 @@ async function buildDetailFromRow(
     const { data: usersRows } = await userLookupClient
       .from("users")
       .select(
-        "id, first_name, last_name, nickname, display_name_mode, email, bio_61"
+        "id, nickname, first_name, last_name, display_name_mode, email, bio_61"
       )
       .in("id", userIdsForAuthor);
     for (const u of usersRows ?? []) {
