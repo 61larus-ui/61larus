@@ -11,7 +11,7 @@ type Props = {
   title: string;
   content: string;
   entryId: string | null;
-  /** Path segment; yoksa `/?entry=` */
+  /** Path segment; yoksa entry id tabanlı slug. */
   entrySlug?: string | null;
 };
 

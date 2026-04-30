@@ -1,13 +1,13 @@
 "use client";
 
+import { slugifyEntryTitle } from "@/lib/entry-slug";
+
 function entryPublicUrl(entryId: string, slug?: string | null): string {
   if (typeof window === "undefined") return "";
   const origin = window.location.origin;
   const s = typeof slug === "string" ? slug.trim() : "";
-  if (s.length > 0) {
-    return `${origin}/${encodeURI(s)}`;
-  }
-  return `${origin}/?entry=${encodeURIComponent(entryId)}`;
+  const segment = s.length > 0 ? s : slugifyEntryTitle("", entryId);
+  return `${origin}/${encodeURI(segment)}`;
 }
 
 export function EntryDetailShareClient({

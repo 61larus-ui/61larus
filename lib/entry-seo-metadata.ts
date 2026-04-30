@@ -8,7 +8,7 @@ export const SITE_BRAND = "61Larus";
 const DEFAULT_TAGLINE = "Trabzon'un gündemi, lafı ve hafızası";
 
 /**
- * `?entry=` ve `/[slug]` için ortak: başlık, gövde snippet (önce ~150 karakter),
+ * Canonical entry sayfaları için ortak: başlık, gövde snippet (önce ~150 karakter),
  * OG article + Twitter summary_large_image.
  */
 export function buildEntrySeoMetadata(input: {

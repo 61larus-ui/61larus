@@ -178,14 +178,6 @@ const HEADER_ATATURK_QUOTES = [
   "İstikbal göklerdedir.",
 ] as const;
 
-/** 8-4-4-4-12 hex id shape (matches Postgres uuid text form, including v4/v7 and non-RFC variants). */
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function isRealUuid(value: string) {
-  return UUID_RE.test(value);
-}
-
 /** OAuth / PKCE redirect artıkları — entry derin bağlantısı değil. */
 function isOAuthReturnQuery(sp: { get: (key: string) => string | null }): boolean {
   const code = sp.get("code");
@@ -940,18 +932,6 @@ export default function HomePageClient({
     return () => window.clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    if (isOAuthReturnQuery(searchParams)) return;
-    const raw = searchParams.get("entry");
-    const urlEntryId =
-      raw && isRealUuid(decodeURIComponent(raw.trim()))
-        ? decodeURIComponent(raw.trim())
-        : null;
-    if (urlEntryId) {
-      writePendingReturn(urlEntryId, "comment");
-    }
-  }, [searchParams]);
-
   /** OAuth dönüşü: entry URL açma; pending temiz, ana sayfa. */
   useEffect(() => {
     if (!isOAuthReturnQuery(searchParams)) return;
@@ -1186,13 +1166,8 @@ export default function HomePageClient({
     agreementDoneRef.current = true;
     onboardingDoneRef.current = true;
 
-    const raw = searchParams.get("entry");
-    const urlEntryId =
-      raw && isRealUuid(decodeURIComponent(raw.trim()))
-        ? decodeURIComponent(raw.trim())
-        : null;
     const pending = readPendingFromStorage().entryId;
-    const id = urlEntryId ?? pending;
+    const id = pending;
     if (id) {
       const found = centerEntries.find((e) => e.id === id);
       const path = entryHrefPath(found, id);
