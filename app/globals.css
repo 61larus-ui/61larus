@@ -196,6 +196,47 @@ html {
   }
 }
 
+/* Header sağ: Katkılarım + hesap adı — tüm sayfalarda tek tipografi */
+.site-account-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.site-account-link,
+.site-account-name {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: rgba(15, 23, 42, 0.48);
+  text-decoration: none;
+}
+
+.site-account-link:hover,
+.site-account-name:hover {
+  color: rgba(15, 23, 42, 0.68);
+}
+
+/* Eski .account-menu-handle / mobil .header-user !important üzerine — tek görünüm */
+.site-header .site-account-nav .site-account-link,
+.site-header .site-account-nav .site-account-name {
+  font-family: var(--font-ui);
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.01em !important;
+  color: rgba(15, 23, 42, 0.48) !important;
+  opacity: 1 !important;
+}
+
+.site-header .site-account-nav .site-account-link:hover,
+.site-header .site-account-nav .site-account-name:hover,
+.site-header .account-menu-trigger-inner:hover .site-account-name {
+  color: rgba(15, 23, 42, 0.68) !important;
+}
+
 /* Ortak: header iç çizgisi, arama, vitrin, üç kolon, keşif, footer içeriği */
 .home-page-container {
   width: 100%;
@@ -7027,6 +7068,24 @@ aside[aria-label="Yayın paneli"] .right-block {
     text-align: right !important;
     vertical-align: middle !important;
   }
+
+  /* Hesap nav: mobil küçültmeyi aş — ana / entry / katkılarım ile aynı punt */
+  .site-header .site-account-nav .site-account-link,
+  .site-header .site-account-nav .site-account-name,
+  .site-header .account-menu-trigger-inner .site-account-name {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.01em !important;
+    color: rgba(15, 23, 42, 0.48) !important;
+    opacity: 1 !important;
+  }
+
+  .site-header .site-account-nav .site-account-link:hover,
+  .site-header .site-account-nav .site-account-name:hover,
+  .site-header .account-menu-trigger-inner:hover .site-account-name {
+    color: rgba(15, 23, 42, 0.68) !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -7063,6 +7122,23 @@ aside[aria-label="Yayın paneli"] .right-block {
 
     font-size: 12px !important;
     color: rgba(15, 23, 42, 0.58) !important;
+  }
+
+  .site-header .site-account-nav .site-account-link,
+  .site-header .site-account-nav .site-account-name,
+  .site-header .account-menu-trigger-inner .site-account-name {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.01em !important;
+    color: rgba(15, 23, 42, 0.48) !important;
+    opacity: 1 !important;
+  }
+
+  .site-header .site-account-nav .site-account-link:hover,
+  .site-header .site-account-nav .site-account-name:hover,
+  .site-header .account-menu-trigger-inner:hover .site-account-name {
+    color: rgba(15, 23, 42, 0.68) !important;
   }
 }
 
@@ -8385,25 +8461,17 @@ footer#site-footer.home-page-footer .home-page-container {
   background: var(--bg-primary);
 }
 
-/* Üst bardaki hesap adı (.account-menu-handle.header-user) ile aynı tipografi */
+/* Katkılarım içerik başlığı — header hesap linki ile aynı aile */
 .my-comments-heading {
-  margin: 0 0 8px;
-  padding: 0;
   font-family: var(--font-ui);
   font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  line-height: 1.35;
-  opacity: 0.65;
-  color: color-mix(in srgb, var(--text-tertiary) 72%, var(--text-muted) 28%);
-}
-
-@media (max-width: 640px) {
-  .my-comments-page-inner .my-comments-heading {
-    font-size: 12px;
-    opacity: 1;
-    color: rgba(15, 23, 42, 0.58);
-  }
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: rgba(15, 23, 42, 0.48);
+  margin-bottom: 10px;
+  margin-top: 0;
+  padding: 0;
 }
 
 .my-comments-page-intro {

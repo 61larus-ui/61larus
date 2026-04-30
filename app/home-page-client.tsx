@@ -1497,11 +1497,8 @@ export default function HomePageClient({
                 </Link>
             ) : null}
             {isAuthenticated ? (
-                <div className="flex min-w-0 shrink-0 items-center gap-x-2 sm:gap-x-3">
-                <Link
-                  href="/katkilarim"
-                  className="shrink-0 text-[10px] font-normal tracking-[0.06em] text-[color:color-mix(in_srgb,var(--text-tertiary)_88%,transparent)] underline decoration-[color:transparent] underline-offset-[3px] transition-colors hover:text-[color:var(--text-secondary)] hover:decoration-[color:var(--divide-muted)] sm:text-[11px]"
-                >
+                <div className="site-account-nav min-w-0 shrink-0">
+                <Link href="/katkilarim" className="site-account-link shrink-0">
                   Katkılarım
                 </Link>
                 <div
@@ -1522,10 +1519,10 @@ export default function HomePageClient({
                   aria-label="Hesap menüsü"
                 >
                   <div
-                    className="account-menu-trigger-inner flex min-h-9 min-w-0 max-w-full items-center justify-end rounded-md px-0.5 py-0.5 text-[color:var(--text-tertiary)] transition-colors duration-150 hover:text-[color:var(--text-secondary)]"
+                    className="account-menu-trigger-inner flex min-h-9 min-w-0 max-w-full items-center justify-end rounded-md px-0.5 py-0.5"
                     style={{ transition: "var(--transition)" }}
                   >
-                    <span className="account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right">
+                    <span className="site-account-name account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right">
                       {headerDisplayName}
                     </span>
                   </div>
