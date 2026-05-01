@@ -1184,6 +1184,12 @@ main > header .site-header-tagline--manifesto {
   gap: 0.5rem;
 }
 
+.home-page-editorial--section-stack
+  .home-editorial-columns-bridge:not(.home-editorial-columns-bridge--in-explore)
+  .home-editorial-columns-bridge__midstack {
+  gap: 0;
+}
+
 @media (min-width: 768px) {
   .home-editorial-columns-bridge {
     display: grid;
@@ -1241,22 +1247,14 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-/* FAZ 8.1 — arama köprüsü hero ile aradaki floating boşluğu sıkar */
+/* Köprü: stack gap ile hero-alt boşluğu çift sayılmasın; hero↔arama ritmi için net 20px */
 .home-page-editorial--section-stack
   > .home-hero-faz1-outer
   + .home-editorial-columns-bridge {
-  margin-top: -0.55rem;
+  margin-top: calc(-1 * var(--editorial-stack-gap));
 }
 
-@media (min-width: 768px) {
-  .home-page-editorial--section-stack
-    > .home-hero-faz1-outer
-    + .home-editorial-columns-bridge {
-    margin-top: -0.65rem;
-  }
-}
-
-/* FAZ 1.6: yatay taşırma çok az; alt satır ile arayı stack gap içinde çok hafif sıkılaştır */
+/* FAZ 1.6: vitrin kartı yan taşması; hero altına 20px nefes (arama/satır için) */
 .home-page-editorial--section-stack > .home-hero-faz1-outer {
   align-self: stretch;
   margin-left: calc(var(--home-container-px) * -0.22);
@@ -1265,7 +1263,13 @@ main > header .site-header-tagline--manifesto {
   max-width: calc(100% + var(--home-container-px) * 0.44);
   box-sizing: border-box;
   padding-bottom: 0;
-  margin-bottom: clamp(-0.35rem, -0.2vw, -0.125rem);
+  margin-bottom: 20px;
+}
+
+.home-page-editorial--section-stack
+  .home-editorial-columns-bridge
+  + .home-main-columns-wrap {
+  margin-top: calc(-1 * var(--editorial-stack-gap));
 }
 
 .home-hero-faz1-outer {
@@ -1507,12 +1511,15 @@ main > header .site-header-tagline--manifesto {
   padding-right: 0 !important;
 }
 
-/* Sadece arama: hero/manifesto üst boşluğu yok, header’a yapışık */
-.home-page-editorial--section-stack
-  .home-search-bridge.home-manifesto--bridge.home-search-field,
-.home-page-editorial--section-stack
-  .home-search-bridge.home-manifesto--bridge {
-  margin-top: 0;
+/* Ana köprü araması (hero-alt): üst/alt 20px; padding köprüde margin’a taşındı */
+main > section
+  .home-page-editorial--section-stack
+  .home-editorial-columns-bridge__search-shell
+  > .home-search-bridge.home-manifesto--bridge {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 @media (min-width: 640px) {
@@ -2487,9 +2494,13 @@ main > section
     opacity 0.2s ease;
 }
 
-.home-ticker--divider {
-  margin-top: 0;
-  margin-bottom: 0;
+/* Üst marquee (köprü vitrin-altı): arama↔ticker ve kolon öncesi ritim */
+.home-page-editorial--section-stack
+  .home-editorial-columns-bridge:not(.home-editorial-columns-bridge--in-explore)
+  .home-editorial-columns-bridge__midstack
+  > .home-ticker.home-ticker--divider {
+  margin-top: 0 !important;
+  margin-bottom: 32px !important;
 }
 
 .home-ticker--lower {
