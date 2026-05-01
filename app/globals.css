@@ -3428,35 +3428,30 @@ main > section
 }
 
 /*
- * Ana sayfa — kolon + keşif dikey ayraçları (düşük opaklık; :root token’lara dokunmadan)
+ * Ana sayfa — kolon/kart/explore/ticker ayraçları tek opaklık (0.022).
+ * (home-top/home-bottom ticker sınıfları yoksa anlamsız seçici zararsız.)
  */
-@media (min-width: 768px) {
-  main > section .home-page-editorial
-    .home-content-grid.home-content-grid--editorial.home-editorial-cols--faz52
-    > main.home-rail--feed-main {
-    border-left: 1px solid rgba(255, 255, 255, 0.025);
-    border-right: 1px solid rgba(255, 255, 255, 0.025);
-  }
-
-  main > section .home-page-editorial
-    .home-content-grid.home-content-grid--editorial.home-editorial-cols--faz52
-    > aside[aria-label="Yazılmayı bekleyenler"] {
-    border-right: 1px solid rgba(255, 255, 255, 0.025);
-  }
-}
-
-main > section .home-page-editorial
-  .home-editorial-cols
-  .col-head-band.col-head-band--faz5-primary.col-head-band--feed {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.025) !important;
-}
-
-@media (min-width: 1024px) {
-  main > section .home-page-editorial .home-explore--prefooter
-    .home-explore-grid
-    .home-explore-panel:not(:first-of-type) {
-    border-left: 1px solid rgba(255, 255, 255, 0.025);
-  }
+.home-page-editorial .home-main-columns-wrap,
+.home-page-editorial .home-editorial-cols,
+.home-page-editorial .home-editorial-cols > *,
+.home-page-editorial .home-feed-rail,
+.home-page-editorial .home-rail-nav,
+.home-page-editorial .home-index-list,
+.home-page-editorial .home-index-row,
+.home-page-editorial .feed-entry-card--editorial,
+.home-page-editorial .home-explore,
+.home-page-editorial .home-explore *,
+.home-page-editorial .home-ticker,
+.home-page-editorial .home-ticker--divider,
+.home-page-editorial .home-ticker--lower,
+.home-page-editorial .home-bottom-ticker,
+.home-page-editorial .home-top-ticker,
+.home-page-editorial .col-head-band {
+  border-color: rgba(255, 255, 255, 0.022) !important;
+  border-top-color: rgba(255, 255, 255, 0.022) !important;
+  border-right-color: rgba(255, 255, 255, 0.022) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.022) !important;
+  border-left-color: rgba(255, 255, 255, 0.022) !important;
 }
 
 /* FAZ 2.2: lg+ üç kolon yatay nefesi; primary sol/orta ile aynı genişlik omurgasında */
