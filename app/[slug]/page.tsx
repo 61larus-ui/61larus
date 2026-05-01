@@ -166,6 +166,19 @@ export default async function EntrySlugPage({ params }: PageProps) {
         initialPlatformAccessSuspended={auth.isSuspended}
       >
         <div className="entry-detail-page">
+          <div className="entry-hero">
+            <img
+              src="/trabzon-gece-hafiza-banner.png"
+              alt="Trabzon gece"
+              className="entry-hero__image"
+            />
+            <div className="entry-hero__shade" aria-hidden="true" />
+
+            <div className="entry-hero__content">
+              <h1>{SITE_BRAND}</h1>
+              <p>Trabzon&apos;un gündemi, lafı ve hafızası</p>
+            </div>
+          </div>
           <div className="entry-detail-page-inner">
             <EntryDetailBodyRsc
               entry={entrySafe}

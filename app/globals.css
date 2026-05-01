@@ -5414,6 +5414,80 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
 }
 
 /* -------------------------------------------------------------------------
+   Entry detail — üst banner (ana sayfa hero ile hizalı görünüm)
+   ------------------------------------------------------------------------- */
+main:has(.entry-detail-page) > header.site-header {
+  display: none !important;
+}
+
+.entry-hero {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 28px auto;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.entry-hero__image {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  display: block;
+  filter: brightness(0.75) contrast(1.05);
+}
+
+.entry-hero__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.95)),
+    linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent 60%);
+}
+
+.entry-hero__content {
+  position: absolute;
+  left: 28px;
+  bottom: 28px;
+  z-index: 2;
+}
+
+.entry-hero__content h1 {
+  color: #fff;
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  padding: 0;
+}
+
+.entry-hero__content p {
+  margin: 0;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .entry-hero__image {
+    height: 160px;
+  }
+
+  .entry-hero__content {
+    left: 20px;
+    bottom: 20px;
+  }
+
+  .entry-hero__content h1 {
+    font-size: 22px;
+  }
+}
+
+/* -------------------------------------------------------------------------
    Entry detail sayfası — akışta tam genişlik, inner kart; modal yok
    ------------------------------------------------------------------------- */
 .entry-detail-page {
@@ -5421,8 +5495,9 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   width: 100%;
   padding: 1.5rem 1rem 2.5rem;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 @media (max-width: 767.98px) {
