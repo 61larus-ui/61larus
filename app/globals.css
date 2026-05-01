@@ -1213,8 +1213,17 @@ main > header .site-header-tagline--manifesto {
 }
 
 @media (min-width: 768px) {
+  /*
+   * Arama kutusu (~520px): vw bağı koparılır; 2+3. kolon alanı içinde üç kolonluk blok merkezi
+   * (orta iki kolonun merkezi → tüm blok merkezi: −(0.45/2.8) × midstack genişliği) için hafif sola öteleme.
+   */
+  .home-editorial-columns-bridge__search-shell {
+    position: relative;
+    left: calc(-100% * 45 / 280);
+  }
+
   .home-editorial-columns-bridge__search-shell > .home-search-bridge.home-manifesto--bridge.home-search-field {
-    width: clamp(480px, 52vw, 560px);
+    width: min(32.5rem, 100%);
     max-width: 100%;
     flex: 0 0 auto;
     box-sizing: border-box;
@@ -1222,6 +1231,11 @@ main > header .site-header-tagline--manifesto {
 }
 
 @media (max-width: 767.98px) {
+  .home-editorial-columns-bridge__search-shell {
+    position: static;
+    left: auto;
+  }
+
   .home-editorial-columns-bridge__midstack {
     gap: 0.45rem;
   }
