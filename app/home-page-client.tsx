@@ -1485,20 +1485,13 @@ export default function HomePageClient({
     <main className="relative flex min-h-screen w-full max-w-full flex-col bg-transparent text-[color:var(--text-primary)] antialiased">
       <header className="site-header site-header--home-faz83 site-header--trabzon-header relative z-20 shrink-0 overflow-hidden">
         <span className="site-header__bg-surface" aria-hidden="true" />
-        <div
-          className="home-hero-visual home-page-container relative z-[1] w-full min-w-0"
-          aria-hidden="true"
-        >
-          <div className="home-hero-visual__frame">
-            {/* eslint-disable-next-line @next/next/no-img-element -- statik kampanya görseli, build-time URL */}
-            <img
-              src="/trabzon-gece-hafiza-banner.png"
-              alt=""
-              draggable={false}
-              className="home-hero-visual__image"
-            />
-            <div className="home-hero-visual__shade" />
-          </div>
+        <div className="home-hero-visual">
+          <img
+            src="/trabzon-gece-hafiza-banner.png"
+            alt="Trabzon gece panoraması"
+            className="home-hero-visual__image"
+          />
+          <div className="home-hero-visual__shade" aria-hidden="true" />
         </div>
         <div className="headerBlock home-page-container relative z-[1]">
           <div className="headerBar min-w-0">

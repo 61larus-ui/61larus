@@ -1030,55 +1030,38 @@ main > header.site-header.site-header--home-faz83.site-header--trabzon-header .s
   );
 }
 
-/* ----- Ana sayfa — Trabzon gece panoramic hero (canvas max-width ile hizalı) ----- */
-main > header.site-header--home-faz83 .home-hero-visual {
-  box-sizing: border-box;
-}
-
-main > header.site-header--home-faz83 .home-hero-visual__frame {
+/* Ana sayfa header — panoramik gece görseli (public/trabzon-gece-hafiza-banner.png) */
+.home-hero-visual {
   position: relative;
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 24px auto;
+  border-radius: 14px;
   overflow: hidden;
-  border-radius: 0 0 10px 10px;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 10px 40px rgba(0, 0, 0, 0.45);
 }
 
-@media (min-width: 768px) {
-  main > header.site-header--home-faz83 .home-hero-visual__frame {
-    border-radius: 0 0 14px 14px;
-  }
-}
-
-main > header.site-header--home-faz83 .home-hero-visual__image {
-  display: block;
+.home-hero-visual__image {
   width: 100%;
-  height: clamp(140px, 42vw, 180px);
+  height: 260px;
   object-fit: cover;
-  object-position: center;
+  display: block;
+  filter: brightness(0.85) contrast(1.05);
 }
 
-@media (min-width: 768px) {
-  main > header.site-header--home-faz83 .home-hero-visual__image {
-    height: clamp(220px, 24vw, 280px);
-  }
-}
-
-main > header.site-header--home-faz83 .home-hero-visual__shade {
-  pointer-events: none;
+.home-hero-visual__shade {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.42) 0%, transparent 36%),
-    linear-gradient(to top, var(--bg-primary) 0%, transparent 62%),
-    linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.52) 0%,
-      transparent 18%,
-      transparent 82%,
-      rgba(0, 0, 0, 0.48) 100%
-    );
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.85) 100%),
+    linear-gradient(to left, rgba(0, 0, 0, 0.3), transparent 40%),
+    linear-gradient(to right, rgba(0, 0, 0, 0.3), transparent 40%);
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .home-hero-visual__image {
+    height: 160px;
+  }
 }
 
 main > header.site-header {
