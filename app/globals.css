@@ -1229,50 +1229,116 @@ main
   .home-hero-user {
     left: 24px !important;
     right: 24px !important;
-    bottom: 30px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
+    bottom: 28px !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1.35fr !important;
     gap: 10px !important;
     width: calc(100% - 48px) !important;
-    max-width: none !important;
+    z-index: 10 !important;
+  }
+
+  .home-hero-user > *,
+  .home-hero-user .account-menu-name-trigger {
+    min-width: 0 !important;
   }
 
   .home-hero-user a,
   .home-hero-user button,
   .home-hero-user span {
-    height: 38px !important;
-    min-height: 38px !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    padding: 0 12px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 0 14px !important;
     border-radius: 999px !important;
+    box-sizing: border-box !important;
+
+    color: #ffffff !important;
     font-size: 13px !important;
     font-weight: 700 !important;
     line-height: 1 !important;
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.09) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
     white-space: nowrap !important;
     overflow: visible !important;
     text-overflow: unset !important;
-    max-width: none !important;
+
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.11) !important;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25) !important;
+    backdrop-filter: blur(12px) !important;
+  }
+
+  .home-hero-user [role="menu"] span,
+  .home-hero-user .user-menu span,
+  .home-hero-user .account-menu span,
+  .home-hero-user .account-menu-panel span,
+  .home-hero-user .profile-menu span,
+  .home-hero-user .dropdown-menu span {
     width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    justify-content: flex-start !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    display: inline !important;
+  }
+
+  /* Kullanıcı menüsü / dropdown (.account-menu-panel gerçek sınıf) */
+  .home-hero-user [role="menu"],
+  .home-hero-user .user-menu,
+  .home-hero-user .account-menu,
+  .home-hero-user .account-menu-panel,
+  .home-hero-user .profile-menu,
+  .home-hero-user .dropdown-menu {
+    position: absolute !important;
+    right: 0 !important;
+    top: 48px !important;
+    width: min(252px, calc(100vw - 48px)) !important;
+    padding: 10px !important;
+    border-radius: 18px !important;
+    background: rgba(8, 11, 15, 0.96) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(18px) !important;
+    z-index: 50 !important;
     box-sizing: border-box !important;
   }
 
-  .home-hero-user a:first-child,
-  .home-hero-user button:first-child,
-  .home-hero-user span:first-child {
-    flex: 0 0 auto !important;
+  /* Dropdown içindeki metin ve kontroller */
+  .home-hero-user [role="menu"] *,
+  .home-hero-user .user-menu *,
+  .home-hero-user .account-menu *,
+  .home-hero-user .account-menu-panel *,
+  .home-hero-user .profile-menu *,
+  .home-hero-user .dropdown-menu * {
+    color: #ffffff !important;
   }
 
-  .home-hero-user a:last-child,
-  .home-hero-user button:last-child,
-  .home-hero-user span:last-child {
-    flex: 1 1 auto !important;
-    justify-content: center !important;
+  .home-hero-user [role="menu"] button,
+  .home-hero-user .user-menu button,
+  .home-hero-user .account-menu button,
+  .home-hero-user .account-menu-panel button,
+  .home-hero-user .profile-menu button,
+  .home-hero-user .dropdown-menu button {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: flex-start !important;
+    padding: 0 14px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    margin: 6px 0 !important;
   }
 
   /* İsim satırında çift kutu oluşmasın */
@@ -1280,11 +1346,18 @@ main
   .home-hero-user .header-user {
     height: auto !important;
     min-height: 0 !important;
+    width: auto !important;
+    max-width: none !important;
     padding: 0 !important;
     margin: 0 !important;
     background: transparent !important;
     border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
     display: inline !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: nowrap !important;
   }
 
   .home-hero-user .account-menu-trigger-inner {
