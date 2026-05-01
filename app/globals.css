@@ -999,36 +999,24 @@ header.site-header:not(.site-header--home-faz83) {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* FAZ 8.3 — ana sayfa header: foto + koyu gradient katmanları (dosya yoksa yalnızca gradient/zemin) */
-main > header.site-header.site-header--home-faz83 {
+/* FAZ 8.3 — ana sayfa header: yalnız hero (koyu dış kutuyu sıfırla) */
+main > header.home-header-banner.site-header.site-header--home-faz83.site-header--trabzon-header {
   position: relative;
   isolation: isolate;
-  background: transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.058);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   margin-bottom: 0 !important;
+  padding: 0 !important;
+  padding-bottom: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible;
 }
 
+/* JSX’te kaldırıldı / eski sürüm: varsa yüzeyi bastır — yan koyu “çerçeve” oluşmasın */
 main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-color: #090c10;
-  background-image: linear-gradient(
-    rgba(12, 15, 20, 0.85),
-    rgba(7, 9, 12, 0.97)
-  );
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
-}
-
-/* Eski tam geniş foto kaldırıldı — panoramik şerit HTML’de .home-hero-visual ile */
-main > header.site-header.site-header--home-faz83.site-header--trabzon-header .site-header__bg-surface {
-  background-image: linear-gradient(
-    rgba(5, 7, 9, 0.88),
-    rgba(5, 7, 9, 0.97)
-  );
+  display: none !important;
 }
 
 /* Ana sayfa header — panoramik gece görseli (public/trabzon-gece-hafiza-banner.png) */
@@ -1036,7 +1024,7 @@ main > header.site-header.site-header--home-faz83.site-header--trabzon-header .s
   position: relative;
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto 24px auto;
+  margin: 0 auto 24px auto !important;
   border-radius: 16px;
   overflow: hidden;
 }

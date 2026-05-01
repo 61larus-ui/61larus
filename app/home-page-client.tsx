@@ -1483,8 +1483,7 @@ export default function HomePageClient({
 
   return (
     <main className="relative flex min-h-screen w-full max-w-full flex-col bg-transparent text-[color:var(--text-primary)] antialiased">
-      <header className="site-header site-header--home-faz83 site-header--trabzon-header relative z-20 shrink-0 overflow-hidden">
-        <span className="site-header__bg-surface" aria-hidden="true" />
+      <header className="site-header site-header--home-faz83 site-header--trabzon-header home-header-banner relative z-20 shrink-0">
         <div className="home-hero-visual">
           <img
             src="/trabzon-gece-hafiza-banner.png"
