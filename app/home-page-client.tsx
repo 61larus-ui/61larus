@@ -186,15 +186,6 @@ function hasAnyHeroTitle(entry: EntryItem): boolean {
   return heroTitleTrimmedLength(entry) > 0;
 }
 
-/** Header orta alan — tek satır, yavaş dönen Atatürk sözleri. */
-const HEADER_ATATURK_QUOTES = [
-  "Ne mutlu Türküm diyene!",
-  "Yurtta sulh, cihanda sulh.",
-  "Hayatta en hakiki mürşit ilimdir.",
-  "Ümitsiz durumlar yoktur.",
-  "İstikbal göklerdedir.",
-] as const;
-
 /** OAuth / PKCE redirect artıkları — entry derin bağlantısı değil. */
 function isOAuthReturnQuery(sp: { get: (key: string) => string | null }): boolean {
   const code = sp.get("code");
@@ -626,7 +617,6 @@ export default function HomePageClient({
   const searchSuggestRootRef = useRef<HTMLDivElement>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchReqSeqRef = useRef(0);
-  const [headerEditorialIdx, setHeaderEditorialIdx] = useState(0);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [accountDeleteStep, setAccountDeleteStep] = useState<"idle" | "confirm">(
     "idle"
@@ -940,14 +930,6 @@ export default function HomePageClient({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [footerInfoOpen]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const id = window.setInterval(() => {
-      setHeaderEditorialIdx((i) => (i + 1) % HEADER_ATATURK_QUOTES.length);
-    }, 14000);
-    return () => window.clearInterval(id);
-  }, []);
 
   /** OAuth dönüşü: entry URL açma; pending temiz, ana sayfa. */
   useEffect(() => {
@@ -1501,11 +1483,12 @@ export default function HomePageClient({
 
   return (
     <main className="relative flex min-h-screen w-full max-w-full flex-col bg-transparent text-[color:var(--text-primary)] antialiased">
-      <header className="site-header relative z-20 shrink-0">
-        <div className="headerBlock home-page-container">
+      <header className="site-header site-header--home-faz83 site-header--trabzon-header relative z-20 shrink-0 overflow-hidden">
+        <span className="site-header__bg-surface" aria-hidden="true" />
+        <div className="headerBlock home-page-container relative z-[1]">
           <div className="headerBar min-w-0">
             <div className="header-text-group">
-              <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(21rem,100%)]">
+              <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(22rem,100%)]">
                 <h1 className="m-0 p-0">
                   <button
                     type="button"
@@ -1521,21 +1504,8 @@ export default function HomePageClient({
                   TRABZON&apos;UN GÜNDEMİ, LAFI VE HAFIZASI
                 </p>
               </div>
-              <div
-                className="headerCenterText site-header-editorial header-quote ataturk-quote"
-                aria-live="polite"
-                aria-atomic="true"
-                aria-label="Atatürk sözleri"
-              >
-                <p
-                  key={headerEditorialIdx}
-                  className="site-header-editorial-text m-0"
-                >
-                  {HEADER_ATATURK_QUOTES[headerEditorialIdx]}
-                </p>
-              </div>
             </div>
-          <div className="headerUserName site-header-aux min-w-0 justify-self-end gap-x-2 pl-1 sm:gap-x-2.5 lg:shrink-0 lg:gap-x-3 lg:pl-1.5 lg:pr-2">
+          <div className="headerUserName site-header-aux min-w-0 shrink-0 gap-x-2 pl-1 sm:gap-x-2.5 lg:gap-x-3 lg:pl-1.5 lg:pr-2">
             {!isAuthenticated ? (
                 <Link
                   href="/auth"
@@ -1728,6 +1698,13 @@ export default function HomePageClient({
                 </button>
               </div>
             ) : null}
+            <div className="home-editorial-columns-bridge">
+              <div
+                className="home-editorial-columns-bridge__gutter-left"
+                aria-hidden="true"
+              />
+              <div className="home-editorial-columns-bridge__midstack">
+                <div className="home-editorial-columns-bridge__search-shell">
             <div
               ref={searchSuggestRootRef}
               className="home-manifesto home-manifesto--bridge home-search-bridge home-global-search home-manifesto-inner--bridge home-search-field relative z-50 min-w-0 w-full max-w-full"
@@ -1852,6 +1829,7 @@ export default function HomePageClient({
                 ) : null}
               </div>
             </div>
+                </div>
             {topTickerItems.length > 0 ? (
               <div
                 className="home-ticker home-ticker--divider"
@@ -1883,6 +1861,8 @@ export default function HomePageClient({
                 </div>
               </div>
             ) : null}
+              </div>
+            </div>
             <div className="home-main-columns-wrap home-main-columns-wrap--faz51 home-main-columns-wrap--faz56 min-h-0 w-full min-w-0 max-w-full overflow-x-hidden">
             <div className="main-3col home-editorial-cols home-editorial-cols--faz52 home-content-grid home-content-grid--editorial home-content-grid--flow home-content-grid--faz3 flex w-full min-h-0 min-w-0 max-w-full flex-col gap-0 md:grid md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,1.6fr)] md:items-stretch md:gap-0 md:min-h-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,1.6fr)]">
             <aside
@@ -2036,7 +2016,13 @@ export default function HomePageClient({
                       : { "aria-hidden": true })}
                   >
                     {bottomTickerItems.length > 0 ? (
-                      <div className="home-ticker home-ticker--lower">
+                      <div className="home-editorial-columns-bridge home-editorial-columns-bridge--in-explore">
+                        <div
+                          className="home-editorial-columns-bridge__gutter-left"
+                          aria-hidden="true"
+                        />
+                        <div className="home-editorial-columns-bridge__midstack">
+                          <div className="home-ticker home-ticker--lower">
                         <div className="home-ticker__track">
                           {bottomTickerItems.map((entry) => (
                             <button
@@ -2060,6 +2046,8 @@ export default function HomePageClient({
                               {entry.title}
                             </span>
                           ))}
+                        </div>
+                          </div>
                         </div>
                       </div>
                     ) : null}
