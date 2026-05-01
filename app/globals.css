@@ -1187,7 +1187,7 @@ main
     height: 190px !important;
     object-fit: cover;
     border-radius: 18px;
-    filter: brightness(0.55) !important;
+    filter: brightness(0.48) contrast(1.05) saturate(0.65) !important;
     object-position: center center !important;
     opacity: 0.62 !important;
   }
@@ -1214,9 +1214,20 @@ main
     margin: 0 0 8px 0 !important;
   }
 
-  .home-hero-content h1 .site-wordmark,
+  .home-hero-content h1,
+  .home-hero-content h1 *,
+  .home-hero-content p,
+  .home-hero-content p * {
+    color: #ffffff !important;
+    background: transparent !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.75) !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
   .home-hero-content h1 button {
-    color: inherit !important;
     opacity: 1 !important;
     font-size: inherit !important;
     line-height: inherit !important;
@@ -1232,43 +1243,61 @@ main
     left: 24px !important;
     right: 24px !important;
     bottom: 28px !important;
-    display: grid !important;
-    grid-template-columns: 1fr 1.35fr !important;
-    gap: 10px !important;
     width: calc(100% - 48px) !important;
+    display: flex !important;
+    gap: 10px !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
     z-index: 10 !important;
   }
 
-  .home-hero-user > *,
-  .home-hero-user .account-menu-name-trigger {
+  .home-hero-user > div:last-child {
+    flex: 1 1 auto !important;
     min-width: 0 !important;
   }
 
   .home-hero-user a,
   .home-hero-user button,
   .home-hero-user span {
-    width: 100% !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.075) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    box-shadow: none !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 14px !important;
+    border-radius: 999px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
     max-width: none !important;
-    min-width: 0 !important;
-    height: 40px !important;
-    padding: 0 12px !important;
+    width: auto !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    border-radius: 999px !important;
     box-sizing: border-box !important;
+  }
 
-    color: #ffffff !important;
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
+  .home-hero-user a:first-child,
+  .home-hero-user button:first-child,
+  .home-hero-user span:first-child {
+    flex: 0 0 auto !important;
+  }
 
-    background: rgba(255, 255, 255, 0.06) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    box-shadow: none !important;
+  .home-hero-user a:last-child,
+  .home-hero-user button:last-child,
+  .home-hero-user span:last-child {
+    flex: 1 1 auto !important;
+    min-width: 155px !important;
+    justify-content: center !important;
+  }
+
+  .home-hero-user .account-menu-name-trigger {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .home-hero-user [role="menu"] span,
@@ -1427,12 +1456,6 @@ main
   .home-hero-visual span,
   .home-hero-visual div {
     color: #ffffff !important;
-  }
-
-  .home-hero-visual a,
-  .home-hero-visual button {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
   }
 
   .home-hero-visual [role="menu"],
