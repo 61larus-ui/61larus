@@ -10097,3 +10097,16 @@ footer a:hover {
   color: #c81e25;
   text-decoration-color: var(--home-line-faint-mid);
 }
+
+/* Ana sayfa bölüm başlıkları — üç sütun h2 + keşif h3 (yalnız renk; genel h2’lere dokunmaz) */
+main
+  .home-page-editorial.home-page-editorial--section-stack
+  .home-editorial-cols
+  h2.col-section-head__title--rail,
+main
+  .home-page-editorial.home-page-editorial--section-stack
+  .home-explore--faz51
+  .home-explore-panel-head
+  h3.home-explore-panel-label {
+  color: #b03a3a !important;
+}
