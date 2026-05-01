@@ -9084,3 +9084,105 @@ footer#site-footer.home-page-footer .home-page-container {
   opacity: 1;
   transform: translateX(2px);
 }
+
+/* =========================
+   FAZ 5 — PREMIUM TOUCH
+========================= */
+
+/* GENEL RİTİM */
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ANA HERO BLOK */
+.hero-card {
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+  transition: all 0.25s ease;
+}
+
+.hero-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.06);
+}
+
+/* BAŞLIK (EN KRİTİK) */
+.hero-card h1,
+.hero-card .hero-title {
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+/* ALT METİN */
+.hero-card p {
+  opacity: 0.75;
+  font-size: 0.95rem;
+}
+
+/* ARAMA KUTUSU */
+.home-global-search__input {
+  border: 1px solid rgba(0,0,0,0.05);
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(6px);
+  transition: all 0.2s ease;
+}
+
+.home-global-search__input:focus {
+  border-color: rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.9);
+}
+
+/* KOLON BAŞLIKLARI */
+.col-section-head {
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+/* KOLON AYIRICILAR (dergi hissi) */
+.main-3col > div {
+  border-right: 1px solid rgba(0,0,0,0.035);
+}
+
+.main-3col > div:last-child {
+  border-right: none;
+}
+
+/* ENTRY LİSTELERİ */
+.feed-entry-title--editorial {
+  transition: opacity 0.2s ease;
+}
+
+.feed-entry-title--editorial:hover {
+  opacity: 0.7;
+}
+
+/* DEVAMINI OKU (premium hareket) */
+.devamini-oku {
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.devamini-oku:hover {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+/* FOOTER (ağırlaştırma) */
+footer {
+  background: #0f1113;
+  color: rgba(255,255,255,0.7);
+}
+
+footer a {
+  opacity: 0.7;
+}
+
+footer a:hover {
+  opacity: 1;
+}
+
+/* GENEL BOŞLUK DENGESİ */
+.section-block {
+  margin-bottom: 42px;
+}
