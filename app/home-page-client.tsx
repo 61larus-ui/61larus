@@ -1696,17 +1696,33 @@ export default function HomePageClient({
                   onFocus={() => prefetchEntryRoute(homeHeroEntry.id)}
                   aria-label={`Yazıyı aç: ${homeHeroEntry.title}`}
                 >
-                  <span className="home-hero-faz1__eyebrow">
-                    Bugün 61Larus&apos;ta
-                  </span>
-                  <h2 className="home-hero-faz1__title">{homeHeroEntry.title}</h2>
-                  <div className="home-hero-faz1__lower">
-                    <p className="home-hero-faz1__micro">
-                      Bu konu boş değil. Okumadan geçme.
-                    </p>
-                    <span className="home-hero-faz1__cta" aria-hidden="true">
-                      Yazıyı aç →
+                  <span
+                    className="home-hero-faz1__layer home-hero-faz1__base"
+                    aria-hidden="true"
+                  />
+                  <span
+                    className="home-hero-faz1__layer home-hero-faz1__atmo-bg"
+                    aria-hidden="true"
+                  />
+                  <span
+                    className="home-hero-faz1__layer home-hero-faz1__atmo-shade"
+                    aria-hidden="true"
+                  />
+                  <div className="home-hero-faz1__inner">
+                    <span className="home-hero-faz1__eyebrow">
+                      Bugün 61Larus&apos;ta
                     </span>
+                    <h2 className="home-hero-faz1__title">
+                      {homeHeroEntry.title}
+                    </h2>
+                    <div className="home-hero-faz1__lower">
+                      <p className="home-hero-faz1__micro">
+                        Bu konu boş değil. Okumadan geçme.
+                      </p>
+                      <span className="home-hero-faz1__cta" aria-hidden="true">
+                        Yazıyı aç →
+                      </span>
+                    </div>
                   </div>
                 </button>
               </div>

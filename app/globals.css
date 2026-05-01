@@ -1102,25 +1102,20 @@ main > header .site-header-tagline--manifesto {
 }
 
 .home-hero-faz1 {
+  position: relative;
+  isolation: isolate;
   display: block;
+  overflow: hidden;
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: clamp(1.05rem, 0.88rem + 0.55vw, 1.55rem)
-    clamp(1.05rem, 0.88rem + 0.62vw, 1.65rem)
-    clamp(1.15rem, 0.95rem + 0.65vw, 1.75rem);
+  padding: 0;
   box-sizing: border-box;
   text-align: left;
   cursor: pointer;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-strong);
-  background: linear-gradient(
-    165deg,
-    rgba(255, 255, 255, 0.88) 0%,
-    var(--surface-panel) 36%,
-    var(--bg-tertiary) 72%,
-    rgba(253, 252, 248, 0.97) 100%
-  );
+  background: transparent;
   box-shadow:
     var(--shadow-soft),
     0 6px 20px rgba(15, 23, 42, 0.045),
@@ -1128,7 +1123,6 @@ main > header .site-header-tagline--manifesto {
   color: var(--text-primary);
   transition:
     color 0.2s ease,
-    background-color 0.2s ease,
     border-color 0.2s ease,
     opacity 0.2s ease,
     box-shadow 0.22s ease,
@@ -1138,7 +1132,60 @@ main > header .site-header-tagline--manifesto {
   -webkit-tap-highlight-color: transparent;
 }
 
-.home-hero-faz1:hover {
+/* Zemin + hover: kartın arkası tek yerde tutuluyor */
+.home-hero-faz1__layer,
+.home-hero-faz1__base {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.home-hero-faz1__base {
+  z-index: 0;
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    var(--surface-panel) 36%,
+    var(--bg-tertiary) 72%,
+    rgba(253, 252, 248, 0.97) 100%
+  );
+  transition: background 0.22s ease;
+}
+
+/* Çok düşük opak foto + blur — görsel yoksa yalnızca üsttekiler görünür */
+.home-hero-faz1__atmo-bg {
+  z-index: 1;
+  background-image: url("/trabzon-hero.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.1;
+  filter: blur(6px);
+  transform: translateZ(0) scale(1.085);
+}
+
+/* Okunabilirlik: nötr sıcak nötr ile yumuşatma — palet içi */
+.home-hero-faz1__atmo-shade {
+  z-index: 2;
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.52) 0%,
+    color-mix(in srgb, var(--surface-panel) 58%, transparent) 44%,
+    color-mix(in srgb, var(--bg-primary) 45%, transparent) 100%
+  );
+}
+
+.home-hero-faz1__inner {
+  position: relative;
+  z-index: 3;
+  padding: clamp(1.05rem, 0.88rem + 0.55vw, 1.55rem)
+    clamp(1.05rem, 0.88rem + 0.62vw, 1.65rem)
+    clamp(1.15rem, 0.95rem + 0.65vw, 1.75rem);
+  box-sizing: border-box;
+}
+
+.home-hero-faz1:hover .home-hero-faz1__base {
   background: linear-gradient(
     165deg,
     rgba(255, 255, 255, 0.96) 0%,
@@ -1146,12 +1193,36 @@ main > header .site-header-tagline--manifesto {
     var(--surface-panel) 78%,
     rgba(251, 250, 246, 0.99) 100%
   );
+}
+
+.home-hero-faz1:hover .home-hero-faz1__atmo-bg {
+  opacity: 0.12;
+}
+
+.home-hero-faz1:hover .home-hero-faz1__atmo-shade {
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.58) 0%,
+    color-mix(in srgb, var(--surface-panel) 52%, transparent) 52%,
+    color-mix(in srgb, var(--bg-secondary) 38%, transparent) 100%
+  );
+}
+
+.home-hero-faz1:hover {
   border-color: var(--divide-column);
   box-shadow:
     0 12px 38px rgba(15, 23, 42, 0.072),
     0 4px 14px rgba(15, 23, 42, 0.04),
     var(--surface-inset-highlight);
   transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-faz1__atmo-bg {
+    filter: blur(3px);
+    opacity: 0.085;
+    transform: none;
+  }
 }
 
 .home-hero-faz1:focus-visible {
