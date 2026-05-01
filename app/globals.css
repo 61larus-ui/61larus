@@ -3427,6 +3427,38 @@ main > section
   }
 }
 
+/*
+ * Ana sayfa — kolon + keşif dikey ayraçları (düşük opaklık; :root token’lara dokunmadan)
+ */
+@media (min-width: 768px) {
+  main > section .home-page-editorial
+    .home-content-grid.home-content-grid--editorial.home-editorial-cols--faz52
+    > main.home-rail--feed-main {
+    border-left: 1px solid rgba(255, 255, 255, 0.025);
+    border-right: 1px solid rgba(255, 255, 255, 0.025);
+  }
+
+  main > section .home-page-editorial
+    .home-content-grid.home-content-grid--editorial.home-editorial-cols--faz52
+    > aside[aria-label="Yazılmayı bekleyenler"] {
+    border-right: 1px solid rgba(255, 255, 255, 0.025);
+  }
+}
+
+main > section .home-page-editorial
+  .home-editorial-cols
+  .col-head-band.col-head-band--faz5-primary.col-head-band--feed {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.025) !important;
+}
+
+@media (min-width: 1024px) {
+  main > section .home-page-editorial .home-explore--prefooter
+    .home-explore-grid
+    .home-explore-panel:not(:first-of-type) {
+    border-left: 1px solid rgba(255, 255, 255, 0.025);
+  }
+}
+
 /* FAZ 2.2: lg+ üç kolon yatay nefesi; primary sol/orta ile aynı genişlik omurgasında */
 @media (min-width: 1024px) {
   .home-editorial-cols .col-list-panel .home-rail-nav {
