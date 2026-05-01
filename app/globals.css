@@ -408,6 +408,10 @@ body {
   text-shadow: 0 0 12px rgba(255, 106, 0, 0.25);
 }
 
+.section-title {
+  color: var(--accent);
+}
+
 /* Başlık sınıfları kendi --type-* token’ıyla hizalanır; genel selektör yok */
 
 [class*="subtitle"],
@@ -3376,11 +3380,7 @@ main > section
   font-weight: 500;
   letter-spacing: -0.021em;
   line-height: 1.32;
-  color: color-mix(
-    in srgb,
-    var(--wordmark-ink) 92%,
-    var(--text-secondary) 8%
-  );
+  color: var(--accent);
 }
 
 .home-rail--faz5-left .home-index-num,
@@ -3437,11 +3437,7 @@ main > section
   font-weight: 500;
   letter-spacing: -0.021em;
   line-height: 1.32;
-  color: color-mix(
-    in srgb,
-    var(--wordmark-ink) 92%,
-    var(--text-secondary) 8%
-  );
+  color: var(--accent);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -3478,11 +3474,7 @@ main > section
   font-weight: 500;
   letter-spacing: -0.018em;
   line-height: 1.32;
-  color: color-mix(
-    in srgb,
-    var(--wordmark-ink) 92%,
-    var(--text-secondary) 8%
-  );
+  color: var(--accent);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -4201,11 +4193,7 @@ main > section
   line-height: 1.32;
   letter-spacing: -0.021em;
   text-transform: none;
-  color: color-mix(
-    in srgb,
-    var(--wordmark-ink) 92%,
-    var(--text-secondary) 8%
-  );
+  color: var(--accent);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -10647,7 +10635,7 @@ main
   .home-explore--faz51
   .home-explore-panel-head
   h3.home-explore-panel-label:focus-visible {
-  color: #c24a4a !important;
+  color: var(--accent) !important;
   opacity: 1 !important;
 }
 
