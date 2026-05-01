@@ -273,13 +273,7 @@ body {
   color: var(--text-primary);
   font-family: var(--font-ui);
   min-height: 100vh;
-  background: linear-gradient(
-    160deg,
-    #faf9f6 0%,
-    #f4f0ea 48%,
-    #efeae2 100%
-  );
-  background-attachment: fixed;
+  background: #f7f5f2 !important;
 }
 
 body > * {
@@ -9247,43 +9241,22 @@ footer#site-footer.home-page-footer .home-page-container {
   margin-top: clamp(1.25rem, 4vw, 1.75rem) !important;
 }
 
-/* FAZ 7 — Katkılarim yüzey derinliği (yalnız .katkilarim-* zinciri) */
-body:has(.katkilarim-wrapper) {
-  background: linear-gradient(to bottom, #f9f8f6 0%, #f3f1ee 100%);
-}
-
-html:has(.katkilarim-wrapper) {
-  background: transparent;
-}
-
-section:has(.katkilarim-wrapper) {
-  background: transparent !important;
-}
-
+/* FAZ 7.1 — Katkılarim: abartıyı kaldır, editoryal netlik */
 /* Katkılarim — editorial ritim blokları (.katkilarim-*) */
 .katkilarim-wrapper {
   max-width: 860px;
   margin-left: auto;
   margin-right: auto;
   position: relative;
-  isolation: isolate;
 }
 
 .katkilarim-wrapper::before {
-  content: "";
-  position: absolute;
-  top: -40px;
-  left: -40px;
-  right: -40px;
-  bottom: -40px;
-  background: rgba(255, 255, 255, 0.35);
-  border-radius: 18px;
-  z-index: -1;
+  display: none !important;
 }
 
 .katkilarim-header {
-  margin-top: 32px;
-  margin-bottom: 36px;
+  margin-top: 40px;
+  margin-bottom: 28px;
 }
 
 .katkilarim-header .my-comments-heading,
@@ -9322,22 +9295,23 @@ section:has(.katkilarim-wrapper) {
 
 .my-comments-card.katkilarim-card,
 .katkilarim-card {
+  margin-top: 18px;
   padding: 22px 24px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: none;
   transition:
     border-color 0.25s ease,
     background-color 0.25s ease,
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
+    transform 0.25s ease;
 }
 
 .my-comments-card.katkilarim-card:hover,
 .katkilarim-card:hover {
-  background: rgba(255, 255, 255, 0.82);
+  background: #ffffff !important;
   transform: translateY(-2px);
 }
 
@@ -9350,11 +9324,7 @@ section:has(.katkilarim-wrapper) {
 
 .my-comments-card.katkilarim-card::after,
 .katkilarim-card::after {
-  content: "";
-  display: block;
-  height: 1px;
-  margin-top: 18px;
-  background: rgba(0, 0, 0, 0.04);
+  display: none !important;
 }
 
 .my-comments-title.katkilarim-card-title {
