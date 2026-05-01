@@ -176,6 +176,8 @@ html {
   --home-container-px: 1rem; /* 16px mobil */
   /* Blok aralığı: 24 / 32 / 48px (FAZ 2) */
   --home-section-gap: 1.5rem;
+  /* FAZ 1.5: ana sayfa .home-page-editorial--section-stack dikey ritmi + footer hizası */
+  --editorial-stack-gap: clamp(20px, 2.5vw, 28px);
   /* FAZ 4 final: header–arama 20–24px (section gap ayrı) */
   --home-header-below-gap: 1.25rem; /* 20px */
 }
@@ -1077,14 +1079,14 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-/* Tek dikey ritim: arama, Bugün, üç kolon, keşif aynı gap ile; çift çizgi yerine boşluk */
+/* FAZ 1.5: ana sayfa yığın — tek dikey ritim (--editorial-stack-gap) */
 .home-page-editorial--section-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--home-section-gap);
+  gap: var(--editorial-stack-gap);
 }
 
-/* FAZ 1.2 / 1.3: hero hafif genişleme (kopuk his vermeden), arama ile nefes */
+/* FAZ 1.2 / 1.3: hero yatay genişleme; alt boşluk yığılması yok (stack gap tek kaynak) */
 .home-page-editorial--section-stack > .home-hero-faz1-outer {
   align-self: stretch;
   margin-left: calc(var(--home-container-px) * -0.3);
@@ -1092,8 +1094,8 @@ main > header .site-header-tagline--manifesto {
   width: calc(100% + var(--home-container-px) * 0.6);
   max-width: calc(100% + var(--home-container-px) * 0.6);
   box-sizing: border-box;
-  padding-bottom: clamp(0.4rem, 0.22rem + 0.55vw, 0.85rem);
-  margin-bottom: clamp(1.15rem, 0.65rem + 1.65vw, 2.5rem);
+  padding-bottom: 0;
+  margin-bottom: 0;
 }
 
 .home-hero-faz1-outer {
@@ -1316,24 +1318,23 @@ main > header .site-header-tagline--manifesto {
   text-decoration-color: var(--divide-column);
 }
 
-/* Üst ticker (doğrudan stack çocuğu); Bugün yoksa — alt ticker bu seçicide değil */
+/* Üst ticker: stack gap dışında ekstra dikey margin yok */
 .home-page-editorial--section-stack > .home-ticker {
-  margin-top: 4px !important;
-  margin-bottom: 10px !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
-/* Bugün bloğundan hemen sonra üst ticker: gap + section alt boşluğunu margin ile dengele */
 .today-strip.today-discovery + .home-ticker--divider,
 .today-discovery + .home-ticker--divider,
 .today-discovery--vitrin + .home-ticker--divider {
-  margin-top: 8px !important;
+  margin-top: 0 !important;
 }
 
 .home-page-editorial--section-stack > .today-strip.today-discovery + .home-ticker--divider {
-  margin-top: calc(8px - var(--home-section-gap)) !important;
+  margin-top: 0 !important;
 }
 
-/* Bugün → üst ticker: section alt boşluğu sıfır (asıl boşluk flex gap + ticker margin) */
+/* Bugün → üst ticker: alt margin yok — dikey ritim stack gap */
 .today-strip.today-discovery,
 .today-discovery--vitrin,
 .home-page-editorial .today-strip.today-discovery--faz5 {
@@ -1341,17 +1342,23 @@ main > header .site-header-tagline--manifesto {
   margin-bottom: 0 !important;
 }
 
-/* FAZ 2: vitrin ↔ orta ticker / üçlü kolon — section-stack gap ile birlikte görsel ritim */
+/* Üç kolon sarmalı: stack gap sonrası ek üst çekme yok */
 .home-page-editorial--section-stack
   .today-strip.today-discovery
   + .home-main-columns-wrap {
-  margin-top: calc(var(--home-section-gap) * -0.4);
+  margin-top: 0;
 }
 
 .home-page-editorial--section-stack
   .home-ticker--divider
   + .home-main-columns-wrap {
-  margin-top: calc(var(--home-section-gap) * -0.4);
+  margin-top: 0;
+}
+
+/* FAZ 1.5: kolon bant başlıkları — ekstra üst margin yok (yalnızca stack gap) */
+.home-page-editorial--section-stack .home-main-columns-wrap .col-head-band,
+.home-page-editorial--section-stack .home-feed-rail__head.col-head-band {
+  margin-top: 0 !important;
 }
 
 /* --- Arama dışı manifesto: eski hero padding’i (köprü sınıfı ile sıfırlanır) --- */
@@ -1756,7 +1763,7 @@ main > section
   margin-right: 0;
 }
 
-/* FAZ 3.5: ana 3 kolon — alt nefes çoğunlukla --home-section-gap (section-stack) */
+/* FAZ 3.5: ana 3 kolon — section-stack içinde alt nefes stack gap’a bırakıldı */
 .home-main-columns-wrap {
   min-height: 0;
   min-width: 0;
@@ -3092,19 +3099,11 @@ main > section
   padding-bottom: 0;
 }
 
-/* Üç kolon ↔ alt keşif: section-stack gap + keşif üst padding’i ~12–16px nefese indir */
+/* Üç kolon ↔ alt keşif: yığılma yok; aralığı stack gap + keşif padding verir */
 .home-page-editorial.home-page-editorial--section-stack
   .home-main-columns-wrap
   + .home-explore--prefooter.home-explore--faz51 {
-  margin-top: calc(12px - var(--home-section-gap));
-}
-
-@media (min-width: 768px) {
-  .home-page-editorial.home-page-editorial--section-stack
-    .home-main-columns-wrap
-    + .home-explore--prefooter.home-explore--faz51 {
-    margin-top: calc(14px - var(--home-section-gap));
-  }
+  margin-top: 0;
 }
 
 .home-rail--faz5-left .home-index-title,
@@ -4352,14 +4351,14 @@ aside[aria-label="Yayın paneli"] nav button.group {
   }
 }
 
-/* Ana sayfa: keşif/son blok ile footer — aynı section gap */
+/* Ana sayfa: keşif/son blok ile footer — editorial stack ritmi */
 main > section > .home-page-editorial + footer#site-footer.home-page-footer--after-explore {
-  margin-top: calc(var(--home-section-gap) + 0.5rem);
+  margin-top: calc(var(--editorial-stack-gap) + 0.5rem);
 }
 
 @media (min-width: 768px) {
   main > section > .home-page-editorial + footer#site-footer.home-page-footer--after-explore {
-    margin-top: calc(var(--home-section-gap) + 0.75rem);
+    margin-top: calc(var(--editorial-stack-gap) + 0.75rem);
   }
 }
 
@@ -7999,14 +7998,14 @@ footer#site-footer.home-page-footer .home-page-container {
     line-height: 1.4;
   }
 
-  /* —— Bölümler arası: tek ritim (rastgele boşluk hissi azalt) —— */
+  /* —— Bölümler arası: masaüstü ile aynı stack ritmi —— */
   .home-page-editorial--section-stack {
-    gap: 1rem;
+    gap: var(--editorial-stack-gap);
   }
 
   .home-page-editorial .home-search-bridge.home-manifesto--bridge.home-search-field {
     margin-top: 0;
-    margin-bottom: 0.15rem;
+    margin-bottom: 0;
   }
 
   .home-page-editorial .today-strip.today-discovery--faz5 {
@@ -8032,7 +8031,7 @@ footer#site-footer.home-page-footer .home-page-container {
   }
 
   .home-explore--prefooter {
-    margin-top: 0.2rem;
+    margin-top: 0;
   }
 
   .home-explore-grid {
