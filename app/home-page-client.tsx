@@ -1506,21 +1506,14 @@ export default function HomePageClient({
             </h1>
             <p>Trabzon&apos;un gündemi, lafı ve hafızası</p>
           </div>
-        </div>
-        <div className="headerBlock home-page-container relative z-[1]">
-          <div className="headerBar min-w-0">
-          <div className="headerUserName site-header-aux ml-auto min-w-0 shrink-0 gap-x-2 pl-1 sm:gap-x-2.5 lg:gap-x-3 lg:pl-1.5 lg:pr-2">
+
+          <div className="home-hero-user">
             {!isAuthenticated ? (
-                <Link
-                  href="/auth"
-                  prefetch
-                  className="inline-flex shrink-0 items-center text-[12px] font-normal tracking-[0.03em] text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[4px] transition-colors hover:text-[color:var(--text-secondary)] md:text-[12.5px]"
-                >
-                  Giriş
-                </Link>
-            ) : null}
-            {isAuthenticated ? (
-                <div className="site-account-nav min-w-0 shrink-0">
+              <Link href="/auth" prefetch>
+                Giriş
+              </Link>
+            ) : (
+              <>
                 <Link
                   href="/katkilarim"
                   prefetch
@@ -1533,90 +1526,89 @@ export default function HomePageClient({
                   className="relative z-30 min-w-0 shrink-0"
                   ref={accountMenuRef}
                 >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsUserMenuOpen((o) => !o);
-                  }}
-                  className="account-menu-name-trigger max-w-full cursor-pointer border-0 bg-transparent p-0"
-                  style={{ WebkitTapHighlightColor: "transparent" }}
-                  aria-expanded={isUserMenuOpen}
-                  aria-haspopup="menu"
-                  aria-label="Hesap menüsü"
-                >
-                  <div
-                    className="account-menu-trigger-inner flex min-h-9 min-w-0 max-w-full items-center justify-end rounded-md px-0.5 py-0 md:min-h-8"
-                    style={{ transition: "var(--transition)" }}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsUserMenuOpen((o) => !o);
+                    }}
+                    className="account-menu-name-trigger max-w-full cursor-pointer border-0 bg-transparent p-0"
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                    aria-expanded={isUserMenuOpen}
+                    aria-haspopup="menu"
+                    aria-label="Hesap menüsü"
                   >
-                    <span className="site-account-name account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right">
-                      {headerDisplayName}
-                    </span>
-                  </div>
-                </button>
-                {isUserMenuOpen ? (
-                  <div
-                    className="account-menu-panel user-menu"
-                    role="menu"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <p className="account-menu-meta m-0">
-                      Google ile giriş yapıldı
-                    </p>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => void handleLogout()}
-                      className="account-menu-item account-menu-item--default"
+                    <div
+                      className="account-menu-trigger-inner flex min-h-9 min-w-0 max-w-full items-center justify-end rounded-md px-0.5 py-0 md:min-h-8"
+                      style={{ transition: "var(--transition)" }}
                     >
-                      Çıkış yap
-                    </button>
-                    {accountDeleteStep === "idle" ? (
+                      <span className="site-account-name account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right">
+                        {headerDisplayName}
+                      </span>
+                    </div>
+                  </button>
+                  {isUserMenuOpen ? (
+                    <div
+                      className="account-menu-panel user-menu"
+                      role="menu"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <p className="account-menu-meta m-0">
+                        Google ile giriş yapıldı
+                      </p>
                       <button
                         type="button"
                         role="menuitem"
-                        disabled={accountDeleteLoading}
-                        onClick={() => setAccountDeleteStep("confirm")}
-                        className="account-menu-item account-menu-item--destructive"
+                        onClick={() => void handleLogout()}
+                        className="account-menu-item account-menu-item--default"
                       >
-                        Google hesabımı sil
+                        Çıkış yap
                       </button>
-                    ) : (
-                      <div className="account-menu-delete-block">
-                        <p className="account-menu-delete-hint m-0">
-                          Bu işlem geri alınamaz. Profil bilgilerin kaldırılır; eski
-                          içerikler anonim görünür.
-                        </p>
-                        <div className="account-menu-delete-actions">
-                          <button
-                            type="button"
-                            disabled={accountDeleteLoading}
-                            onClick={() => void handleConfirmAccountDeletion()}
-                            className="account-menu-delete-confirm"
-                          >
-                            {accountDeleteLoading ? "İşleniyor…" : "Silmeyi onayla"}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={accountDeleteLoading}
-                            onClick={() => setAccountDeleteStep("idle")}
-                            className="account-menu-delete-cancel"
-                          >
-                            Vazgeç
-                          </button>
+                      {accountDeleteStep === "idle" ? (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          disabled={accountDeleteLoading}
+                          onClick={() => setAccountDeleteStep("confirm")}
+                          className="account-menu-item account-menu-item--destructive"
+                        >
+                          Google hesabımı sil
+                        </button>
+                      ) : (
+                        <div className="account-menu-delete-block">
+                          <p className="account-menu-delete-hint m-0">
+                            Bu işlem geri alınamaz. Profil bilgilerin kaldırılır; eski
+                            içerikler anonim görünür.
+                          </p>
+                          <div className="account-menu-delete-actions">
+                            <button
+                              type="button"
+                              disabled={accountDeleteLoading}
+                              onClick={() => void handleConfirmAccountDeletion()}
+                              className="account-menu-delete-confirm"
+                            >
+                              {accountDeleteLoading ? "İşleniyor…" : "Silmeyi onayla"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={accountDeleteLoading}
+                              onClick={() => setAccountDeleteStep("idle")}
+                              className="account-menu-delete-cancel"
+                            >
+                              Vazgeç
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {accountDeleteError ? (
-                      <p className="account-menu-error m-0">{accountDeleteError}</p>
-                    ) : null}
-                  </div>
-                ) : null}
+                      )}
+                      {accountDeleteError ? (
+                        <p className="account-menu-error m-0">{accountDeleteError}</p>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
-                </div>
-            ) : null}
-          </div>
+              </>
+            )}
           </div>
         </div>
       </header>

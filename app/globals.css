@@ -1005,6 +1005,7 @@ main > header.site-header.site-header--home-faz83 {
   isolation: isolate;
   background: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.058);
+  margin-bottom: 0 !important;
 }
 
 main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
@@ -1035,7 +1036,7 @@ main > header.site-header.site-header--home-faz83.site-header--trabzon-header .s
   position: relative;
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto 28px auto;
+  margin: 0 auto 24px auto;
   border-radius: 16px;
   overflow: hidden;
 }
@@ -1107,9 +1108,74 @@ main > header.site-header.site-header--home-faz83.site-header--trabzon-header .s
   margin: 0;
 }
 
+main > header.site-header--home-faz83 .home-hero-content .site-wordmark {
+  color: #fff;
+  opacity: 0.95;
+}
+
+.home-hero-user {
+  position: absolute;
+  right: 32px;
+  bottom: 28px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.home-hero-user a,
+.home-hero-user button,
+.home-hero-user span {
+  color: rgba(255, 255, 255, 0.68);
+  text-decoration: none;
+}
+
+.home-hero-user a:hover,
+.home-hero-user button:hover {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.home-hero-user .site-account-name,
+.home-hero-user .header-user {
+  max-width: min(10.5rem, 42vw);
+}
+
+/* Hero üstü: eski header nav !important renklerini bastır */
+main > header.site-header--home-faz83 .home-hero-user .site-account-link,
+main > header.site-header--home-faz83 .home-hero-user .site-account-name,
+main > header.site-header--home-faz83 .home-hero-user .header-user {
+  color: rgba(255, 255, 255, 0.68) !important;
+  font-weight: 600 !important;
+}
+
+main > header.site-header--home-faz83 .home-hero-user .site-account-link:hover,
+main > header.site-header--home-faz83 .home-hero-user .site-account-name:hover,
+main
+  > header.site-header--home-faz83
+  .home-hero-user
+  .account-menu-trigger-inner:hover
+  .site-account-name,
+main
+  > header.site-header--home-faz83
+  .home-hero-user
+  .account-menu-trigger-inner:hover
+  .header-user {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
 @media (max-width: 768px) {
   .home-hero-visual__image {
     height: 160px;
+  }
+
+  .home-hero-user {
+    right: 20px;
+    bottom: 18px;
+    gap: 10px;
+    font-size: 12px;
   }
 }
 
