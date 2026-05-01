@@ -9031,7 +9031,11 @@ footer#site-footer.home-page-footer .home-page-container {
   color: #60a5fa;
 }
 
-/* === Katkılarım (üye yorumları) — yalnız bu scope === */
+/* === Katkılarım — ana sayfa editoryal dili === */
+.home-page-editorial--section-stack + .my-comments-page {
+  padding-top: clamp(0.35rem, 1.5vw, 1rem);
+}
+
 .my-comments-page {
   flex: 1;
   width: 100%;
@@ -9045,52 +9049,119 @@ footer#site-footer.home-page-footer .home-page-container {
   background: var(--bg-primary);
 }
 
-/* Katkılarım içerik başlığı — header hesap linki ile aynı aile */
 .my-comments-heading {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  color: rgba(15, 23, 42, 0.48);
-  margin-bottom: 10px;
-  margin-top: 0;
+  margin: 0 0 0.5rem;
   padding: 0;
+  font-family: var(--font-editorial-display);
+  font-size: clamp(1.32rem, 1.05rem + 1vw, 1.68rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.22;
+  color: var(--wordmark-ink);
+  text-rendering: optimizeLegibility;
 }
 
 .my-comments-page-intro {
-  margin-top: 0.5rem;
-  font-size: 0.8125rem;
-  line-height: 1.55;
-  color: var(--text-tertiary);
-  max-width: 36rem;
+  margin-top: 0;
+  margin-bottom: 0;
+  max-width: 28rem;
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  letter-spacing: 0.014em;
+  color: color-mix(
+    in srgb,
+    var(--text-secondary) 72%,
+    var(--text-tertiary) 28%
+  );
+}
+
+.my-comments-flow-back-row {
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.my-comments-flow-back {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0.025em;
+  color: color-mix(
+    in srgb,
+    var(--text-secondary) 58%,
+    var(--text-meta) 42%
+  );
+  opacity: 0.78;
+  text-decoration: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.my-comments-flow-back:hover {
+  opacity: 1;
+  color: var(--text-primary);
+}
+
+.my-comments-list {
+  gap: clamp(0.75rem, 2vw, 1.05rem);
+  margin-top: clamp(1.35rem, 3.5vw, 1.85rem);
 }
 
 .my-comments-card {
   display: block;
-  text-decoration: none;
+  box-sizing: border-box;
+  overflow: hidden;
+  max-width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.044);
+  background: color-mix(in srgb, rgba(255, 255, 255, 0.55) 42%, var(--bg-secondary) 58%);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  padding: clamp(1rem, 3vw, 1.25rem) clamp(1.05rem, 3.2vw, 1.35rem);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.035);
   color: inherit;
-  border-radius: 6px;
-  border: 1px solid var(--divide-muted);
-  background: color-mix(in srgb, var(--bg-primary) 96%, #fff 4%);
-  padding: 1rem 1.1rem;
+  text-decoration: none;
   transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease;
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
 }
 
 .my-comments-card:hover {
-  border-color: color-mix(in srgb, var(--divide) 82%, transparent);
-  background: color-mix(in srgb, var(--bg-primary) 92%, #fff 8%);
+  border-color: rgba(0, 0, 0, 0.07);
+  background: color-mix(in srgb, rgba(255, 255, 255, 0.68) 52%, var(--bg-secondary) 48%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.048);
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-comments-card:hover {
+    transform: none;
+  }
+}
+
+.my-comments-card:hover .my-comments-title {
+  opacity: 0.9;
 }
 
 .my-comments-title {
   margin: 0;
-  font-family: var(--font-libre-baskerville), ui-serif, Georgia, serif;
-  font-weight: 400;
-  font-size: clamp(1.05rem, 2.2vw, 1.2rem);
-  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-family: var(--font-editorial-display);
+  font-weight: 500;
+  font-size: clamp(1.035rem, 0.98rem + 0.35vw, 1.2rem);
+  line-height: 1.42;
+  letter-spacing: -0.012em;
   color: var(--text-primary);
+  transition: opacity 0.2s ease;
 }
 
 .my-comments-meta {
@@ -9100,13 +9171,81 @@ footer#site-footer.home-page-footer .home-page-container {
   line-height: 1.55;
 }
 
+.my-comments-card-meta-row {
+  font-family: var(--font-sans);
+  font-size: 0.765rem;
+  line-height: 1.5;
+  letter-spacing: 0.028em;
+  color: color-mix(
+    in srgb,
+    var(--text-meta) 78%,
+    var(--text-tertiary) 22%
+  );
+}
+
+.my-comments-meta-quiet {
+  font-weight: 400;
+  opacity: 0.68;
+  letter-spacing: 0.04em;
+}
+
+.my-comments-meta-sep {
+  font-weight: 400;
+  opacity: 0.45;
+}
+
+.my-comments-card-row {
+  align-items: stretch;
+}
+
+@media (max-width: 639.98px) {
+  .my-comments-card-row {
+    gap: 0.75rem;
+  }
+
+  .my-comments-card-cta {
+    align-self: flex-end;
+    margin-top: 0.15rem;
+    text-align: right;
+  }
+}
+
+.my-comments-card-cta {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  line-height: 1.45;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-meta) 88%, var(--text-secondary) 12%);
+  opacity: 0.88;
+  transition:
+    opacity 0.2s ease,
+    transform 0.22s ease,
+    color 0.2s ease;
+}
+
+.my-comments-card:hover .my-comments-card-cta {
+  opacity: 1;
+  color: var(--text-secondary);
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-comments-card:hover .my-comments-card-cta {
+    transform: none;
+  }
+}
+
 .my-comments-empty {
   margin: 0;
   color: var(--text-secondary);
-  font-family: var(--font-libre-baskerville), ui-serif, Georgia, serif;
+  font-family: var(--font-editorial-display), ui-serif, Georgia, serif;
 }
 
-/* --- FAZ 3.1: metin görünürlüğü & CTA (tipografi / opaklık; yeni renk yok) --- */
+.my-comments-empty--below-back {
+  margin-top: clamp(1.25rem, 4vw, 1.75rem) !important;
+}
 
 .hemen-yorum-yok,
 .no-comment-text,

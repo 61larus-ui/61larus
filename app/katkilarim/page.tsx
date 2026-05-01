@@ -21,9 +21,24 @@ export const fetchCache = "force-no-store";
 
 export const metadata: Metadata = {
   title: "Katkılarım | 61Sözlük",
-  description: "Yorum yaptığın başlıklar",
+  description: "Yorum yaptığın başlıklar burada birikir.",
   robots: { index: false, follow: true },
 };
+
+function KatkilarimFlowBackLink() {
+  return (
+    <p className="my-comments-flow-back-row m-0">
+      <Link
+        href="/"
+        prefetch
+        scroll={false}
+        className="my-comments-flow-back"
+      >
+        ← Akışa dön
+      </Link>
+    </p>
+  );
+}
 
 async function katkilarimHeaderLabel(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
@@ -88,16 +103,9 @@ export default async function KatkilarimPage() {
             <p className="my-comments-empty m-0 font-serif text-[1.05rem] leading-relaxed text-[color:var(--text-secondary)]">
               Katkılarını görmek için giriş yapmalısın.
             </p>
-            <p className="mt-5 m-0">
-              <Link
-                href="/"
-                prefetch
-                scroll={false}
-                className="text-sm font-normal tracking-wide text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
-              >
-                Akışa dön
-              </Link>
-            </p>
+            <div className="mt-6">
+              <KatkilarimFlowBackLink />
+            </div>
           </div>
         </div>
       </KatkilarimChrome>
@@ -121,16 +129,9 @@ export default async function KatkilarimPage() {
             <p className="my-comments-empty m-0 text-[color:var(--text-secondary)]">
               Katkılar yüklenirken bir sorun oluştu. Daha sonra tekrar dene.
             </p>
-            <p className="mt-5 m-0">
-              <Link
-                href="/"
-                prefetch
-                scroll={false}
-                className="text-sm font-normal tracking-wide text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
-              >
-                Akışa dön
-              </Link>
-            </p>
+            <div className="mt-6">
+              <KatkilarimFlowBackLink />
+            </div>
           </div>
         </div>
       </KatkilarimChrome>
@@ -174,20 +175,11 @@ export default async function KatkilarimPage() {
           <div className="home-page-container mx-auto w-full py-8 md:py-10">
             <h1 className="my-comments-heading">Katkılarım</h1>
             <p className="my-comments-meta my-comments-page-intro">
-              Yorum yaptığın başlıklar; her biri bir kez listelenir.
+              Yorum yaptığın başlıklar burada birikir.
             </p>
-            <p className="my-comments-empty mt-8 m-0 font-serif text-[1.05rem] leading-relaxed text-[color:var(--text-secondary)]">
+            <KatkilarimFlowBackLink />
+            <p className="my-comments-empty my-comments-empty--below-back mt-8 m-0 font-serif text-[1.05rem] leading-relaxed text-[color:var(--text-secondary)]">
               Henüz katkın yok — akışa dön, bir başlık seç.
-            </p>
-            <p className="mt-5 m-0">
-              <Link
-                href="/"
-                prefetch
-                scroll={false}
-                className="text-sm font-normal tracking-wide text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
-              >
-                Akışa dön
-              </Link>
             </p>
           </div>
         </div>
@@ -212,16 +204,9 @@ export default async function KatkilarimPage() {
             <p className="my-comments-empty m-0 text-[color:var(--text-secondary)]">
               Başlıklar yüklenirken bir sorun oluştu. Daha sonra tekrar dene.
             </p>
-            <p className="mt-5 m-0">
-              <Link
-                href="/"
-                prefetch
-                scroll={false}
-                className="text-sm font-normal tracking-wide text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
-              >
-                Akışa dön
-              </Link>
-            </p>
+            <div className="mt-6">
+              <KatkilarimFlowBackLink />
+            </div>
           </div>
         </div>
       </KatkilarimChrome>
@@ -240,10 +225,11 @@ export default async function KatkilarimPage() {
         <div className="home-page-container mx-auto w-full py-8 md:py-10">
           <h1 className="my-comments-heading">Katkılarım</h1>
           <p className="my-comments-meta my-comments-page-intro">
-            Yorum yaptığın başlıklar; her biri bir kez listelenir.
+            Yorum yaptığın başlıklar burada birikir.
           </p>
+          <KatkilarimFlowBackLink />
 
-          <ul className="my-comments-list mt-8 flex list-none flex-col gap-4 p-0 m-0 md:mt-10">
+          <ul className="my-comments-list flex list-none flex-col p-0 m-0">
             {entryOrder.filter((id) => byId.has(id)).map((entryId) => {
               const row = byId.get(entryId)!;
               const title =
@@ -264,20 +250,27 @@ export default async function KatkilarimPage() {
                     scroll={false}
                     className="my-comments-card"
                   >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                      <div className="min-w-0 flex-1">
+                    <div className="my-comments-card-row flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                      <div className="my-comments-card-main min-w-0 flex-1">
                         <p className="my-comments-title">{title}</p>
-                        <p className="my-comments-meta mt-2 m-0 text-[13px] leading-relaxed text-[color:var(--text-tertiary)]">
+                        <p className="my-comments-meta my-comments-card-meta-row mt-2 m-0">
                           {dateLabel ? (
                             <>
-                              Son yorumun: {dateLabel}
-                              <span aria-hidden> · </span>
+                              <span className="my-comments-meta-quiet">
+                                Son yorumun
+                              </span>
+                              {": "}
+                              {dateLabel}
+                              <span className="my-comments-meta-sep" aria-hidden>
+                                {" "}
+                                ·{" "}
+                              </span>
                             </>
                           ) : null}
                           {countLabel}
                         </p>
                       </div>
-                      <span className="my-comments-meta shrink-0 text-[13px] text-[color:var(--text-tertiary)] sm:pt-0.5">
+                      <span className="my-comments-card-cta shrink-0 sm:mt-0.5">
                         Devamını oku →
                       </span>
                     </div>
@@ -286,17 +279,6 @@ export default async function KatkilarimPage() {
               );
             })}
           </ul>
-
-          <p className="mt-10 m-0">
-            <Link
-              href="/"
-              prefetch
-              scroll={false}
-              className="text-sm font-normal tracking-wide text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
-            >
-              Akışa dön
-            </Link>
-          </p>
         </div>
       </div>
     </KatkilarimChrome>
