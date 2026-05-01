@@ -845,11 +845,7 @@ h3.col-section-head__kicker {
   font-weight: 500;
   line-height: 1.38;
   letter-spacing: -0.009em;
-  color: color-mix(
-    in srgb,
-    var(--wordmark-ink) 94%,
-    var(--text-secondary) 6%
-  );
+  color: rgba(255, 255, 255, 0.88);
   text-rendering: optimizeLegibility;
 }
 
@@ -1214,6 +1210,12 @@ main > header .site-header-tagline--manifesto {
   -webkit-line-clamp: 2;
   overflow: hidden;
   word-break: break-word;
+  transition: color 0.2s ease;
+}
+
+.home-hero-faz1:hover .home-hero-faz1__title,
+.home-hero-faz1:focus-visible .home-hero-faz1__title {
+  color: #c81e25;
 }
 
 @media (min-width: 1024px) {
@@ -3097,11 +3099,7 @@ main > section
   font-size: clamp(0.7rem, 0.645rem + 0.14vw, 0.82rem);
   line-height: 1.3;
   font-weight: 500;
-  color: color-mix(
-    in srgb,
-    var(--wordmark-ink) 74%,
-    var(--text-secondary) 26%
-  );
+  color: rgba(255, 255, 255, 0.88);
   letter-spacing: -0.007em;
 }
 
@@ -3109,13 +3107,8 @@ main > section
   font-size: clamp(0.585rem, 0.545rem + 0.13vw, 0.665rem);
   line-height: 1.26;
   font-weight: 400;
-  color: color-mix(
-    in srgb,
-    var(--wordmark-ink) 64%,
-    var(--text-secondary) 36%
-  );
+  color: rgba(255, 255, 255, 0.88);
   letter-spacing: -0.004em;
-  opacity: 0.86;
 }
 
 .home-rail--faz5-primary .feed-entry-card--editorial {
@@ -3224,7 +3217,6 @@ main > section
 
   .home-rail--faz5-left .home-index-title {
     font-size: clamp(0.66rem, 0.6rem + 0.22vw, 0.76rem);
-    opacity: 0.87;
   }
 
   .home-rail--faz5-mid .home-index-title {
@@ -8098,13 +8090,13 @@ main .home-explore--faz51 .home-explore-panel-label:hover {
   text-decoration-thickness: 1px;
   text-underline-offset: 0.16em;
   transition:
-    color var(--home-interact-160) var(--home-interact-ease),
+    color 0.2s ease,
     text-decoration-color var(--home-interact-160) var(--home-interact-ease);
 }
 
 .home-index-row:hover .home-index-title,
 .home-index-row:focus-visible .home-index-title {
-  color: var(--home-title-ink-hover);
+  color: #c81e25;
   text-decoration-color: var(--home-line-faint);
 }
 
@@ -9488,6 +9480,15 @@ footer a:hover {
   line-height: 1.21;
 }
 
+/* FAZ 8.2 — vitrin başlıkta isteğe bağlı iç vurgu (markup ile); komple kırmızı yok */
+.home-hero-faz1__title strong,
+.home-hero-faz1__title em,
+.home-hero-faz1__title .hero-title-em {
+  color: #c81e25;
+  font-weight: inherit;
+  font-style: normal;
+}
+
 @media (min-width: 1024px) {
   .home-hero-faz1__title {
     line-height: 1.195;
@@ -9682,4 +9683,28 @@ footer a:hover {
 
 .site-footer nav[aria-label="Alt bağlantılar"] {
   letter-spacing: calc(var(--type-nav-tracking) + 0.01em);
+}
+
+/* =========================
+   FAZ 8.2 — kontrollü kırmızı başlık vurgusu (premium)
+========================= */
+
+/* Aktif seçim (ileride routing / selection ile kullanılacak) */
+.is-active-title {
+  color: #c81e25;
+}
+
+/* Hafıza sütunu: kart hover odakında başlık #c81e25 (sol/orta akış hover’ları açık beyaz kalır) */
+.home-rail--faz5-primary .feed-entry-card--editorial .feed-entry-title--editorial {
+  transition:
+    color 0.2s ease,
+    opacity var(--home-interact-160) var(--home-interact-ease),
+    text-decoration-color var(--home-interact-160) var(--home-interact-ease);
+}
+
+.home-rail--faz5-primary .feed-entry-card--editorial:hover .feed-entry-title--editorial,
+.home-rail--faz5-primary .feed-entry-card--editorial:focus-within .feed-entry-title--editorial,
+.home-rail--faz5-primary .feed-entry-card--editorial:focus-visible .feed-entry-title--editorial {
+  color: #c81e25;
+  text-decoration-color: var(--home-line-faint-mid);
 }
