@@ -169,6 +169,22 @@ const LS_PENDING_ACTION = "pendingAction";
 /** Center feed pagination (initial + each “Daha fazla yükle” batch). */
 const FEED_PAGE_SIZE = 12;
 
+/** Hero: uzun biyografi başlıklarını dışla; önce trend/hafıza/üst ticker havuzları. */
+const HERO_TITLE_MAX_CHARS = 90;
+
+function heroTitleTrimmedLength(entry: EntryItem): number {
+  return entry.title?.trim().length ?? 0;
+}
+
+function heroTitleLengthOk(entry: EntryItem): boolean {
+  const n = heroTitleTrimmedLength(entry);
+  return n > 0 && n <= HERO_TITLE_MAX_CHARS;
+}
+
+function hasAnyHeroTitle(entry: EntryItem): boolean {
+  return heroTitleTrimmedLength(entry) > 0;
+}
+
 /** Header orta alan — tek satır, yavaş dönen Atatürk sözleri. */
 const HEADER_ATATURK_QUOTES = [
   "Ne mutlu Türküm diyene!",
@@ -1155,14 +1171,34 @@ export default function HomePageClient({
     return shuffledMainFeedEntries.slice(0, feedVisibleCount);
   }, [shuffledMainFeedEntries, feedVisibleCount]);
 
-  /** FAZ 1: ana akış listeden ilk başlığı dolu kayıt (önce hafıza kolonu, yoksa merkez havuzu). */
+  /** FAZ 1.3: önce ≤90 char + trend → hafıza → üst ticker; yoksa merkez; son çare uzun başlık. */
   const homeHeroEntry = useMemo((): EntryItem | undefined => {
-    const titled = (e: EntryItem) => Boolean(e?.title?.trim());
-    const fromFeed = shuffledMainFeedEntries.find(titled);
+    const pools: EntryItem[][] = [
+      mostCommentedEntries,
+      shuffledMainFeedEntries,
+      topTickerItems,
+    ];
+    for (const pool of pools) {
+      const hit = pool.find(heroTitleLengthOk);
+      if (hit) return hit;
+    }
+    const shortFromCenter = [...centerEntries]
+      .filter(heroTitleLengthOk)
+      .sort(compareEntriesByNewest)[0];
+    if (shortFromCenter) return shortFromCenter;
+    for (const pool of pools) {
+      const hit = pool.find(hasAnyHeroTitle);
+      if (hit) return hit;
+    }
+    const fromFeed = shuffledMainFeedEntries.find(hasAnyHeroTitle);
     if (fromFeed) return fromFeed;
-    const pool = [...centerEntries].filter(titled).sort(compareEntriesByNewest);
-    return pool[0];
-  }, [shuffledMainFeedEntries, centerEntries]);
+    return [...centerEntries].filter(hasAnyHeroTitle).sort(compareEntriesByNewest)[0];
+  }, [
+    mostCommentedEntries,
+    shuffledMainFeedEntries,
+    topTickerItems,
+    centerEntries,
+  ]);
 
   const feedHasMore = useMemo(
     () => feedVisibleCount < shuffledMainFeedEntries.length,
@@ -1664,9 +1700,14 @@ export default function HomePageClient({
                     Bugün 61Larus&apos;ta
                   </span>
                   <h2 className="home-hero-faz1__title">{homeHeroEntry.title}</h2>
-                  <p className="home-hero-faz1__micro">
-                    Bu konu boş değil. Okumadan geçme.
-                  </p>
+                  <div className="home-hero-faz1__lower">
+                    <p className="home-hero-faz1__micro">
+                      Bu konu boş değil. Okumadan geçme.
+                    </p>
+                    <span className="home-hero-faz1__cta" aria-hidden="true">
+                      Yazıyı aç →
+                    </span>
+                  </div>
                 </button>
               </div>
             ) : null}
