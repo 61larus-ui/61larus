@@ -1411,9 +1411,15 @@ main
     color: #ffffff !important;
   }
 
-  /* Mobil hero: .home-hero-visual içinde tüm metin/CTA renklerini beyaza zorla */
+  /* Mobil hero: görsel kutusu — tüm yazıları ve SVG’yi beyaza zorla */
+  .home-hero-visual,
   .home-hero-visual * {
-    color: #ffffff !important;
+    color: #fff !important;
+  }
+
+  .home-hero-visual svg {
+    color: #fff !important;
+    stroke: #fff !important;
   }
 
   .home-hero-visual a,

@@ -1492,23 +1492,25 @@ export default function HomePageClient({
           />
           <div className="home-hero-visual__shade" aria-hidden="true" />
           <div className="home-hero-content">
-            <h1>
+            <h1 className="!text-white">
               <button
                 type="button"
                 onClick={goToBrandHome}
-                className="site-wordmark transition-opacity duration-200 hover:opacity-88"
+                className="site-wordmark !text-white transition-opacity duration-200 hover:opacity-88"
                 style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
                 aria-label="Ana sayfa — Akış"
               >
                 {SITE_BRAND}
               </button>
             </h1>
-            <p>Trabzon&apos;un gündemi, lafı ve hafızası</p>
+            <p className="!text-white">
+              Trabzon&apos;un gündemi, lafı ve hafızası
+            </p>
           </div>
 
           <div className="home-hero-user">
             {!isAuthenticated ? (
-              <Link href="/auth" prefetch>
+              <Link href="/auth" prefetch className="!text-white">
                 Giriş
               </Link>
             ) : (
@@ -1517,7 +1519,7 @@ export default function HomePageClient({
                   href="/katkilarim"
                   prefetch
                   scroll={false}
-                  className="site-account-link shrink-0"
+                  className="site-account-link shrink-0 !text-white"
                 >
                   Katkılarım
                 </Link>
@@ -1532,17 +1534,17 @@ export default function HomePageClient({
                       e.stopPropagation();
                       setIsUserMenuOpen((o) => !o);
                     }}
-                    className="account-menu-name-trigger max-w-full cursor-pointer border-0 bg-transparent p-0"
+                    className="account-menu-name-trigger max-w-full cursor-pointer border-0 bg-transparent p-0 !text-white"
                     style={{ WebkitTapHighlightColor: "transparent" }}
                     aria-expanded={isUserMenuOpen}
                     aria-haspopup="menu"
                     aria-label="Hesap menüsü"
                   >
                     <div
-                      className="account-menu-trigger-inner flex min-h-9 min-w-0 max-w-full items-center justify-end rounded-md px-0.5 py-0 md:min-h-8"
+                      className="account-menu-trigger-inner flex min-h-9 w-full max-w-none items-center justify-center overflow-visible rounded-md px-0.5 py-0 md:min-h-8 md:justify-end"
                       style={{ transition: "var(--transition)" }}
                     >
-                      <span className="site-account-name account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right">
+                      <span className="site-account-name account-menu-handle header-user mobileHeaderUserName block whitespace-nowrap text-right !text-white">
                         {headerDisplayName}
                       </span>
                     </div>
