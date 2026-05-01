@@ -3941,7 +3941,7 @@ main
   border-bottom: none;
   background: transparent;
   margin-top: 0;
-  margin-bottom: 0;
+  margin-bottom: 24px !important;
 }
 
 .home-explore-head.home-explore-head--transition-has-ticker.home-explore-head--section-start {
@@ -10098,15 +10098,39 @@ footer a:hover {
   text-decoration-color: var(--home-line-faint-mid);
 }
 
-/* Ana sayfa bölüm başlıkları — üç sütun h2 + keşif h3 (yalnız renk; genel h2’lere dokunmaz) */
+/* Ana sayfa bölüm başlıkları — tek premium kırmızı (+ hover/focus, opacity sıfır fark) */
+main .home-page-editorial.home-page-editorial--section-stack .home-section-title,
+main .home-page-editorial.home-page-editorial--section-stack .home-block-title,
+main .home-page-editorial.home-page-editorial--section-stack .home-grid h2,
+main .home-page-editorial.home-page-editorial--section-stack .home-columns h2,
 main
   .home-page-editorial.home-page-editorial--section-stack
   .home-editorial-cols
   h2.col-section-head__title--rail,
 main
   .home-page-editorial.home-page-editorial--section-stack
+  .home-editorial-cols
+  h2.col-section-head__title--rail:hover,
+main
+  .home-page-editorial.home-page-editorial--section-stack
+  .home-editorial-cols
+  h2.col-section-head__title--rail:focus-visible,
+main
+  .home-page-editorial.home-page-editorial--section-stack
   .home-explore--faz51
   .home-explore-panel-head
-  h3.home-explore-panel-label {
-  color: #b03a3a !important;
+  h3.home-explore-panel-label,
+main
+  .home-page-editorial.home-page-editorial--section-stack
+  .home-explore--faz51
+  .home-explore-panel-head
+  h3.home-explore-panel-label:hover,
+main
+  .home-page-editorial.home-page-editorial--section-stack
+  .home-explore--faz51
+  .home-explore-panel-head
+  h3.home-explore-panel-label:focus-visible {
+  color: #c24a4a !important;
+  opacity: 1 !important;
 }
+
