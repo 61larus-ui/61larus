@@ -1189,18 +1189,14 @@ main
     border-radius: 18px;
     filter: brightness(0.72) contrast(1.08) saturate(0.88) !important;
     object-position: center center !important;
+    opacity: 0.62 !important;
   }
 
   .home-hero-visual__shade {
     border-radius: 18px;
     background:
-      linear-gradient(to bottom, rgba(3, 6, 10, 0.18) 0%, rgba(3, 6, 10, 0.94) 100%),
-      linear-gradient(
-        to right,
-        rgba(3, 6, 10, 0.78) 0%,
-        rgba(3, 6, 10, 0.25) 62%,
-        rgba(3, 6, 10, 0.55) 100%
-      ) !important;
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0.96) 100%),
+      linear-gradient(to right, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.38) 100%) !important;
   }
 
   .home-hero-content {
@@ -1233,53 +1229,77 @@ main
   .home-hero-user {
     left: 24px !important;
     right: 24px !important;
-    bottom: 28px !important;
-    display: grid !important;
-    grid-template-columns: auto 1fr !important;
+    bottom: 30px !important;
+    display: flex !important;
     align-items: center !important;
+    justify-content: flex-start !important;
     gap: 10px !important;
+    width: calc(100% - 48px) !important;
     max-width: none !important;
   }
 
   .home-hero-user a,
   .home-hero-user button,
   .home-hero-user span {
-    min-width: 0 !important;
-    max-width: none !important;
-    width: auto !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 14px !important;
+    border-radius: 999px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.09) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    white-space: nowrap !important;
     overflow: visible !important;
     text-overflow: unset !important;
-    white-space: nowrap !important;
-    font-size: 13px !important;
-    line-height: 1 !important;
-    padding: 10px 14px !important;
-    border-radius: 999px !important;
+    max-width: none !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .home-hero-user a:first-child,
+  .home-hero-user button:first-child,
+  .home-hero-user span:first-child {
+    flex: 0 0 auto !important;
   }
 
   .home-hero-user a:last-child,
   .home-hero-user button:last-child,
   .home-hero-user span:last-child {
-    justify-self: start !important;
+    flex: 1 1 auto !important;
+    justify-content: center !important;
   }
 
-  /* İsim satırında çift iç padding oluşmasın */
-  .home-hero-user .account-menu-trigger-inner,
+  /* İsim satırında çift kutu oluşmasın */
   .home-hero-user .site-account-name,
   .home-hero-user .header-user {
+    height: auto !important;
+    min-height: 0 !important;
     padding: 0 !important;
     margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    display: inline !important;
+  }
+
+  .home-hero-user .account-menu-trigger-inner {
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-sizing: border-box !important;
   }
 
   .home-hero-user > a,
   .home-hero-user .account-menu-name-trigger {
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    box-shadow: none !important;
     text-decoration: none;
-    flex-shrink: 0;
   }
 
   .home-hero-user .account-menu-name-trigger .account-menu-trigger-inner {
