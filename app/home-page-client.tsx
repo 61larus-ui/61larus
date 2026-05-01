@@ -2260,36 +2260,32 @@ export default function HomePageClient({
                   <span className="text-[color:rgba(240,241,244,0.25)]" aria-hidden>
                     ·
                   </span>
-                  <a
-                    href="https://x.com/61sozluk"
-                    className="footer-link-btn"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    X
-                  </a>
-                  <span className="text-[color:rgba(240,241,244,0.25)]" aria-hidden>
-                    ·
-                  </span>
-                  <a
-                    href="https://www.instagram.com/61aktif/"
-                    className="footer-link-btn"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Instagram
-                  </a>
-                  <span className="text-[color:rgba(240,241,244,0.25)]" aria-hidden>
-                    ·
-                  </span>
-                  <a
-                    href="https://www.facebook.com/profile.php?id=61586158055479"
-                    className="footer-link-btn"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Facebook
-                  </a>
+                  <div className="footer-social-row">
+                    <a
+                      href="https://x.com/61sozluk"
+                      className="footer-link-btn"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      X
+                    </a>
+                    <a
+                      href="https://www.instagram.com/61aktif/"
+                      className="footer-link-btn"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Instagram
+                    </a>
+                    <a
+                      href="https://www.facebook.com/profile.php?id=61586158055479"
+                      className="footer-link-btn"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Facebook
+                    </a>
+                  </div>
                 </nav>
                 <p className="m-0 text-[10.5px] font-normal tabular-nums leading-none text-[color:var(--footer-link)] opacity-90 md:text-right md:text-[11px]">
                   © {new Date().getFullYear()}{" "}
