@@ -3393,30 +3393,32 @@ main > section
   }
 }
 
-/* FAZ 2.0 / FAZ 5.2: üç kolon dikey çizgiler + Hafıza iç omurga padding (ızgara ~0.9:1.2:1.6) */
+/* FAZ 2.0 / FAZ 5.2: üç kolon dikey çizgiler (+ Hafıza omurga padding) — yalnızca ana sayfa .home-page-editorial altında kullanılmıyor; çizgiler kapalı */
 @media (min-width: 768px) {
-  /* FAZ 3: ana (Hafıza) sütun — ince yumuşak dikey; çift çizgi yok (orta rail border kapatıldı) */
+  /* Ana sayfa üç kolonda dikey ayraç yok */
   main
     > section
+    .home-page-editorial
     .home-content-grid--editorial.home-editorial-cols--faz52
     > main.home-rail--feed-main {
-    border-left: 1px solid var(--divide-column);
-    border-right: 1px solid var(--divide-column);
+    border-left: none !important;
+    border-right: none !important;
   }
 
-  /* 1|2: sol aside sağ; 2|3: yalnızca main sol (orta asiden çift hattı kalktı) */
   main
     > section
+    .home-page-editorial
     .home-content-grid--editorial.home-editorial-cols--faz52
     > aside[aria-label="Yazılmayı bekleyenler"] {
-    border-right: 1px solid var(--divide-column);
+    border-right: none !important;
   }
 
   main
     > section
+    .home-page-editorial
     .home-content-grid--editorial.home-editorial-cols--faz52
     > aside[aria-label="Şu an en çok konuşulanlar"] {
-    border-right: none;
+    border-right: none !important;
   }
 
   .home-editorial-cols--faz52
@@ -3428,10 +3430,11 @@ main > section
 }
 
 /*
- * Ana sayfa — kolon/kart/explore/ticker ayraçları tek opaklık (0.022).
- * (home-top/home-bottom ticker sınıfları yoksa anlamsız seçici zararsız.)
+ * Ana sayfa (61larus giriş) — konteyner/kolon/blok/ticker ara çizgileri kapalı (yerleşim aynı)
  */
 .home-page-editorial .home-main-columns-wrap,
+.home-page-editorial .home-editorial-columns-bridge,
+.home-page-editorial .home-editorial-columns-bridge__midstack,
 .home-page-editorial .home-editorial-cols,
 .home-page-editorial .home-editorial-cols > *,
 .home-page-editorial .home-feed-rail,
@@ -3439,19 +3442,41 @@ main > section
 .home-page-editorial .home-index-list,
 .home-page-editorial .home-index-row,
 .home-page-editorial .feed-entry-card--editorial,
+.home-page-editorial .home-rail--faz5-primary .feed-entry-card--editorial,
 .home-page-editorial .home-explore,
 .home-page-editorial .home-explore *,
+.home-page-editorial .home-explore-panel,
+.home-page-editorial .home-explore-panel-head,
+.home-page-editorial .home-explore-item,
+.home-page-editorial .home-explore-question,
 .home-page-editorial .home-ticker,
 .home-page-editorial .home-ticker--divider,
 .home-page-editorial .home-ticker--lower,
 .home-page-editorial .home-bottom-ticker,
 .home-page-editorial .home-top-ticker,
-.home-page-editorial .col-head-band {
-  border-color: rgba(255, 255, 255, 0.022) !important;
-  border-top-color: rgba(255, 255, 255, 0.022) !important;
-  border-right-color: rgba(255, 255, 255, 0.022) !important;
-  border-bottom-color: rgba(255, 255, 255, 0.022) !important;
-  border-left-color: rgba(255, 255, 255, 0.022) !important;
+.home-page-editorial .col-head-band,
+.home-page-editorial aside[aria-label="Yazılmayı bekleyenler"] nav button,
+.home-page-editorial aside[aria-label="Çok konuşulanlar"] nav button {
+  border: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+}
+
+.home-page-editorial .home-explore-questions-grid .home-explore-question--stack {
+  border-top: none !important;
+}
+
+.home-page-editorial .home-ticker:hover,
+.home-page-editorial .home-ticker:focus-within,
+.home-page-editorial .home-ticker--divider:hover,
+.home-page-editorial .home-ticker--lower:hover,
+.home-page-editorial .home-explore-head .home-ticker:hover,
+.home-page-editorial .home-explore-head .home-ticker:focus-within {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
 }
 
 /* FAZ 2.2: lg+ üç kolon yatay nefesi; primary sol/orta ile aynı genişlik omurgasında */
@@ -4544,6 +4569,18 @@ main > section .home-content-grid--editorial
   nav
   button {
   border-bottom: 1px solid rgba(255, 255, 255, 0.072) !important;
+}
+
+main > section .home-page-editorial .home-content-grid--editorial > aside > div.border-b {
+  border-bottom: none !important;
+}
+
+main > section .home-page-editorial .home-content-grid--editorial > aside:first-of-type nav button,
+main > section .home-page-editorial .home-content-grid--editorial
+  > aside[aria-label="Yayın paneli"]
+  nav
+  button {
+  border-bottom: none !important;
 }
 
 main > section .home-content-grid--editorial > main {
