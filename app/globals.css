@@ -1109,7 +1109,9 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   margin: 0;
 }
 
-main > header.site-header--home-faz83 .home-hero-content .site-wordmark {
+:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+  .home-hero-content
+  .site-wordmark {
   color: #fff;
   opacity: 0.95;
 }
@@ -1145,22 +1147,30 @@ main > header.site-header--home-faz83 .home-hero-content .site-wordmark {
 }
 
 /* Hero üstü: eski header nav !important renklerini bastır */
-main > header.site-header--home-faz83 .home-hero-user .site-account-link,
-main > header.site-header--home-faz83 .home-hero-user .site-account-name,
-main > header.site-header--home-faz83 .home-hero-user .header-user {
+:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+  .home-hero-user
+  .site-account-link,
+:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+  .home-hero-user
+  .site-account-name,
+:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+  .home-hero-user
+  .header-user {
   color: rgba(255, 255, 255, 0.68) !important;
   font-weight: 600 !important;
 }
 
-main > header.site-header--home-faz83 .home-hero-user .site-account-link:hover,
-main > header.site-header--home-faz83 .home-hero-user .site-account-name:hover,
-main
-  > header.site-header--home-faz83
+:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+  .home-hero-user
+  .site-account-link:hover,
+:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+  .home-hero-user
+  .site-account-name:hover,
+:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
   .home-hero-user
   .account-menu-trigger-inner:hover
   .site-account-name,
-main
-  > header.site-header--home-faz83
+:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
   .home-hero-user
   .account-menu-trigger-inner:hover
   .header-user {
@@ -1433,10 +1443,18 @@ main
     color: #ffffff !important;
   }
 
-  main > header.site-header--home-faz83 .home-hero-user > a,
-  main > header.site-header--home-faz83 .home-hero-user .account-menu-name-trigger,
-  main > header.site-header--home-faz83 .home-hero-user .site-account-name,
-  main > header.site-header--home-faz83 .home-hero-user .header-user {
+  :is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+    .home-hero-user
+    > a,
+  :is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+    .home-hero-user
+    .account-menu-name-trigger,
+  :is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+    .home-hero-user
+    .site-account-name,
+  :is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+    .home-hero-user
+    .header-user {
     color: #ffffff !important;
   }
 
@@ -5420,70 +5438,24 @@ main:has(.entry-detail-page) > header.site-header {
   display: none !important;
 }
 
-.entry-hero {
-  position: relative;
-  isolation: isolate;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto 28px auto;
-  border-radius: 18px;
-  overflow: hidden;
+/* Entry detay: kart genişliği ana sayfa ile aynı yatay düzlem (page padding telafisi) */
+.entry-detail-page > header.site-header--home-faz83.home-header-banner {
+  align-self: stretch;
 }
 
-.entry-hero__image {
-  position: relative;
-  z-index: 0;
-  width: 100%;
-  height: 240px;
-  object-fit: cover;
-  display: block;
-  filter: brightness(0.75) contrast(1.05);
-}
-
-.entry-hero__shade {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.95)),
-    linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent 60%);
-}
-
-.entry-hero__content {
-  position: absolute;
-  left: 28px;
-  bottom: 28px;
-  z-index: 2;
-}
-
-.entry-hero__content h1 {
-  color: #fff;
-  font-size: 26px;
-  font-weight: 600;
-  margin: 0 0 6px 0;
-  padding: 0;
-}
-
-.entry-hero__content p {
-  margin: 0;
-  padding: 0;
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 13px;
-}
-
-@media (max-width: 768px) {
-  .entry-hero__image {
-    height: 160px;
+@media (max-width: 767.98px) {
+  .entry-detail-page > header.site-header--home-faz83.home-header-banner {
+    width: calc(100% + 2 * 0.65rem);
+    max-width: none;
+    margin-inline: -0.65rem;
   }
+}
 
-  .entry-hero__content {
-    left: 20px;
-    bottom: 20px;
-  }
-
-  .entry-hero__content h1 {
-    font-size: 22px;
+@media (min-width: 768px) {
+  .entry-detail-page > header.site-header--home-faz83.home-header-banner {
+    width: calc(100% + 2 * 1.25rem);
+    max-width: none;
+    margin-inline: -1.25rem;
   }
 }
 

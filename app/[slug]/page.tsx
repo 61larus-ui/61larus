@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
@@ -22,6 +23,23 @@ export const runtime = "nodejs";
 
 type PageParams = { slug?: string | string[] };
 type PageProps = { params: Promise<PageParams> };
+
+function heroUserDisplayLabel(
+  isAuthenticated: boolean,
+  email: string | null,
+  meta: Record<string, unknown> | null,
+): string {
+  if (!isAuthenticated) return "";
+  const full =
+    meta && typeof meta.full_name === "string" ? meta.full_name.trim() : "";
+  const name = meta && typeof meta.name === "string" ? meta.name.trim() : "";
+  if (full) return full;
+  if (name) return name;
+  if (email?.trim()) {
+    return email.split("@")[0]?.trim() || "\u2026";
+  }
+  return "\u2026";
+}
 
 function pathSegmentFromParams(p: PageParams): string | null {
   const rawSlug = Array.isArray(p.slug) ? p.slug[0] : p.slug;
@@ -147,6 +165,12 @@ export default async function EntrySlugPage({ params }: PageProps) {
     permanentRedirect(`/${encodeURI(canonicalPath)}`);
   }
 
+  const heroUserLabel = heroUserDisplayLabel(
+    auth.isAuthenticated,
+    headerAuthUser.email,
+    headerAuthUser.userMetadata,
+  );
+
   return (
     <>
       <div style={{ display: "none" }} data-entry-detail-loaded="true">
@@ -166,19 +190,73 @@ export default async function EntrySlugPage({ params }: PageProps) {
         initialPlatformAccessSuspended={auth.isSuspended}
       >
         <div className="entry-detail-page">
-          <div className="entry-hero">
-            <img
-              src="/trabzon-gece-hafiza-banner.png"
-              alt="Trabzon gece"
-              className="entry-hero__image"
-            />
-            <div className="entry-hero__shade" aria-hidden="true" />
+          <header className="site-header site-header--home-faz83 site-header--trabzon-header home-header-banner relative z-20 shrink-0">
+            <div className="home-hero-visual">
+              <img
+                src="/trabzon-gece-hafiza-banner.png"
+                alt="Trabzon gece panoraması"
+                className="home-hero-visual__image"
+              />
+              <div className="home-hero-visual__shade" aria-hidden="true" />
+              <div className="home-hero-content">
+                <h1 className="!text-white">
+                  <Link
+                    href="/"
+                    prefetch
+                    scroll={false}
+                    className="site-wordmark !text-white transition-opacity duration-200 hover:opacity-88"
+                    style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
+                    aria-label="Ana sayfa — Akış"
+                  >
+                    {SITE_BRAND}
+                  </Link>
+                </h1>
+                <p className="!text-white">
+                  Trabzon&apos;un gündemi, lafı ve hafızası
+                </p>
+              </div>
 
-            <div className="entry-hero__content">
-              <h1>{SITE_BRAND}</h1>
-              <p>Trabzon&apos;un gündemi, lafı ve hafızası</p>
+              <div className="home-hero-user">
+                {!auth.isAuthenticated ? (
+                  <Link href="/auth" prefetch className="!text-white">
+                    Giriş
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/katkilarim"
+                      prefetch
+                      scroll={false}
+                      className="site-account-link shrink-0 !text-white"
+                    >
+                      Katkılarım
+                    </Link>
+                    <div className="relative z-30 min-w-0 shrink-0">
+                      <button
+                        type="button"
+                        className="account-menu-name-trigger max-w-full cursor-pointer border-0 bg-transparent p-0 !text-white"
+                        style={{ WebkitTapHighlightColor: "transparent" }}
+                        aria-haspopup="menu"
+                        aria-expanded={false}
+                        aria-label="Hesap menüsü"
+                      >
+                        <div
+                          className="account-menu-trigger-inner flex min-h-9 w-full max-w-none items-center justify-center overflow-visible rounded-md px-0.5 py-0 md:min-h-8 md:justify-end"
+                          style={{
+                            transition: "var(--transition)",
+                          }}
+                        >
+                          <span className="site-account-name account-menu-handle header-user mobileHeaderUserName block whitespace-nowrap text-right !text-white">
+                            {heroUserLabel}
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          </header>
           <div className="entry-detail-page-inner">
             <EntryDetailBodyRsc
               entry={entrySafe}
