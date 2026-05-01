@@ -15,13 +15,16 @@ export async function EntryDetailCommentsRsc({ row }: { row: EntryRow }) {
   );
 
   return (
-    <section className="entry-comments-section" aria-label="Yorumlar">
+    <section
+      className="entry-comments-section entry-comments-block"
+      aria-label="Yorumlar"
+    >
       {loadFailed ? (
         <div className="entry-comments-empty" role="alert">
           Yorumlar yüklenemedi
         </div>
       ) : commentList.length === 0 ? (
-        <div className="entry-comments-empty no-comment-text">
+        <div className="entry-comments-empty no-comment-text entry-empty">
           Henüz yazılmamış
         </div>
       ) : (

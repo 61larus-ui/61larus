@@ -40,12 +40,12 @@ export function EntryDetailBodyRsc({
         </Link>
       </div>
 
-      <article className="entry-detail-article m-0 border-0 p-0">
+      <article className="entry-detail-article entry-detail-card m-0">
         <header className="m-0 border-0 p-0">
           <h1 id="entry-detail-title" className="entry-detail-title">
             {entry.title}
           </h1>
-          <div className="entry-meta">
+          <div className="entry-meta entry-detail-meta">
             <span className="entry-author">{authorName}</span>
             <span className="entry-dot" aria-hidden>
               •
@@ -57,7 +57,7 @@ export function EntryDetailBodyRsc({
           aria-labelledby="entry-detail-title"
           className="m-0 border-0 p-0"
         >
-          <p className="entry-detail-body">{entry.content}</p>
+          <p className="entry-detail-body entry-detail-content">{entry.content}</p>
         </section>
       </article>
 
