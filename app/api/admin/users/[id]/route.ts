@@ -51,7 +51,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
       return NextResponse.json(
         {
           error:
-            "Ana yönetici (61larus) hesabının rolü düşürülemez veya değiştirilemez.",
+            "Ana yönetici hesabının rolü düşürülemez veya değiştirilemez.",
         },
         { status: 403 }
       );
@@ -59,7 +59,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     if (body.is_active === false) {
       return NextResponse.json(
         {
-          error: "Ana yönetici (61larus) hesabı devre dışı bırakılamaz.",
+          error: "Ana yönetici hesabı devre dışı bırakılamaz.",
         },
         { status: 403 }
       );
@@ -132,7 +132,7 @@ export async function DELETE(_req: Request, ctx: Ctx) {
 
   if (isProtectedPrimarySuper(row.username)) {
     return NextResponse.json(
-      { error: "Ana yönetici (61larus) hesabı silinemez." },
+      { error: "Ana yönetici hesabı silinemez." },
       { status: 403 }
     );
   }

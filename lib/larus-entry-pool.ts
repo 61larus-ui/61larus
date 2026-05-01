@@ -1,18 +1,18 @@
 /**
- * FAZ 1 — 61larus.com içerik tarama (istemci + localStorage).
+ * FAZ 1 — istemci içerik tarama + localStorage.
  * İstekler /__larus_ingest/* üzerinden next.config rewrites ile proxy edilir (CORS yok).
  */
 
 export const LARUS_ENTRIES_POOL_KEY = "larus_entries_pool";
 
-/** 61Larus içerik havuzu maddesi (panel genişletmeleri için alanlar opsiyonel). */
+/** 61Sözlük içerik havuzu maddesi (panel genişletmeleri için alanlar opsiyonel). */
 export type LarusEntry = {
   id: string;
   title: string;
   content: string;
   created_at: string;
   category?: string;
-  /** Varsa genelde kamuya açık URL yolu (61larus). */
+  /** Varsa genelde kamuya açık URL yolu slug’ı. */
   slug?: string;
   usedCount: number;
   lastUsedAt?: string;
@@ -22,7 +22,7 @@ export type LarusEntry = {
 const INGEST_BASE = "/__larus_ingest";
 
 /**
- * Geniş arama sözlüğü: tek “kategoriye” sıkışmadan 61Larus aramasından örneklem.
+ * Geniş arama sözlüğü: tek “kategoriye” sıkışmadan site aramasından örneklem.
  * Her çekimde karıştırılarak farklı sıra denenir.
  */
 const SEARCH_TERMS = [
@@ -186,7 +186,9 @@ const SEARCH_TERMS = [
   "doğalgaz",
   "yenilenebilir",
   "61larus",
+  "61sozluk",
   "larus",
+  "sozluk",
   "entry",
   "not",
   "günlük",
@@ -578,7 +580,7 @@ async function fetchEntriesViaScrape(): Promise<LarusEntry[]> {
 }
 
 /**
- * 61Larus entry havuzu: önce veritabanı API’si, yoksa scrape.
+ * 61Sözlük entry havuzu: önce veritabanı API’si, yoksa scrape.
  */
 export async function fetchEntries(): Promise<LarusEntry[]> {
   const fromDb = await fetchEntriesFromDatabaseApi();

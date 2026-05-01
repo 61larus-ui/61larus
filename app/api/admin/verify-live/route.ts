@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
       signal: ac.signal,
       headers: {
         Accept: "text/html,application/xhtml+xml",
-        "User-Agent": "61Larus-Admin-Verify/1.0",
+        "User-Agent": "61Sözlük-Admin-Verify/1.0",
       },
     });
     const status = r.status;
