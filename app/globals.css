@@ -4966,6 +4966,23 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
   margin-bottom: 0;
 }
 
+/* Lead paragraf — editoryal giriş */
+.entry-detail-content p:first-child {
+  font-size: 1.08rem;
+  line-height: 1.8;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.9);
+  margin-bottom: 16px;
+  border-left: 2px solid rgba(0, 0, 0, 0.08);
+  padding-left: 12px;
+}
+
+.entry-detail-content p:not(:first-child) {
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: rgba(0, 0, 0, 0.78);
+}
+
 .entry-detail-body:not(.entry-detail-content) {
   max-width: 36rem;
   margin: 0;
