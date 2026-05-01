@@ -7,7 +7,12 @@ html {
 }
 
 :root {
-  /* FAZ 8 + 8.1 — editoryal koyu; düz derinlik, düşük kırmızı disiplini */
+  /* Marka vurgusu — logo turuncusu */
+  --accent: #ff6a00;
+  --accent-hover: #ff7a1a;
+  --accent-soft: rgba(255, 106, 0, 0.12);
+
+  /* FAZ 8 + 8.1 — editoryal koyu; düz derinlik */
   --bg-deep: #0a0d10;
   --bg-mid: #0a0d10;
   --bg-primary: #0a0d10;
@@ -17,7 +22,7 @@ html {
   --surface-page: #11161a;
   --surface-panel: #11161a;
   --surface-hover: rgba(255, 255, 255, 0.04);
-  --list-row-active: rgba(200, 30, 37, 0.08);
+  --list-row-active: rgba(255, 106, 0, 0.08);
 
   /* Kart kenarı 0.06; hover güçlemesi --border-strong; ayırıcılar 0.08 */
   --border-subtle: rgba(255, 255, 255, 0.06);
@@ -40,14 +45,14 @@ html {
   --text-meta: rgba(255, 255, 255, 0.46);
   --text-muted: rgba(255, 255, 255, 0.34);
 
-  /* CTA / link hover vurgusu — geniş yüzey yok (#c81e25) */
-  --accent-green: #c81e25;
-  --accent-green-soft: rgba(200, 30, 37, 0.08);
-  --accent-green-line: rgba(200, 30, 37, 0.48);
-  --accent-green-glow: rgba(200, 30, 37, 0.12);
+  /* CTA / link hover vurgusu — geniş yüzey yok */
+  --accent-green: var(--accent);
+  --accent-green-soft: rgba(255, 106, 0, 0.08);
+  --accent-green-line: rgba(255, 106, 0, 0.48);
+  --accent-green-glow: rgba(255, 106, 0, 0.12);
 
-  --accent-orange: #ea580c;
-  --accent-orange-soft: rgba(234, 88, 12, 0.16);
+  --accent-orange: var(--accent);
+  --accent-orange-soft: rgba(255, 106, 0, 0.16);
 
   --shadow-soft: none;
   --shadow-modal: none;
@@ -324,7 +329,7 @@ small {
 }
 
 ::selection {
-  background: rgba(200, 30, 37, 0.28);
+  background: rgba(255, 106, 0, 0.28);
   color: var(--text-primary);
 }
 
@@ -396,6 +401,11 @@ body {
   letter-spacing: 0.02em;
   text-transform: none;
   color: var(--text-meta);
+}
+
+.text-accent {
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(255, 106, 0, 0.25);
 }
 
 /* Başlık sınıfları kendi --type-* token’ıyla hizalanır; genel selektör yok */
@@ -1969,7 +1979,7 @@ main > header .site-header-tagline--manifesto {
 
 .home-hero-faz1:hover .home-hero-faz1__title,
 .home-hero-faz1:focus-visible .home-hero-faz1__title {
-  color: #c81e25;
+  color: var(--accent);
 }
 
 @media (min-width: 1024px) {
@@ -8986,7 +8996,7 @@ main .home-explore--faz51 .home-explore-panel-label:hover {
 
 .home-index-row:hover .home-index-title,
 .home-index-row:focus-visible .home-index-title {
-  color: #c81e25;
+  color: var(--accent);
   text-decoration-color: var(--home-line-faint);
 }
 
@@ -9736,11 +9746,7 @@ footer#site-footer.home-page-footer .home-page-container {
 }
 
 .xpanel-btn-primary:hover {
-  background: color-mix(
-    in srgb,
-    var(--accent-green) 88%,
-    rgba(255, 255, 255, 0.18) 12%
-  );
+  background: var(--accent-hover);
 }
 
 .xpanel-btn-secondary {
@@ -10380,11 +10386,11 @@ footer a:hover {
   line-height: 1.21;
 }
 
-/* FAZ 8.2 — vitrin başlıkta isteğe bağlı iç vurgu (markup ile); komple kırmızı yok */
+/* FAZ 8.2 — vitrin başlıkta isteğe bağlı iç vurgu (markup ile); tek renk yoğunluğu yok */
 .home-hero-faz1__title strong,
 .home-hero-faz1__title em,
 .home-hero-faz1__title .hero-title-em {
-  color: #c81e25;
+  color: var(--accent);
   font-weight: inherit;
   font-style: normal;
 }
@@ -10586,15 +10592,15 @@ footer a:hover {
 }
 
 /* =========================
-   FAZ 8.2 — kontrollü kırmızı başlık vurgusu (premium)
+   FAZ 8.2 — kontrollü marka turuncusu başlık vurgusu (premium)
 ========================= */
 
 /* Aktif seçim (ileride routing / selection ile kullanılacak) */
 .is-active-title {
-  color: #c81e25;
+  color: var(--accent);
 }
 
-/* Hafıza sütunu: kart hover odakında başlık #c81e25 (sol/orta akış hover’ları açık beyaz kalır) */
+/* Hafıza sütunu: kart hover odakında başlık var(--accent) (sol/orta akış hover’ları açık beyaz kalır) */
 .home-rail--faz5-primary .feed-entry-card--editorial .feed-entry-title--editorial {
   transition:
     color 0.2s ease,
@@ -10605,11 +10611,11 @@ footer a:hover {
 .home-rail--faz5-primary .feed-entry-card--editorial:hover .feed-entry-title--editorial,
 .home-rail--faz5-primary .feed-entry-card--editorial:focus-within .feed-entry-title--editorial,
 .home-rail--faz5-primary .feed-entry-card--editorial:focus-visible .feed-entry-title--editorial {
-  color: #c81e25;
+  color: var(--accent);
   text-decoration-color: var(--home-line-faint-mid);
 }
 
-/* Ana sayfa bölüm başlıkları — tek premium kırmızı (+ hover/focus, opacity sıfır fark) */
+/* Ana sayfa bölüm başlıkları — tek premium turuncu (+ hover/focus, opacity sıfır fark) */
 main .home-page-editorial.home-page-editorial--section-stack .home-section-title,
 main .home-page-editorial.home-page-editorial--section-stack .home-block-title,
 main .home-page-editorial.home-page-editorial--section-stack .home-grid h2,

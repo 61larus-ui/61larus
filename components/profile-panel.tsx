@@ -334,7 +334,7 @@ export default function ProfilePanel({
           </fieldset>
 
           {error ? (
-            <p className="text-sm leading-relaxed text-red-700">{error}</p>
+            <p className="text-sm leading-relaxed text-[var(--accent)]">{error}</p>
           ) : null}
 
           <button
@@ -353,7 +353,7 @@ export default function ProfilePanel({
               type="button"
               disabled={loading || deleteLoading}
               onClick={() => setDeleteStep("confirm")}
-              className="text-left text-sm font-normal text-[#8B95A5] underline decoration-[#D0D5DD]/70 underline-offset-4 transition-colors hover:text-red-800 disabled:opacity-40"
+              className="text-left text-sm font-normal text-[#8B95A5] underline decoration-[#D0D5DD]/70 underline-offset-4 transition-colors hover:text-[var(--accent-hover)] disabled:opacity-40"
             >
               Hesabımı sil
             </button>
@@ -372,7 +372,7 @@ export default function ProfilePanel({
                   type="button"
                   disabled={deleteLoading}
                   onClick={() => void confirmAccountDeletion()}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-red-200/80 bg-white px-4 text-sm font-medium text-red-800 transition-colors hover:bg-red-50 disabled:opacity-40"
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-[rgba(255,106,0,0.35)] bg-white px-4 text-sm font-medium text-[var(--accent)] transition-colors hover:bg-[rgba(255,106,0,0.08)] disabled:opacity-40"
                 >
                   {deleteLoading ? "İşleniyor…" : "Silmeyi onayla"}
                 </button>

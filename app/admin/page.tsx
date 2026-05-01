@@ -1076,7 +1076,7 @@ export default function AdminPage() {
           </div>
           <form onSubmit={(e) => void onLogin(e)} className="space-y-4">
             {loginError ? (
-              <p className="admin-msg-error rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-200">
+              <p className="admin-msg-error rounded-lg border border-[rgba(255,106,0,0.3)] bg-[rgba(255,106,0,0.1)] px-3 py-2 text-[var(--accent)]">
                 {loginError}
               </p>
             ) : null}
@@ -1203,7 +1203,7 @@ export default function AdminPage() {
             ve yeniden etkinleştirme yapabilir; kalıcı silme bu aşamada yoktur.
           </p>
           {membersError ? (
-            <p className="admin-msg-error mt-3 text-red-300">{membersError}</p>
+            <p className="admin-msg-error mt-3 text-[var(--accent)]">{membersError}</p>
           ) : null}
           <div className="admin-members-table-wrap mt-4 min-w-0 max-w-full rounded-xl border border-slate-800">
             <table className="admin-members-table w-full table-fixed border-collapse text-left text-sm">
@@ -1462,7 +1462,7 @@ export default function AdminPage() {
                 className="mt-3 grid max-w-md gap-3"
               >
                 {pwErr ? (
-                  <p className="admin-msg-error text-red-300">{pwErr}</p>
+                  <p className="admin-msg-error text-[var(--accent)]">{pwErr}</p>
                 ) : null}
                 {pwMsg ? (
                   <p className="admin-msg-success text-emerald-400">{pwMsg}</p>
@@ -1512,7 +1512,7 @@ export default function AdminPage() {
                 className="mt-4 grid max-w-lg gap-3 sm:grid-cols-2"
               >
                 {newAdminErr ? (
-                  <p className="admin-msg-error sm:col-span-2 text-red-300">
+                  <p className="admin-msg-error sm:col-span-2 text-[var(--accent)]">
                     {newAdminErr}
                   </p>
                 ) : null}
@@ -1584,7 +1584,7 @@ export default function AdminPage() {
                 </button>
               </div>
               {adminUsersError ? (
-                <p className="admin-msg-error mt-3 text-red-300">
+                <p className="admin-msg-error mt-3 text-[var(--accent)]">
                   {adminUsersError}
                 </p>
               ) : null}
@@ -1692,7 +1692,7 @@ export default function AdminPage() {
                                     type="button"
                                     disabled={busy}
                                     onClick={() => void deleteAdminUser(u)}
-                                    className="admin-btn-text text-red-400 hover:underline disabled:opacity-50"
+                                    className="admin-btn-text text-[var(--accent)] hover:text-[var(--accent-hover)] hover:underline disabled:opacity-50"
                                   >
                                     Sil
                                   </button>
@@ -1835,7 +1835,7 @@ export default function AdminPage() {
             </p>
           ) : null}
           {deleteError ? (
-            <p className="admin-msg-error mt-2 text-red-300">{deleteError}</p>
+            <p className="admin-msg-error mt-2 text-[var(--accent)]">{deleteError}</p>
           ) : null}
           <div className="mt-4 overflow-x-auto rounded-xl border border-slate-800">
             <table className="w-full min-w-[720px] border-collapse text-left">
@@ -1907,7 +1907,7 @@ export default function AdminPage() {
                               type="button"
                               disabled={deletingId === row.id}
                               onClick={() => void handleDeleteEntry(row.id)}
-                              className="admin-btn-text text-red-400 hover:underline disabled:opacity-50"
+                              className="admin-btn-text text-[var(--accent)] hover:text-[var(--accent-hover)] hover:underline disabled:opacity-50"
                             >
                               Sil
                             </button>
@@ -1986,7 +1986,7 @@ export default function AdminPage() {
               </button>
             </div>
             {submitError ? (
-              <p className="admin-msg-error mt-3 text-red-300">{submitError}</p>
+              <p className="admin-msg-error mt-3 text-[var(--accent)]">{submitError}</p>
             ) : null}
             <form
               onSubmit={(e) => void onSubmitNew(e)}
@@ -2019,7 +2019,7 @@ export default function AdminPage() {
                   </button>
                 </div>
                 {composeTitle.validation.phase === "blocked" ? (
-                  <p className="admin-msg-error mt-2 text-sm text-red-300">
+                  <p className="admin-msg-error mt-2 text-sm text-[var(--accent)]">
                     {composeTitle.validation.message}
                   </p>
                 ) : composeTitle.validation.phase === "warning" ? (
@@ -2172,7 +2172,7 @@ export default function AdminPage() {
               </button>
             </div>
             {editError ? (
-              <p className="admin-msg-error mt-2 text-red-300">{editError}</p>
+              <p className="admin-msg-error mt-2 text-[var(--accent)]">{editError}</p>
             ) : null}
             <label className="mt-4 block">
               <span className="admin-label">Başlık</span>

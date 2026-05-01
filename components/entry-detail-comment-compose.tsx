@@ -150,7 +150,7 @@ export function EntryDetailCommentCompose({
           aria-label="Yorum yaz"
         />
         {formError ? (
-          <p className="mt-2 text-sm text-red-600" role="alert">
+          <p className="mt-2 text-sm text-[var(--accent)]" role="alert">
             {formError}
           </p>
         ) : null}
