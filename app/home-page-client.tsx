@@ -1491,20 +1491,28 @@ export default function HomePageClient({
             className="home-hero-visual__image"
           />
           <div className="home-hero-visual__shade" aria-hidden="true" />
-          <div className="home-hero-content">
-            <h1 className="!text-white">
+          <div className="home-hero-content max-w-[420px]">
+            <h1 className="text-white font-bold">
               <button
                 type="button"
                 onClick={goToBrandHome}
-                className="site-wordmark !text-white transition-opacity duration-200 hover:opacity-88"
+                className="site-wordmark text-white font-bold transition-opacity duration-200 hover:opacity-88"
                 style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
                 aria-label="Ana sayfa — Akış"
               >
                 {SITE_BRAND}
               </button>
             </h1>
-            <p className="!text-white">
-              Trabzon&apos;un gündemi, lafı ve hafızası
+            <div
+              className="mt-2 mb-3 h-[2px] w-12 bg-[var(--accent)]"
+              aria-hidden="true"
+            />
+            <p className="home-hero-tagline text-gray-300">
+              Trabzon&apos;un gündemi,
+              <br />
+              <span className="home-hero-tagline-accent text-[var(--accent)]">
+                lafı ve hafızası
+              </span>
             </p>
           </div>
 
