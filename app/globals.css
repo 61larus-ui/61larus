@@ -1084,9 +1084,16 @@ main > header .site-header-tagline--manifesto {
   gap: var(--home-section-gap);
 }
 
-/* FAZ 1 / 1.1: ana sayfa hero — belirgin ama minimalist kart, editorial palet */
+/* FAZ 1.2: hero hafif genişleme (padding alanına sıçramadan), arama ile net nefes */
 .home-page-editorial--section-stack > .home-hero-faz1-outer {
-  margin-bottom: clamp(0.375rem, 0.15rem + 0.85vw, 1rem);
+  align-self: stretch;
+  margin-left: calc(var(--home-container-px) * -0.55);
+  margin-right: calc(var(--home-container-px) * -0.55);
+  width: calc(100% + var(--home-container-px) * 1.1);
+  max-width: calc(100% + var(--home-container-px) * 1.1);
+  box-sizing: border-box;
+  padding-bottom: clamp(0.45rem, 0.25rem + 0.65vw, 1rem);
+  margin-bottom: clamp(1.05rem, 0.55rem + 1.55vw, 2.35rem);
 }
 
 .home-hero-faz1-outer {
@@ -1158,23 +1165,25 @@ main > header .site-header-tagline--manifesto {
 
 .home-hero-faz1__eyebrow {
   display: block;
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.55rem;
+  padding: 0 0 0.5rem;
   font-family: var(--font-ui);
   font-size: clamp(0.6875rem, 0.65rem + 0.12vw, 0.75rem);
   font-weight: var(--type-sidebar-eyebrow-weight);
-  letter-spacing: var(--type-sidebar-eyebrow-tracking);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   line-height: var(--type-sidebar-eyebrow-leading);
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--divide-muted);
 }
 
 .home-hero-faz1__title {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.72rem;
   padding: 0;
   max-width: 100%;
   font-family: var(--font-editorial-display);
-  font-weight: 600;
-  letter-spacing: -0.026em;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   line-height: 1.13;
   color: var(--text-primary);
   font-size: clamp(1.35rem, 1.02rem + 1.35vw, 2.42rem);
@@ -1187,15 +1196,16 @@ main > header .site-header-tagline--manifesto {
   }
 }
 
-.home-hero-faz1__micro {
+.home-hero-faz1__micro,
+.home-hero-faz1__sub {
   margin: 0;
   max-width: 100%;
   font-family: var(--font-ui);
   font-size: clamp(0.8125rem, 0.78rem + 0.12vw, 0.875rem);
-  line-height: 1.55;
+  line-height: 1.68;
   font-weight: 400;
   letter-spacing: 0.01em;
-  color: var(--text-secondary);
+  color: color-mix(in srgb, var(--text-secondary) 78%, var(--text-primary) 22%);
 }
 
 /* Üst ticker (doğrudan stack çocuğu); Bugün yoksa — alt ticker bu seçicide değil */
