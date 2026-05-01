@@ -1172,25 +1172,35 @@ main
     overflow-x: hidden;
   }
 
-  /* —— Mobil hero: sıkı kart, marka / kullanıcı ayrımı, pill aksiyonlar —— */
+  /* —— Mobil hero: renk uyumu + kart gölgesi —— */
   .home-hero-visual {
     width: calc(100% - 28px);
     margin: 12px auto 22px auto !important;
     border-radius: 18px;
+    background: #070b10 !important;
+    box-shadow:
+      0 22px 60px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(255, 255, 255, 0.04) !important;
   }
 
   .home-hero-visual__image {
     height: 190px !important;
     object-fit: cover;
-    object-position: center center;
     border-radius: 18px;
+    filter: brightness(0.72) contrast(1.08) saturate(0.88) !important;
+    object-position: center center !important;
   }
 
   .home-hero-visual__shade {
     border-radius: 18px;
     background:
-      linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.92) 100%),
-      linear-gradient(to right, rgba(0, 0, 0, 0.42), transparent 62%);
+      linear-gradient(to bottom, rgba(3, 6, 10, 0.18) 0%, rgba(3, 6, 10, 0.94) 100%),
+      linear-gradient(
+        to right,
+        rgba(3, 6, 10, 0.78) 0%,
+        rgba(3, 6, 10, 0.25) 62%,
+        rgba(3, 6, 10, 0.55) 100%
+      ) !important;
   }
 
   .home-hero-content {
@@ -1203,59 +1213,97 @@ main
     font-size: 25px !important;
     line-height: 1;
     margin-bottom: 6px;
+    color: rgba(255, 255, 255, 0.94) !important;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
+  }
+
+  .home-hero-content h1 .site-wordmark,
+  .home-hero-content h1 button {
+    color: inherit !important;
+    opacity: 1 !important;
   }
 
   .home-hero-content p {
     font-size: 11px !important;
     line-height: 1.35;
     max-width: 220px;
+    color: rgba(255, 255, 255, 0.68) !important;
   }
 
   .home-hero-user {
     left: 18px !important;
     right: 18px !important;
     bottom: 14px !important;
+    max-width: calc(100% - 36px) !important;
     display: flex !important;
     justify-content: flex-start;
     align-items: center;
     gap: 8px;
     flex-wrap: nowrap;
     overflow: hidden;
+    box-sizing: border-box;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  /* Pill: yalnız dış link ve hesap tetikleyici; iç span’a çift kutu verme */
   .home-hero-user > a,
   .home-hero-user .account-menu-name-trigger {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 145px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 11px !important;
     line-height: 1;
     padding: 7px 9px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.055) !important;
+    border: 1px solid rgba(255, 255, 255, 0.075) !important;
+    color: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: none !important;
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
+    text-decoration: none;
   }
 
   .home-hero-user .account-menu-trigger-inner {
     min-height: 0 !important;
     padding: 0 !important;
+    margin: 0 !important;
     background: transparent !important;
     border: 0 !important;
+    box-shadow: none !important;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
   }
 
   .home-hero-user .site-account-name,
   .home-hero-user .header-user {
+    display: block;
     padding: 0 !important;
-    background: none !important;
+    margin: 0 !important;
+    background: transparent !important;
     border: none !important;
-    max-width: min(7.5rem, 42vw);
+    box-shadow: none !important;
+    max-width: 145px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: inherit !important;
   }
 
-  .home-hero-user a,
-  .home-hero-user .account-menu-name-trigger {
-    text-decoration: none;
+  main > header.site-header--home-faz83 .home-hero-user > a,
+  main > header.site-header--home-faz83 .home-hero-user .account-menu-name-trigger {
+    color: rgba(255, 255, 255, 0.72) !important;
+  }
+
+  main > header.site-header--home-faz83 .home-hero-user .site-account-name,
+  main > header.site-header--home-faz83 .home-hero-user .header-user {
+    color: rgba(255, 255, 255, 0.72) !important;
   }
 
   /* Ana gövde: arama + köprü nefesi */
@@ -1266,29 +1314,54 @@ main
     max-width: calc(100% - 28px);
   }
 
-  /* Footer: alt bağlantılar tek satır, taşarsa yatay kaydır */
-  .home-page-footer__nav {
+  /* Footer: satır düzeni — sosyal linkler dahil sıkıştırılabilir blok */
+  .site-footer,
+  footer#site-footer {
+    overflow-x: hidden;
+  }
+
+  .site-footer nav,
+  footer nav {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 14px !important;
-    white-space: nowrap !important;
-    overflow-x: auto;
-    max-width: 100%;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    gap: 14px 18px !important;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  .home-page-footer__nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  .home-page-footer__nav .footer-link-btn,
-  .home-page-footer__nav a.footer-link-btn {
+  .site-footer nav .footer-link-btn,
+  footer nav .footer-link-btn,
+  .site-footer nav a.footer-link-btn,
+  footer nav a.footer-link-btn {
+    font-size: 14px !important;
     flex: 0 0 auto;
-    white-space: nowrap;
+  }
+
+  .site-footer nav a,
+  footer nav a {
+    white-space: nowrap !important;
+  }
+
+  .site-footer nav button.footer-link-btn,
+  footer nav button.footer-link-btn {
+    white-space: nowrap !important;
+  }
+
+  .site-footer nav a[href*="instagram"],
+  .site-footer nav a[href*="facebook"],
+  .site-footer nav a[href*="x.com"],
+  .site-footer nav a[href*="twitter"],
+  footer nav a[href*="instagram"],
+  footer nav a[href*="facebook"],
+  footer nav a[href*="x.com"],
+  footer nav a[href*="twitter"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
   }
 }
 
