@@ -1022,12 +1022,63 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   background-repeat: no-repeat;
 }
 
+/* Eski tam geniş foto kaldırıldı — panoramik şerit HTML’de .home-hero-visual ile */
 main > header.site-header.site-header--home-faz83.site-header--trabzon-header .site-header__bg-surface {
   background-image: linear-gradient(
-      rgba(5, 7, 9, 0.78),
-      rgba(5, 7, 9, 0.92)
-    ),
-    url("/trabzon-header.jpg");
+    rgba(5, 7, 9, 0.88),
+    rgba(5, 7, 9, 0.97)
+  );
+}
+
+/* ----- Ana sayfa — Trabzon gece panoramic hero (canvas max-width ile hizalı) ----- */
+main > header.site-header--home-faz83 .home-hero-visual {
+  box-sizing: border-box;
+}
+
+main > header.site-header--home-faz83 .home-hero-visual__frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0 0 10px 10px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 10px 40px rgba(0, 0, 0, 0.45);
+}
+
+@media (min-width: 768px) {
+  main > header.site-header--home-faz83 .home-hero-visual__frame {
+    border-radius: 0 0 14px 14px;
+  }
+}
+
+main > header.site-header--home-faz83 .home-hero-visual__image {
+  display: block;
+  width: 100%;
+  height: clamp(140px, 42vw, 180px);
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (min-width: 768px) {
+  main > header.site-header--home-faz83 .home-hero-visual__image {
+    height: clamp(220px, 24vw, 280px);
+  }
+}
+
+main > header.site-header--home-faz83 .home-hero-visual__shade {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.42) 0%, transparent 36%),
+    linear-gradient(to top, var(--bg-primary) 0%, transparent 62%),
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.52) 0%,
+      transparent 18%,
+      transparent 82%,
+      rgba(0, 0, 0, 0.48) 100%
+    );
 }
 
 main > header.site-header {
