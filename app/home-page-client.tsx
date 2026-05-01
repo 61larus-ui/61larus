@@ -1492,28 +1492,24 @@ export default function HomePageClient({
             className="home-hero-visual__image"
           />
           <div className="home-hero-visual__shade" aria-hidden="true" />
+          <div className="home-hero-content">
+            <h1>
+              <button
+                type="button"
+                onClick={goToBrandHome}
+                className="site-wordmark transition-opacity duration-200 hover:opacity-88"
+                style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
+                aria-label="Ana sayfa — Akış"
+              >
+                {SITE_BRAND}
+              </button>
+            </h1>
+            <p>Trabzon&apos;un gündemi, lafı ve hafızası</p>
+          </div>
         </div>
         <div className="headerBlock home-page-container relative z-[1]">
           <div className="headerBar min-w-0">
-            <div className="header-text-group">
-              <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(22rem,100%)]">
-                <h1 className="m-0 p-0">
-                  <button
-                    type="button"
-                    onClick={goToBrandHome}
-                    className="site-wordmark max-w-full border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-88"
-                    style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
-                    aria-label="Ana sayfa — Akış"
-                  >
-                    {SITE_BRAND}
-                  </button>
-                </h1>
-                <p className="site-header-tagline m-0 site-header-tagline--manifesto">
-                  TRABZON&apos;UN GÜNDEMİ, LAFI VE HAFIZASI
-                </p>
-              </div>
-            </div>
-          <div className="headerUserName site-header-aux min-w-0 shrink-0 gap-x-2 pl-1 sm:gap-x-2.5 lg:gap-x-3 lg:pl-1.5 lg:pr-2">
+          <div className="headerUserName site-header-aux ml-auto min-w-0 shrink-0 gap-x-2 pl-1 sm:gap-x-2.5 lg:gap-x-3 lg:pl-1.5 lg:pr-2">
             {!isAuthenticated ? (
                 <Link
                   href="/auth"
