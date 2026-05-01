@@ -1504,7 +1504,7 @@ export default function HomePageClient({
         <div className="headerBlock home-page-container">
           <div className="headerBar min-w-0">
             <div className="header-text-group">
-              <div className="flex min-w-0 flex-col gap-2 lg:max-w-[min(21rem,100%)]">
+              <div className="flex min-w-0 flex-col gap-1 lg:max-w-[min(21rem,100%)]">
                 <h1 className="m-0 p-0">
                   <button
                     type="button"
@@ -1534,12 +1534,12 @@ export default function HomePageClient({
                 </p>
               </div>
             </div>
-          <div className="headerUserName site-header-aux min-w-0 justify-self-end gap-x-3 pl-1 sm:gap-x-4 lg:shrink-0 lg:gap-x-4 lg:pl-2 lg:pr-3">
+          <div className="headerUserName site-header-aux min-w-0 justify-self-end gap-x-2 pl-1 sm:gap-x-2.5 lg:shrink-0 lg:gap-x-3 lg:pl-1.5 lg:pr-2">
             {!isAuthenticated ? (
                 <Link
                   href="/auth"
                   prefetch
-                  className="inline-flex shrink-0 items-center font-normal tracking-[0.04em] text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-secondary)]"
+                  className="inline-flex shrink-0 items-center text-[12px] font-normal tracking-[0.03em] text-[color:var(--text-tertiary)] underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[4px] transition-colors hover:text-[color:var(--text-secondary)] md:text-[12.5px]"
                 >
                   Giriş
                 </Link>
@@ -1572,7 +1572,7 @@ export default function HomePageClient({
                   aria-label="Hesap menüsü"
                 >
                   <div
-                    className="account-menu-trigger-inner flex min-h-9 min-w-0 max-w-full items-center justify-end rounded-md px-0.5 py-0.5"
+                    className="account-menu-trigger-inner flex min-h-9 min-w-0 max-w-full items-center justify-end rounded-md px-0.5 py-0 md:min-h-8"
                     style={{ transition: "var(--transition)" }}
                   >
                     <span className="site-account-name account-menu-handle header-user mobileHeaderUserName block min-w-0 max-w-full truncate text-right">
