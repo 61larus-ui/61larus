@@ -2893,7 +2893,7 @@ main > section
   );
 }
 
-/* Görsel metin yalnız “Yazıyı aç” (bileşen kaynaklı metin ekranda gizli) */
+/* Görsel CTA metni (kart gövdesinde gizli span; ::after ile görünür) */
 .home-rail--faz5-primary .feed-entry-cta {
   position: relative;
   min-height: 1.4rem;
@@ -2911,7 +2911,7 @@ main > section
 }
 
 .home-rail--faz5-primary .feed-entry-cta::after {
-  content: "Yazıyı aç →";
+  content: "Devamını oku →";
   position: absolute;
   right: 0;
   top: 50%;
@@ -8064,7 +8064,7 @@ main .home-explore--faz51 .home-explore-panel-label:hover {
   text-decoration-color: var(--home-line-faint);
 }
 
-/* —— 2) CTA: “Yazıyı aç →” (sağ sütun) —— */
+/* —— 2) CTA: “Devamını oku →” (sağ sütun / keşif) —— */
 .home-rail--faz5-primary .feed-entry-cta {
   transition:
     color var(--home-interact-160) var(--home-interact-ease),
@@ -8375,7 +8375,7 @@ footer#site-footer.home-page-footer .home-page-container {
     line-height: 1.3;
   }
 
-  /* “Yazıyı aç →” / keşif CTA: daha belirgin */
+  /* “Devamını oku →” / keşif CTA: daha belirgin */
   .today-discovery-item-open,
   .home-explore-item .home-explore-cta--row,
   .home-explore-question .home-explore-cta--row {

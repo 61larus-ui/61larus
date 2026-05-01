@@ -21,7 +21,9 @@ export async function EntryDetailCommentsRsc({ row }: { row: EntryRow }) {
           Yorumlar yüklenemedi
         </div>
       ) : commentList.length === 0 ? (
-        <div className="entry-comments-empty">ilk yorumu sen yaz</div>
+        <div className="entry-comments-empty">
+          Henüz kimse bir şey yazmamış
+        </div>
       ) : (
         <div className="flex flex-col">
           {commentList.map((comment, index) => (

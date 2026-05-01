@@ -177,7 +177,7 @@ export default async function KatkilarimPage() {
               Yorum yaptığın başlıklar; her biri bir kez listelenir.
             </p>
             <p className="my-comments-empty mt-8 m-0 font-serif text-[1.05rem] leading-relaxed text-[color:var(--text-secondary)]">
-              Henüz yorum yaptığın bir başlık yok.
+              Henüz katkın yok — akışa dön, bir başlık seç.
             </p>
             <p className="mt-5 m-0">
               <Link
@@ -278,7 +278,7 @@ export default async function KatkilarimPage() {
                         </p>
                       </div>
                       <span className="my-comments-meta shrink-0 text-[13px] text-[color:var(--text-tertiary)] sm:pt-0.5">
-                        Yazıyı aç →
+                        Devamını oku →
                       </span>
                     </div>
                   </Link>

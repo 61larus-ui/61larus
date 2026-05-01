@@ -139,10 +139,13 @@ export function EntryDetailCommentCompose({
   return (
     <div className="entry-comment-compose-wrap">
       <div className="entry-comment-compose">
+        <p className="m-0 mb-2 text-[0.9375rem] font-medium leading-snug text-[color:var(--text-secondary)]">
+          Sen ne düşünüyorsun?
+        </p>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="yorum yaz…"
+          placeholder="Düşünceni yaz…"
           className="entry-comment-textarea"
           rows={2}
           disabled={submitting}

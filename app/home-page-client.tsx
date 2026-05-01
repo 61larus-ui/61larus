@@ -1282,7 +1282,7 @@ export default function HomePageClient({
     if (centerEntries.length === 0) {
       return (
         <div className="feed-index-empty-message flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-hair)] px-0 py-14 text-center">
-          Henüz içerik yok
+          Henüz burada yazı yok.
         </div>
       );
     }
@@ -1290,7 +1290,7 @@ export default function HomePageClient({
       return (
         <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-0 py-16 text-center md:py-20">
           <p className="feed-search-empty-title m-0">
-            Bu alanda henüz listelenen yazı yok.
+            Bu akış şu an boş.
           </p>
         </div>
       );
@@ -1324,7 +1324,7 @@ export default function HomePageClient({
             }}
             className="feed-load-more feed-load-more--faz55 feed-load-more--calm mt-6 w-full min-h-[3rem] border-0 bg-transparent py-3 text-center underline decoration-[color:var(--divide-muted)] decoration-1 underline-offset-[5px] transition-colors hover:text-[color:var(--text-primary)] hover:decoration-[color:var(--border-subtle)] md:mt-6 md:min-h-0 md:py-3.5"
           >
-            Daha fazla yazı yükle ↓
+            Daha fazla ↓
           </button>
         ) : null}
       </div>
@@ -1695,7 +1695,7 @@ export default function HomePageClient({
                     prefetchEntryRoute(homeHeroEntry.id)
                   }
                   onFocus={() => prefetchEntryRoute(homeHeroEntry.id)}
-                  aria-label={`Yazıyı aç: ${homeHeroEntry.title}`}
+                  aria-label={`Devamını oku: ${homeHeroEntry.title}`}
                 >
                   <span
                     className="home-hero-faz1__layer home-hero-faz1__base"
@@ -1718,10 +1718,10 @@ export default function HomePageClient({
                     </h2>
                     <div className="home-hero-faz1__lower">
                       <p className="home-hero-faz1__micro">
-                        Bu konu boş değil. Okumadan geçme.
+                        Bu başlık boş değil. Gir, oku, yorumunu bırak.
                       </p>
                       <span className="home-hero-faz1__cta" aria-hidden="true">
-                        Yazıyı aç →
+                        Devamını oku →
                       </span>
                     </div>
                   </div>
@@ -1774,7 +1774,7 @@ export default function HomePageClient({
                     onChange={onHomeSearchInputChange}
                     onFocus={onHomeSearchInputFocus}
                     onKeyDown={onHomeSearchKeyDown}
-                    placeholder="Başlık, kişi, yer veya konu ara"
+                    placeholder="Ne arıyorsun?"
                     autoComplete="off"
                     spellCheck={false}
                     enterKeyHint="search"
@@ -1893,6 +1893,7 @@ export default function HomePageClient({
                 <h2 className="col-section-head__title col-section-head__title--rail">
                   Yazılmayı bekleyenler
                 </h2>
+                <p className="col-section-head__micro">İlk yazan sen ol.</p>
               </div>
               <div className="home-rail-body home-rail-body--awaiting col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <nav
@@ -1925,7 +1926,9 @@ export default function HomePageClient({
                           <span className="home-index-title line-clamp-2">
                             {entry.title}
                           </span>
-                          <span className="home-index-meta">0 yorum</span>
+                          <span className="home-index-meta">
+                            Henüz kimse bir şey yazmamış
+                          </span>
                         </div>
                       </button>
                     );
@@ -1941,6 +1944,9 @@ export default function HomePageClient({
                 <h2 className="col-section-head__title col-section-head__title--rail">
                   Çok konuşulanlar
                 </h2>
+                <p className="col-section-head__micro">
+                  Bu başlıklar boş geçilmiyor.
+                </p>
               </div>
               <div className="home-rail-body home-rail-body--trending col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <nav
@@ -1975,7 +1981,9 @@ export default function HomePageClient({
                             {entry.title}
                           </span>
                           <span className="home-index-meta">
-                            {cc} yorum
+                            {cc === 0
+                              ? "Henüz kimse bir şey yazmamış"
+                              : `${cc} yorum`}
                           </span>
                         </div>
                       </button>
@@ -1993,6 +2001,9 @@ export default function HomePageClient({
                   >
                     Hafızaya eklenenler
                   </h2>
+                  <p className="col-section-head__micro">
+                    Trabzon&apos;un unutulmayanları.
+                  </p>
                 </div>
                 <div className="home-feed-rail__body home-feed-rail__body--faz55 home-rail-body home-rail-body--feed col-list-panel min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain max-md:left-scroll max-md:overscroll-contain md:min-h-0 md:flex-1 md:overflow-y-auto md:overflow-x-hidden md:overscroll-contain lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-contain">
                   {renderMainFeed()}
@@ -2075,10 +2086,12 @@ export default function HomePageClient({
                                     </span>
                                     <div className="home-explore-item-foot">
                                       <span className="home-explore-item-meta">
-                                        {cc} yorum
+                                        {cc === 0
+                                          ? "Henüz kimse bir şey yazmamış"
+                                          : `${cc} yorum`}
                                       </span>
                                       <span className="home-explore-cta home-explore-cta--row">
-                                        Yazıyı aç →
+                                        Devamını oku →
                                       </span>
                                     </div>
                                   </button>
@@ -2116,10 +2129,12 @@ export default function HomePageClient({
                                   </span>
                                   <div className="home-explore-item-foot">
                                     <span className="home-explore-item-meta">
-                                      {wcc} yorum
+                                      {wcc === 0
+                                        ? "Henüz kimse bir şey yazmamış"
+                                        : `${wcc} yorum`}
                                     </span>
                                     <span className="home-explore-cta home-explore-cta--row">
-                                      Yazıyı aç →
+                                      Devamını oku →
                                     </span>
                                   </div>
                                 </button>
@@ -2162,10 +2177,12 @@ export default function HomePageClient({
                                   </span>
                                   <div className="home-explore-item-foot">
                                     <span className="home-explore-item-meta">
-                                      {cc} yorum
+                                      {cc === 0
+                                        ? "Henüz kimse bir şey yazmamış"
+                                        : `${cc} yorum`}
                                     </span>
                                     <span className="home-explore-cta home-explore-cta--row">
-                                      Yazıyı aç →
+                                      Devamını oku →
                                     </span>
                                   </div>
                                 </button>

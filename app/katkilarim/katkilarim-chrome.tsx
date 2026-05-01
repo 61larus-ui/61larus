@@ -426,7 +426,7 @@ export function KatkilarimChrome({
                   onChange={onHomeSearchInputChange}
                   onFocus={onHomeSearchInputFocus}
                   onKeyDown={onHomeSearchKeyDown}
-                  placeholder="Başlık, kişi, yer veya konu ara"
+                  placeholder="Ne arıyorsun?"
                   autoComplete="off"
                   spellCheck={false}
                   enterKeyHint="search"
