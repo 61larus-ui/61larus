@@ -2748,11 +2748,27 @@ main > section
   text-rendering: optimizeLegibility;
 }
 
-/* Hafızaya başlığı: bir kademe daha sakin (sol/orta ile denge) */
+/* FAZ 2.1: Hafızaya başlığı — ana blok; mobilde bir kademe güçlü */
 .col-head-band--faz5-primary .col-section-head__title--rail {
-  font-size: 1.0625rem;
-  letter-spacing: -0.019em;
-  line-height: 1.34;
+  font-size: 1.0925rem;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.32;
+}
+
+@media (max-width: 767.98px) {
+  .home-editorial-cols
+    .col-head-band.col-head-band--faz5-primary.col-head-band--feed {
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--editorial-hairline) 82%, transparent);
+    padding-bottom: 0.7rem;
+    margin-bottom: 0;
+  }
+
+  .col-head-band--faz5-primary .col-section-head__title--rail {
+    margin-bottom: 0;
+    padding-bottom: 0.12rem;
+  }
 }
 
 /* Alt keşif ana başlığı — “Trabzon’u keşfetmeye devam et” */
@@ -2793,17 +2809,63 @@ main > section
   max-width: 26rem;
 }
 
+/* FAZ 2.1: ilk hafıza kartı — lead / daha rahat okuma */
 .home-rail--faz5-primary
   .layout-feed-inner
   nav[aria-label="Hafızaya eklenen yazılar"]
-  > .feed-entry-card:first-of-type {
-  padding-top: 0.75rem;
-  padding-bottom: 1.25rem;
+  > .feed-entry-card.feed-entry-card--editorial:first-of-type {
+  padding-top: 0.95rem;
+  padding-bottom: 1.42rem;
+  padding-left: 0.38rem;
+  padding-right: 0.38rem;
+  margin-top: 0.12rem;
+  border-bottom-width: 1px;
   border-bottom-color: color-mix(
     in srgb,
-    var(--editorial-hairline) 85%,
+    var(--editorial-hairline) 76%,
     transparent
   );
+}
+
+.home-rail--faz5-primary
+  nav[aria-label="Hafızaya eklenen yazılar"]
+  > .feed-entry-card.feed-entry-card--editorial:first-of-type
+  .feed-entry-card-inner {
+  padding-left: 0.02rem;
+  padding-right: 0.02rem;
+}
+
+.home-rail--faz5-primary
+  nav[aria-label="Hafızaya eklenen yazılar"]
+  > .feed-entry-card.feed-entry-card--editorial:first-of-type
+  .feed-entry-title--editorial {
+  font-size: clamp(1.1rem, 1.03rem + 0.42vw, 1.38rem);
+  font-weight: 600;
+  line-height: 1.43;
+  letter-spacing: -0.014em;
+}
+
+.home-rail--faz5-primary
+  nav[aria-label="Hafızaya eklenen yazılar"]
+  > .feed-entry-card.feed-entry-card--editorial:first-of-type
+  .feed-entry-excerpt--editorial {
+  margin-top: 0.4rem;
+  font-size: calc(var(--type-scale-body) + 0.045rem);
+  line-height: 1.74;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  color: color-mix(
+    in srgb,
+    var(--text-secondary) 72%,
+    var(--text-muted) 28%
+  );
+}
+
+.home-rail--faz5-primary
+  nav[aria-label="Hafızaya eklenen yazılar"]
+  > .feed-entry-card.feed-entry-card--editorial:first-of-type
+  .feed-entry-bottom {
+  margin-top: 1.38rem;
 }
 
 .home-rail--faz5-primary .feed-entry-excerpt--editorial {
@@ -3113,8 +3175,8 @@ main > section
   font-weight: 500;
   color: color-mix(
     in srgb,
-    var(--wordmark-ink) 78%,
-    var(--text-secondary) 22%
+    var(--wordmark-ink) 74%,
+    var(--text-secondary) 26%
   );
   letter-spacing: -0.007em;
 }
@@ -3125,11 +3187,11 @@ main > section
   font-weight: 400;
   color: color-mix(
     in srgb,
-    var(--wordmark-ink) 66%,
-    var(--text-secondary) 34%
+    var(--wordmark-ink) 64%,
+    var(--text-secondary) 36%
   );
   letter-spacing: -0.004em;
-  opacity: 0.9;
+  opacity: 0.86;
 }
 
 .home-rail--faz5-primary .feed-entry-card--editorial {
@@ -3192,21 +3254,42 @@ main > section
 
   .home-rail--faz5-left .home-index-meta {
     font-size: 10.5px;
-    opacity: 0.78;
+    opacity: 0.76;
   }
 
   .home-rail--faz5-left .col-section-head__title--rail {
     font-size: 1rem !important;
-    opacity: 0.88;
+    opacity: 0.85;
   }
 
   .home-rail--faz5-mid .col-section-head__title--rail {
-    font-size: 1.125rem !important;
+    font-size: 1.1125rem !important;
+    opacity: 0.93;
+    font-weight: 500;
+  }
+
+  .home-editorial-cols
+    .col-head-band.col-head-band--faz5-primary.col-head-band--feed {
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--editorial-hairline) 76%, transparent);
+    padding-top: 0.55rem;
+    padding-bottom: 0.88rem;
   }
 
   .col-head-band--faz5-primary .col-section-head__title--rail {
-    font-size: 1.16rem !important;
-    letter-spacing: -0.021em;
+    font-size: 1.24rem !important;
+    font-weight: 600;
+    letter-spacing: -0.023em;
+    line-height: 1.3;
+    padding-bottom: 0.14rem;
+  }
+
+  .home-rail--faz5-primary
+    nav[aria-label="Hafızaya eklenen yazılar"]
+    > .feed-entry-card.feed-entry-card--editorial:first-of-type
+    .feed-entry-title--editorial {
+    font-size: 1.26rem;
+    line-height: 1.42;
   }
 }
 
@@ -3217,7 +3300,7 @@ main > section
 
   .home-rail--faz5-left .home-index-title {
     font-size: clamp(0.66rem, 0.6rem + 0.22vw, 0.76rem);
-    opacity: 0.92;
+    opacity: 0.87;
   }
 
   .home-rail--faz5-mid .home-index-title {
