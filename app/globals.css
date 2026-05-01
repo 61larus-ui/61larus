@@ -1204,14 +1204,14 @@ main
   }
 
   .home-hero-content {
-    left: 22px !important;
-    bottom: 72px !important;
-    max-width: calc(100% - 44px) !important;
+    left: 24px !important;
+    right: 24px !important;
+    bottom: 92px !important;
+    max-width: none !important;
   }
 
   .home-hero-content h1 {
-    color: #ffffff !important;
-    font-size: 44px !important;
+    font-size: 42px !important;
     line-height: 0.95 !important;
     margin: 0 0 8px 0 !important;
   }
@@ -1225,39 +1225,41 @@ main
   }
 
   .home-hero-content p {
-    color: #ffffff !important;
     font-size: 13px !important;
     line-height: 1.25 !important;
     margin: 0 !important;
-    max-width: none;
   }
 
   .home-hero-user {
-    left: 22px !important;
-    right: 22px !important;
-    bottom: 20px !important;
-    display: flex !important;
-    justify-content: flex-start !important;
+    left: 24px !important;
+    right: 24px !important;
+    bottom: 28px !important;
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    align-items: center !important;
     gap: 10px !important;
-    flex-wrap: nowrap !important;
-    overflow: visible !important;
     max-width: none !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    align-items: center;
   }
 
   .home-hero-user a,
   .home-hero-user button,
   .home-hero-user span {
-    color: #ffffff !important;
+    min-width: 0 !important;
     max-width: none !important;
     width: auto !important;
     overflow: visible !important;
     text-overflow: unset !important;
     white-space: nowrap !important;
     font-size: 13px !important;
-    padding: 8px 12px !important;
+    line-height: 1 !important;
+    padding: 10px 14px !important;
+    border-radius: 999px !important;
+  }
+
+  .home-hero-user a:last-child,
+  .home-hero-user button:last-child,
+  .home-hero-user span:last-child {
+    justify-self: start !important;
   }
 
   /* İsim satırında çift iç padding oluşmasın */
