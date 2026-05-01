@@ -9186,3 +9186,206 @@ footer a:hover {
 .section-block {
   margin-bottom: 42px;
 }
+
+/* =========================
+   FAZ 6 — EDITORIAL TYPOGRAPHY POLISH
+   (yalnız okuma ritmi / tipografi; palet layout değişmez)
+========================= */
+
+/* Ana vitrin — gerçek hero: home-hero-faz1 */
+.home-hero-faz1__title {
+  letter-spacing: -0.017em;
+  line-height: 1.21;
+}
+
+@media (min-width: 1024px) {
+  .home-hero-faz1__title {
+    line-height: 1.195;
+  }
+}
+
+.home-hero-faz1__micro,
+.home-hero-faz1__sub {
+  letter-spacing: 0.012em;
+  line-height: 1.76;
+  color: color-mix(
+    in srgb,
+    var(--text-secondary) 61%,
+    var(--text-primary) 39%
+  );
+}
+
+/* Hafıza kartı başlığı + gövde (orta / ana kolon listesi) */
+.feed-entry-title--editorial {
+  letter-spacing: -0.013em;
+  line-height: 1.435;
+}
+
+.feed-entry-card.feed-entry-card--editorial .feed-entry-title--editorial {
+  letter-spacing: -0.013em;
+  line-height: 1.445;
+}
+
+@media (max-width: 767.98px) {
+  .feed-entry-title--editorial,
+  .feed-entry-card.feed-entry-card--editorial .feed-entry-title--editorial {
+    line-height: 1.465;
+    letter-spacing: -0.012em;
+  }
+}
+
+.feed-entry-excerpt--editorial {
+  color: color-mix(
+    in srgb,
+    var(--text-secondary) 76%,
+    var(--text-tertiary) 24%
+  );
+  line-height: 1.74;
+}
+
+@media (max-width: 767.98px) {
+  .feed-entry-excerpt--editorial {
+    line-height: 1.68;
+  }
+}
+
+.feed-entry-card.feed-entry-card--editorial .feed-entry-excerpt--editorial {
+  line-height: 1.72;
+}
+
+/* Yan kolon bölüm başlıkları — “yardımcı” hissi korunur, bir tık okunur */
+.home-rail--faz5-left .col-section-head__title--rail,
+.home-rail--faz5-mid .col-section-head__title--rail {
+  font-size: 1.14rem;
+  font-weight: 500;
+  letter-spacing: -0.023em;
+  line-height: 1.35;
+}
+
+.today-discovery--faz5 .today-discovery-kicker,
+.home-explore--faz51 .home-explore-head--settled .col-section-head__title--explore {
+  letter-spacing: -0.02em;
+  line-height: 1.34;
+}
+
+.col-head-band--faz5-primary .col-section-head__title--rail {
+  letter-spacing: -0.026em;
+  line-height: 1.295;
+}
+
+.col-head-band--faz52-support .col-section-head__micro {
+  opacity: 0.84;
+  letter-spacing: 0.024em;
+}
+
+/* Liste satırları: başlık + meta (“Henüz yazılmamış”, tarih, yorum) */
+.home-rail--faz5-left .home-index-title,
+.home-rail--faz5-mid .home-index-title {
+  font-size: calc(var(--type-scale-title) + 0.02rem);
+  line-height: 1.415;
+  letter-spacing: -0.011em;
+}
+
+.home-rail--faz5-left .home-index-meta,
+.home-rail--faz5-mid .home-index-meta {
+  letter-spacing: 0.055em;
+  line-height: 1.52;
+  opacity: 1;
+  color: color-mix(in srgb, var(--text-meta) 78%, var(--text-secondary) 22%);
+}
+
+.home-rail--faz5-left .home-index-meta.hemen-yorum-yok,
+.home-rail--faz5-mid .home-index-meta.hemen-yorum-yok {
+  opacity: 0.92;
+  color: color-mix(in srgb, var(--text-meta) 72%, var(--text-secondary) 28%);
+}
+
+/* Akış kartı meta satırı */
+.feed-entry-card--editorial .feed-meta-row--editorial {
+  letter-spacing: 0.024em;
+  line-height: 1.52;
+}
+
+.feed-entry-card--editorial
+  .feed-meta-row--editorial
+  .feed-meta-date,
+.feed-entry-card--editorial
+  .feed-meta-row--editorial
+  .feed-meta-stat,
+.feed-entry-card--editorial
+  .feed-meta-row--editorial
+  .feed-meta-author {
+  opacity: 0.94;
+}
+
+/* CTA — sakin geçiş, hafif hareket (FAZ 5’teki 3px fazla gelmesin diye sıvama) */
+.devamini-oku {
+  transition:
+    opacity 0.26s ease-out,
+    transform 0.26s ease-out,
+    color 0.26s ease-out;
+}
+
+.devamini-oku:hover {
+  transform: translateX(2px);
+}
+
+.feed-entry-card--editorial .feed-entry-cta,
+.feed-entry-card--editorial:hover .feed-entry-cta,
+.feed-entry-card--editorial:focus-within .feed-entry-cta {
+  transition:
+    opacity 0.26s ease-out,
+    transform 0.26s ease-out,
+    color 0.26s ease-out,
+    text-decoration-color 0.26s ease-out;
+}
+
+.feed-entry-card--editorial:hover .feed-entry-cta,
+.feed-entry-card--editorial:focus-within .feed-entry-cta {
+  transform: translateX(2px);
+}
+
+.home-rail--faz5-primary .feed-entry-card--editorial .feed-entry-cta::after {
+  transition:
+    opacity 0.26s ease-out,
+    transform 0.26s ease-out,
+    color 0.26s ease-out;
+}
+
+.home-rail--faz5-primary .feed-entry-card--editorial:hover .feed-entry-cta::after,
+.home-rail--faz5-primary
+  .feed-entry-card--editorial:focus-within
+  .feed-entry-cta::after {
+  transform: translateX(2px);
+}
+
+/* Footer — token tabanlı; koyu zemin korunur, kontrast dengelenir */
+.site-footer {
+  color: color-mix(in srgb, var(--footer-text) 93%, transparent 7%);
+}
+
+.site-footer a {
+  transition: color 0.24s ease-out, opacity 0.24s ease-out;
+  color: color-mix(in srgb, var(--footer-link, rgba(240, 241, 244, 0.72)) 100%, var(--footer-text) 18%);
+}
+
+.site-footer a:hover {
+  color: var(--footer-text);
+}
+
+.site-footer .footer-link-btn {
+  color: color-mix(in srgb, var(--footer-link, rgba(240, 241, 244, 0.72)) 100%, var(--footer-text) 18%);
+}
+
+.site-footer .footer-link-btn:hover {
+  color: var(--footer-text);
+}
+
+.site-footer .site-wordmark {
+  color: color-mix(in srgb, var(--footer-text) 98%, transparent 2%);
+  letter-spacing: -0.018em;
+}
+
+.site-footer nav[aria-label="Alt bağlantılar"] {
+  letter-spacing: calc(var(--type-nav-tracking) + 0.01em);
+}
