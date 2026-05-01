@@ -3106,34 +3106,126 @@ main > section
   margin-top: 0;
 }
 
-.home-rail--faz5-left .home-index-title,
+/* --- FAZ 2.0: kolon hiyerarşisi — orta liste / sol ikincil (başlık gövdesi ayrımı aşağıda) --- */
 .home-rail--faz5-mid .home-index-title {
-  font-size: clamp(0.66rem, 0.63rem + 0.09vw, 0.74rem);
+  font-size: clamp(0.7rem, 0.645rem + 0.14vw, 0.82rem);
+  line-height: 1.3;
+  font-weight: 500;
+  color: color-mix(
+    in srgb,
+    var(--wordmark-ink) 78%,
+    var(--text-secondary) 22%
+  );
+  letter-spacing: -0.007em;
+}
+
+.home-rail--faz5-left .home-index-title {
+  font-size: clamp(0.585rem, 0.545rem + 0.13vw, 0.665rem);
   line-height: 1.26;
   font-weight: 400;
   color: color-mix(
     in srgb,
-    var(--wordmark-ink) 74%,
-    var(--text-secondary) 26%
+    var(--wordmark-ink) 66%,
+    var(--text-secondary) 34%
   );
-  letter-spacing: -0.008em;
+  letter-spacing: -0.004em;
+  opacity: 0.9;
 }
 
 .home-rail--faz5-primary .feed-entry-card--editorial {
-  padding: 1rem 0.2rem 1rem 0.2rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 1.08rem 0.26rem 1.08rem 0.26rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.042);
 }
 
 .home-rail--faz5-primary .feed-entry-excerpt--editorial {
-  line-height: 1.62;
-  margin-top: 0.25rem;
+  line-height: 1.69;
+  margin-top: 0.32rem;
+  font-size: calc(var(--type-scale-body) + 0.02rem);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
 }
 
 .home-rail--faz5-primary .feed-entry-card--editorial .feed-entry-bottom {
-  margin-top: 1.15rem;
+  margin-top: 1.22rem;
 }
 
-/* --- FAZ 5.2: 1:1:2.1 ızgara, destek kolonları hizası, sağ ayrışımı --- */
+@media (min-width: 768px) {
+  .home-rail--faz5-primary .feed-entry-title--editorial {
+    font-size: 1.1rem;
+    line-height: 1.46;
+    letter-spacing: -0.011em;
+  }
+
+  .home-editorial-cols--faz52 .home-rail--faz5-mid .home-index-row {
+    padding-top: 0.7rem !important;
+    padding-bottom: 0.7rem !important;
+    gap: 0.65rem;
+  }
+
+  .home-editorial-cols--faz52 .home-rail--faz5-left .home-index-row {
+    padding-top: 0.45rem !important;
+    padding-bottom: 0.45rem !important;
+  }
+
+  .home-rail--faz5-mid .home-index-num {
+    font-size: calc(var(--type-scale-meta) * 1.08);
+    font-weight: 600;
+    opacity: 0.72;
+    letter-spacing: 0.13em;
+    color: color-mix(
+      in srgb,
+      var(--text-secondary) 62%,
+      var(--accent-green) 10%
+    );
+    min-width: 1.5rem;
+  }
+
+  .home-rail--faz5-left .home-index-num {
+    font-size: calc(var(--type-scale-meta) * 0.78);
+    font-weight: 400;
+    opacity: 0.42;
+    letter-spacing: 0.1em;
+  }
+
+  .home-rail--faz5-left .home-index-meta {
+    font-size: 10.5px;
+    opacity: 0.78;
+  }
+
+  .home-rail--faz5-left .col-section-head__title--rail {
+    font-size: 1rem !important;
+    opacity: 0.88;
+  }
+
+  .home-rail--faz5-mid .col-section-head__title--rail {
+    font-size: 1.125rem !important;
+  }
+
+  .col-head-band--faz5-primary .col-section-head__title--rail {
+    font-size: 1.16rem !important;
+    letter-spacing: -0.021em;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .home-rail--faz5-primary .feed-entry-title--editorial {
+    font-size: clamp(1.08rem, 0.96rem + 0.5vw, 1.27rem);
+  }
+
+  .home-rail--faz5-left .home-index-title {
+    font-size: clamp(0.66rem, 0.6rem + 0.22vw, 0.76rem);
+    opacity: 0.92;
+  }
+
+  .home-rail--faz5-mid .home-index-title {
+    font-size: clamp(0.74rem, 0.68rem + 0.22vw, 0.86rem);
+  }
+}
+
+/* FAZ 2.0 / FAZ 5.2: üç kolon dikey çizgiler + Hafıza iç omurga padding (ızgara ~0.9:1.2:1.6) */
 @media (min-width: 768px) {
   /* FAZ 3: ana (Hafıza) sütun — ince yumuşak dikey; çift çizgi yok (orta rail border kapatıldı) */
   main
