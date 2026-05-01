@@ -6,6 +6,7 @@ import {
   formatCommentDateTr,
   type EntryRowLite,
 } from "@/lib/katkilarim-page";
+import { SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import {
@@ -37,6 +38,89 @@ function KatkilarimFlowBackLink() {
         ← Akışa dön
       </Link>
     </p>
+  );
+}
+
+function KatkilarimHomeHero({
+  isAuthenticated,
+  heroUserLabel,
+}: {
+  isAuthenticated: boolean;
+  heroUserLabel: string | null;
+}) {
+  const label =
+    typeof heroUserLabel === "string" && heroUserLabel.trim().length > 0
+      ? heroUserLabel.trim()
+      : "\u2026";
+
+  return (
+    <header className="site-header site-header--home-faz83 site-header--trabzon-header home-header-banner relative z-20 shrink-0">
+      <div className="home-hero-visual">
+        <img
+          src="/trabzon-gece-hafiza-banner.png"
+          alt="Trabzon gece panoraması"
+          className="home-hero-visual__image"
+        />
+        <div className="home-hero-visual__shade" aria-hidden="true" />
+        <div className="home-hero-content">
+          <h1 className="!text-white">
+            <Link
+              href="/"
+              prefetch
+              scroll={false}
+              className="site-wordmark !text-white transition-opacity duration-200 hover:opacity-88"
+              style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
+              aria-label="Ana sayfa — Akış"
+            >
+              {SITE_BRAND}
+            </Link>
+          </h1>
+          <p className="!text-white">
+            Trabzon&apos;un gündemi, lafı ve hafızası
+          </p>
+        </div>
+
+        <div className="home-hero-user">
+          {!isAuthenticated ? (
+            <Link href="/auth" prefetch className="!text-white">
+              Giriş
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/katkilarim"
+                prefetch
+                scroll={false}
+                className="site-account-link shrink-0 !text-white"
+              >
+                Katkılarım
+              </Link>
+              <div className="relative z-30 min-w-0 shrink-0">
+                <button
+                  type="button"
+                  className="account-menu-name-trigger max-w-full cursor-pointer border-0 bg-transparent p-0 !text-white"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                  aria-haspopup="menu"
+                  aria-expanded={false}
+                  aria-label="Hesap menüsü"
+                >
+                  <div
+                    className="account-menu-trigger-inner flex min-h-9 w-full max-w-none items-center justify-center overflow-visible rounded-md px-0.5 py-0 md:min-h-8 md:justify-end"
+                    style={{
+                      transition: "var(--transition)",
+                    }}
+                  >
+                    <span className="site-account-name account-menu-handle header-user mobileHeaderUserName block whitespace-nowrap text-right !text-white">
+                      {label}
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
   );
 }
 
@@ -98,13 +182,16 @@ export default async function KatkilarimPage() {
         isAuthenticated={false}
         headerDisplayName={null}
       >
-        <div className="my-comments-page my-comments-page-inner">
-          <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
-            <p className="my-comments-empty m-0 font-serif text-[1.05rem] leading-relaxed text-[color:var(--text-secondary)]">
-              Katkılarını görmek için giriş yapmalısın.
-            </p>
-            <div className="mt-6">
-              <KatkilarimFlowBackLink />
+        <div className="katkilarim-page-stack">
+          <KatkilarimHomeHero isAuthenticated={false} heroUserLabel={null} />
+          <div className="my-comments-page my-comments-page-inner">
+            <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
+              <p className="my-comments-empty m-0 font-serif text-[1.05rem] leading-relaxed text-[color:var(--text-secondary)]">
+                Katkılarını görmek için giriş yapmalısın.
+              </p>
+              <div className="mt-6">
+                <KatkilarimFlowBackLink />
+              </div>
             </div>
           </div>
         </div>
@@ -117,20 +204,25 @@ export default async function KatkilarimPage() {
     .select("id, content, created_at, entry_id")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
-
   if (commentsError) {
     return (
       <KatkilarimChrome
         isAuthenticated
         headerDisplayName={headerLabel}
       >
-        <div className="my-comments-page my-comments-page-inner">
-          <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
-            <p className="my-comments-empty m-0 text-[color:var(--text-secondary)]">
-              Katkılar yüklenirken bir sorun oluştu. Daha sonra tekrar dene.
-            </p>
-            <div className="mt-6">
-              <KatkilarimFlowBackLink />
+        <div className="katkilarim-page-stack">
+          <KatkilarimHomeHero
+            isAuthenticated
+            heroUserLabel={headerLabel}
+          />
+          <div className="my-comments-page my-comments-page-inner">
+            <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
+              <p className="my-comments-empty m-0 text-[color:var(--text-secondary)]">
+                Katkılar yüklenirken bir sorun oluştu. Daha sonra tekrar dene.
+              </p>
+              <div className="mt-6">
+                <KatkilarimFlowBackLink />
+              </div>
             </div>
           </div>
         </div>
@@ -171,18 +263,24 @@ export default async function KatkilarimPage() {
         isAuthenticated
         headerDisplayName={headerLabel}
       >
-        <div className="my-comments-page my-comments-page-inner">
-          <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
-            <header className="katkilarim-header">
-              <h1 className="my-comments-heading">Katkılarım</h1>
-              <p className="my-comments-meta my-comments-page-intro">
-                Yorum yaptığın başlıklar burada birikir.
+        <div className="katkilarim-page-stack">
+          <KatkilarimHomeHero
+            isAuthenticated
+            heroUserLabel={headerLabel}
+          />
+          <div className="my-comments-page my-comments-page-inner">
+            <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
+              <header className="katkilarim-header">
+                <h1 className="my-comments-heading">Katkılarım</h1>
+                <p className="my-comments-meta my-comments-page-intro">
+                  Yorum yaptığın başlıklar burada birikir.
+                </p>
+              </header>
+              <KatkilarimFlowBackLink />
+              <p className="my-comments-empty my-comments-empty--below-back mt-8 m-0 font-serif text-[1.05rem] leading-relaxed text-[color:var(--text-secondary)]">
+                Henüz katkın yok — akışa dön, bir başlık seç.
               </p>
-            </header>
-            <KatkilarimFlowBackLink />
-            <p className="my-comments-empty my-comments-empty--below-back mt-8 m-0 font-serif text-[1.05rem] leading-relaxed text-[color:var(--text-secondary)]">
-              Henüz katkın yok — akışa dön, bir başlık seç.
-            </p>
+            </div>
           </div>
         </div>
       </KatkilarimChrome>
@@ -201,13 +299,19 @@ export default async function KatkilarimPage() {
         isAuthenticated
         headerDisplayName={headerLabel}
       >
-        <div className="my-comments-page my-comments-page-inner">
-          <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
-            <p className="my-comments-empty m-0 text-[color:var(--text-secondary)]">
-              Başlıklar yüklenirken bir sorun oluştu. Daha sonra tekrar dene.
-            </p>
-            <div className="mt-6">
-              <KatkilarimFlowBackLink />
+        <div className="katkilarim-page-stack">
+          <KatkilarimHomeHero
+            isAuthenticated
+            heroUserLabel={headerLabel}
+          />
+          <div className="my-comments-page my-comments-page-inner">
+            <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
+              <p className="my-comments-empty m-0 text-[color:var(--text-secondary)]">
+                Başlıklar yüklenirken bir sorun oluştu. Daha sonra tekrar dene.
+              </p>
+              <div className="mt-6">
+                <KatkilarimFlowBackLink />
+              </div>
             </div>
           </div>
         </div>
@@ -223,17 +327,19 @@ export default async function KatkilarimPage() {
 
   return (
     <KatkilarimChrome isAuthenticated headerDisplayName={headerLabel}>
-      <div className="my-comments-page my-comments-page-inner">
-        <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
-          <header className="katkilarim-header">
-            <h1 className="my-comments-heading">Katkılarım</h1>
-            <p className="my-comments-meta my-comments-page-intro">
-              Yorum yaptığın başlıklar burada birikir.
-            </p>
-          </header>
-          <KatkilarimFlowBackLink />
+      <div className="katkilarim-page-stack">
+        <KatkilarimHomeHero isAuthenticated heroUserLabel={headerLabel} />
+        <div className="my-comments-page my-comments-page-inner">
+          <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
+            <header className="katkilarim-header">
+              <h1 className="my-comments-heading">Katkılarım</h1>
+              <p className="my-comments-meta my-comments-page-intro">
+                Yorum yaptığın başlıklar burada birikir.
+              </p>
+            </header>
+            <KatkilarimFlowBackLink />
 
-          <ul className="my-comments-list flex list-none flex-col p-0 m-0">
+            <ul className="my-comments-list flex list-none flex-col p-0 m-0">
             {entryOrder.filter((id) => byId.has(id)).map((entryId) => {
               const row = byId.get(entryId)!;
               const title =
@@ -287,6 +393,7 @@ export default async function KatkilarimPage() {
           </ul>
         </div>
       </div>
+    </div>
     </KatkilarimChrome>
   );
 }

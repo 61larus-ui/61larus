@@ -1109,7 +1109,11 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   margin: 0;
 }
 
-:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+:is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
   .home-hero-content
   .site-wordmark {
   color: #fff;
@@ -1147,30 +1151,58 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
 }
 
 /* Hero üstü: eski header nav !important renklerini bastır */
-:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+:is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
   .home-hero-user
   .site-account-link,
-:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+:is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
   .home-hero-user
   .site-account-name,
-:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+:is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
   .home-hero-user
   .header-user {
   color: rgba(255, 255, 255, 0.68) !important;
   font-weight: 600 !important;
 }
 
-:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+:is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
   .home-hero-user
   .site-account-link:hover,
-:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+:is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
   .home-hero-user
   .site-account-name:hover,
-:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+:is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
   .home-hero-user
   .account-menu-trigger-inner:hover
   .site-account-name,
-:is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+:is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
   .home-hero-user
   .account-menu-trigger-inner:hover
   .header-user {
@@ -1443,16 +1475,32 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
     color: #ffffff !important;
   }
 
-  :is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+  :is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
     .home-hero-user
     > a,
-  :is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+  :is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
     .home-hero-user
     .account-menu-name-trigger,
-  :is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+  :is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
     .home-hero-user
     .site-account-name,
-  :is(main > header.site-header--home-faz83, .entry-detail-page > header.site-header--home-faz83)
+  :is(
+    main > header.site-header--home-faz83,
+    .entry-detail-page > header.site-header--home-faz83,
+    .katkilarim-page-stack > header.site-header--home-faz83
+  )
     .home-hero-user
     .header-user {
     color: #ffffff !important;
@@ -5434,7 +5482,8 @@ main > section > .home-page-editorial + footer#site-footer.home-page-footer--aft
 /* -------------------------------------------------------------------------
    Entry detail — üst banner (ana sayfa hero ile hizalı görünüm)
    ------------------------------------------------------------------------- */
-main:has(.entry-detail-page) > header.site-header {
+main:has(.entry-detail-page) > header.site-header,
+main:has(.katkilarim-page-stack) > header.site-header {
   display: none !important;
 }
 
@@ -5459,10 +5508,44 @@ main:has(.entry-detail-page) > header.site-header {
   }
 }
 
+/* Katkılarim: iç hero + liste; chrome arama alanı görsel sıra 2 */
+.katkilarim-page-stack {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: stretch;
+}
+
+.katkilarim-page-stack > header.site-header--home-faz83.home-header-banner {
+  align-self: stretch;
+  width: 100%;
+  max-width: none;
+}
+
+.katkilarim-page-stack > .my-comments-page {
+  padding-top: clamp(0.35rem, 1.5vw, 1rem);
+}
+
+main:has(.katkilarim-page-stack)
+  > section.relative.z-0.flex.w-full.flex-col {
+  flex-direction: column;
+}
+
+main:has(.katkilarim-page-stack)
+  > section.relative.z-0.flex.w-full.flex-col
+  > .katkilarim-page-stack {
+  order: 1;
+}
+
+main:has(.katkilarim-page-stack)
+  > section.relative.z-0.flex.w-full.flex-col
+  > .home-page-editorial.home-page-editorial--section-stack {
+  order: 2;
+}
+
 /* -------------------------------------------------------------------------
    Entry detail sayfası — akışta tam genişlik, inner kart; modal yok
-   ------------------------------------------------------------------------- */
-.entry-detail-page {
   box-sizing: border-box;
   width: 100%;
   padding: 1.5rem 1rem 2.5rem;
@@ -9987,8 +10070,8 @@ footer#site-footer.home-page-footer .home-page-container {
 }
 
 .katkilarim-header {
-  margin-top: 40px;
-  margin-bottom: 28px;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
 }
 
 .katkilarim-header .my-comments-heading,
