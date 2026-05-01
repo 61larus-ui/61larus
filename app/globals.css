@@ -1084,6 +1084,96 @@ main > header .site-header-tagline--manifesto {
   gap: var(--home-section-gap);
 }
 
+/* FAZ 1: izole ana sayfa hero — akış paleti, hafif derinlik, ince çerçeve */
+.home-hero-faz1-outer {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.home-hero-faz1 {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: clamp(1rem, 0.82rem + 0.55vw, 1.35rem)
+    clamp(1rem, 0.85rem + 0.5vw, 1.35rem)
+    clamp(1.05rem, 0.92rem + 0.45vw, 1.4rem);
+  box-sizing: border-box;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--editorial-hairline);
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    var(--surface-panel) 45%,
+    rgba(253, 252, 248, 0.88) 100%
+  );
+  box-shadow: var(--shadow-soft), var(--surface-inset-highlight);
+  color: var(--text-primary);
+  transition: var(--transition);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-hero-faz1:hover {
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    var(--bg-secondary) 50%,
+    rgba(251, 250, 246, 0.95) 100%
+  );
+  border-color: var(--divide-column);
+  box-shadow:
+    0 10px 32px rgba(15, 23, 42, 0.06),
+    var(--surface-inset-highlight);
+}
+
+.home-hero-faz1:focus-visible {
+  outline: 2px solid var(--accent-green-line);
+  outline-offset: 3px;
+}
+
+.home-hero-faz1:active {
+  transform: translateY(0.5px);
+}
+
+.home-hero-faz1__eyebrow {
+  display: block;
+  margin: 0 0 0.45rem;
+  font-family: var(--font-ui);
+  font-size: clamp(0.6875rem, 0.65rem + 0.12vw, 0.75rem);
+  font-weight: var(--type-sidebar-eyebrow-weight);
+  letter-spacing: var(--type-sidebar-eyebrow-tracking);
+  text-transform: uppercase;
+  line-height: var(--type-sidebar-eyebrow-leading);
+  color: var(--text-tertiary);
+}
+
+.home-hero-faz1__title {
+  margin: 0 0 0.55rem;
+  padding: 0;
+  max-width: 100%;
+  font-family: var(--font-editorial-display);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--text-primary);
+  font-size: clamp(1.35rem, 1.08rem + 1.05vw, 2.125rem);
+}
+
+.home-hero-faz1__micro {
+  margin: 0;
+  max-width: 100%;
+  font-family: var(--font-ui);
+  font-size: clamp(0.8125rem, 0.78rem + 0.12vw, 0.875rem);
+  line-height: 1.55;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--text-secondary);
+}
+
 /* Üst ticker (doğrudan stack çocuğu); Bugün yoksa — alt ticker bu seçicide değil */
 .home-page-editorial--section-stack > .home-ticker {
   margin-top: 4px !important;

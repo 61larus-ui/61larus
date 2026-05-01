@@ -1155,6 +1155,15 @@ export default function HomePageClient({
     return shuffledMainFeedEntries.slice(0, feedVisibleCount);
   }, [shuffledMainFeedEntries, feedVisibleCount]);
 
+  /** FAZ 1: ana akış listeden ilk başlığı dolu kayıt (önce hafıza kolonu, yoksa merkez havuzu). */
+  const homeHeroEntry = useMemo((): EntryItem | undefined => {
+    const titled = (e: EntryItem) => Boolean(e?.title?.trim());
+    const fromFeed = shuffledMainFeedEntries.find(titled);
+    if (fromFeed) return fromFeed;
+    const pool = [...centerEntries].filter(titled).sort(compareEntriesByNewest);
+    return pool[0];
+  }, [shuffledMainFeedEntries, centerEntries]);
+
   const feedHasMore = useMemo(
     () => feedVisibleCount < shuffledMainFeedEntries.length,
     [feedVisibleCount, shuffledMainFeedEntries.length]
@@ -1639,6 +1648,28 @@ export default function HomePageClient({
               </div>
             ) : null}
             <div className="home-page-editorial home-page-editorial--section-stack">
+            {homeHeroEntry ? (
+              <div className="home-hero-faz1-outer min-w-0 w-full max-w-full">
+                <button
+                  type="button"
+                  className="home-hero-faz1"
+                  onClick={() => goToEntry(homeHeroEntry.id)}
+                  onPointerEnter={() =>
+                    prefetchEntryRoute(homeHeroEntry.id)
+                  }
+                  onFocus={() => prefetchEntryRoute(homeHeroEntry.id)}
+                  aria-label={`Yazıyı aç: ${homeHeroEntry.title}`}
+                >
+                  <span className="home-hero-faz1__eyebrow">
+                    Bugün 61Larus&apos;ta
+                  </span>
+                  <h2 className="home-hero-faz1__title">{homeHeroEntry.title}</h2>
+                  <p className="home-hero-faz1__micro">
+                    Bu konu boş değil. Okumadan geçme.
+                  </p>
+                </button>
+              </div>
+            ) : null}
             <div
               ref={searchSuggestRootRef}
               className="home-manifesto home-manifesto--bridge home-search-bridge home-global-search home-manifesto-inner--bridge home-search-field relative z-50 min-w-0 w-full max-w-full"
