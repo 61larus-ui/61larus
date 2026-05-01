@@ -86,9 +86,13 @@ export function FeedEntryCard({
             >
               ·
             </span>
-            <span className="feed-meta-stat tabular-nums text-[color:var(--text-meta)]">
+            <span
+              className={`feed-meta-stat tabular-nums text-[color:var(--text-meta)]${
+                commentCount === 0 ? " hemen-yorum-yok" : ""
+              }`}
+            >
               {commentCount === 0
-                ? "Henüz kimse bir şey yazmamış"
+                ? "Henüz yazılmamış"
                 : `${commentCount} yorum`}
             </span>
           </p>

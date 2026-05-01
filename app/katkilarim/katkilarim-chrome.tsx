@@ -421,7 +421,7 @@ export function KatkilarimChrome({
                   aria-controls={
                     showTitleSearchPanel ? homeSearchListboxId : undefined
                   }
-                  className="home-global-search__input"
+                  className="home-global-search__input search-input"
                   value={searchQuery}
                   onChange={onHomeSearchInputChange}
                   onFocus={onHomeSearchInputFocus}

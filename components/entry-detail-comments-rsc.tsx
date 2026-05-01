@@ -21,8 +21,8 @@ export async function EntryDetailCommentsRsc({ row }: { row: EntryRow }) {
           Yorumlar yüklenemedi
         </div>
       ) : commentList.length === 0 ? (
-        <div className="entry-comments-empty">
-          Henüz kimse bir şey yazmamış
+        <div className="entry-comments-empty no-comment-text">
+          Henüz yazılmamış
         </div>
       ) : (
         <div className="flex flex-col">

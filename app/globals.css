@@ -9002,3 +9002,85 @@ footer#site-footer.home-page-footer .home-page-container {
   color: var(--text-secondary);
   font-family: var(--font-libre-baskerville), ui-serif, Georgia, serif;
 }
+
+/* --- FAZ 3.1: metin görünürlüğü & CTA (tipografi / opaklık; yeni renk yok) --- */
+
+.hemen-yorum-yok,
+.no-comment-text,
+.feed-empty-note {
+  opacity: 0.55;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+}
+
+.col-head-band small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.col-head-band .col-section-head__micro.col-subtext {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.comment-box-label {
+  margin: 0 0 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.home-global-search__input.search-input {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.feed-entry-card.feed-entry-card--editorial .feed-entry-title--editorial {
+  line-height: 1.35;
+}
+
+.feed-entry-card.feed-entry-card--editorial .feed-entry-excerpt--editorial {
+  line-height: 1.65;
+}
+
+.feed-entry-card--editorial .feed-entry-cta,
+.devamini-oku {
+  font-weight: 500;
+  opacity: 0.75;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.feed-entry-card--editorial:hover .feed-entry-cta,
+.feed-entry-card--editorial:focus-within .feed-entry-cta {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+.home-rail--faz5-primary .feed-entry-card--editorial:hover .feed-entry-cta,
+.home-rail--faz5-primary
+  .feed-entry-card--editorial:focus-within
+  .feed-entry-cta {
+  transform: none;
+}
+
+.home-rail--faz5-primary .feed-entry-card--editorial .feed-entry-cta::after {
+  opacity: 0.75;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.home-rail--faz5-primary .feed-entry-card--editorial:hover .feed-entry-cta::after,
+.home-rail--faz5-primary
+  .feed-entry-card--editorial:focus-within
+  .feed-entry-cta::after {
+  opacity: 1;
+  transform: translateX(2px);
+}

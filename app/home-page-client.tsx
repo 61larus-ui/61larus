@@ -1281,7 +1281,7 @@ export default function HomePageClient({
   function renderMainFeed() {
     if (centerEntries.length === 0) {
       return (
-        <div className="feed-index-empty-message flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-hair)] px-0 py-14 text-center">
+        <div className="feed-index-empty-message feed-empty-note flex min-h-[160px] items-center justify-center border-t border-dashed border-[color:var(--divide-hair)] px-0 py-14 text-center">
           Henüz burada yazı yok.
         </div>
       );
@@ -1289,7 +1289,7 @@ export default function HomePageClient({
     if (shuffledMainFeedEntries.length === 0) {
       return (
         <div className="feed-search-empty border-t border-[color:var(--divide-hair)] px-0 py-16 text-center md:py-20">
-          <p className="feed-search-empty-title m-0">
+          <p className="feed-search-empty-title feed-empty-note m-0">
             Bu akış şu an boş.
           </p>
         </div>
@@ -1769,7 +1769,7 @@ export default function HomePageClient({
                     aria-controls={
                       showTitleSearchPanel ? homeSearchListboxId : undefined
                     }
-                    className="home-global-search__input"
+                    className="home-global-search__input search-input"
                     value={searchQuery}
                     onChange={onHomeSearchInputChange}
                     onFocus={onHomeSearchInputFocus}
@@ -1893,7 +1893,7 @@ export default function HomePageClient({
                 <h2 className="col-section-head__title col-section-head__title--rail">
                   Yazılmayı bekleyenler
                 </h2>
-                <p className="col-section-head__micro">İlk yazan sen ol.</p>
+                <p className="col-section-head__micro col-subtext">İlk yazan sen ol.</p>
               </div>
               <div className="home-rail-body home-rail-body--awaiting col-list-panel left-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <nav
@@ -1926,8 +1926,8 @@ export default function HomePageClient({
                           <span className="home-index-title line-clamp-2">
                             {entry.title}
                           </span>
-                          <span className="home-index-meta">
-                            Henüz kimse bir şey yazmamış
+                          <span className="home-index-meta hemen-yorum-yok">
+                            Henüz yazılmamış
                           </span>
                         </div>
                       </button>
@@ -1944,7 +1944,7 @@ export default function HomePageClient({
                 <h2 className="col-section-head__title col-section-head__title--rail">
                   Çok konuşulanlar
                 </h2>
-                <p className="col-section-head__micro">
+                <p className="col-section-head__micro col-subtext">
                   Bu başlıklar boş geçilmiyor.
                 </p>
               </div>
@@ -1980,9 +1980,15 @@ export default function HomePageClient({
                           <span className="home-index-title line-clamp-2">
                             {entry.title}
                           </span>
-                          <span className="home-index-meta">
+                          <span
+                            className={
+                              cc === 0
+                                ? "home-index-meta hemen-yorum-yok"
+                                : "home-index-meta"
+                            }
+                          >
                             {cc === 0
-                              ? "Henüz kimse bir şey yazmamış"
+                              ? "Henüz yazılmamış"
                               : `${cc} yorum`}
                           </span>
                         </div>
@@ -2001,7 +2007,7 @@ export default function HomePageClient({
                   >
                     Hafızaya eklenenler
                   </h2>
-                  <p className="col-section-head__micro">
+                  <p className="col-section-head__micro col-subtext">
                     Trabzon&apos;un unutulmayanları.
                   </p>
                 </div>
@@ -2085,9 +2091,15 @@ export default function HomePageClient({
                                       {entry.title}
                                     </span>
                                     <div className="home-explore-item-foot">
-                                      <span className="home-explore-item-meta">
+                                      <span
+                                        className={
+                                          cc === 0
+                                            ? "home-explore-item-meta hemen-yorum-yok"
+                                            : "home-explore-item-meta"
+                                        }
+                                      >
                                         {cc === 0
-                                          ? "Henüz kimse bir şey yazmamış"
+                                          ? "Henüz yazılmamış"
                                           : `${cc} yorum`}
                                       </span>
                                       <span className="home-explore-cta home-explore-cta--row">
@@ -2128,9 +2140,15 @@ export default function HomePageClient({
                                     {entry.title}
                                   </span>
                                   <div className="home-explore-item-foot">
-                                    <span className="home-explore-item-meta">
+                                    <span
+                                      className={
+                                        wcc === 0
+                                          ? "home-explore-item-meta hemen-yorum-yok"
+                                          : "home-explore-item-meta"
+                                      }
+                                    >
                                       {wcc === 0
-                                        ? "Henüz kimse bir şey yazmamış"
+                                        ? "Henüz yazılmamış"
                                         : `${wcc} yorum`}
                                     </span>
                                     <span className="home-explore-cta home-explore-cta--row">
@@ -2176,9 +2194,15 @@ export default function HomePageClient({
                                     {entry.title}
                                   </span>
                                   <div className="home-explore-item-foot">
-                                    <span className="home-explore-item-meta">
+                                    <span
+                                      className={
+                                        cc === 0
+                                          ? "home-explore-item-meta hemen-yorum-yok"
+                                          : "home-explore-item-meta"
+                                      }
+                                    >
                                       {cc === 0
-                                        ? "Henüz kimse bir şey yazmamış"
+                                        ? "Henüz yazılmamış"
                                         : `${cc} yorum`}
                                     </span>
                                     <span className="home-explore-cta home-explore-cta--row">
