@@ -1168,15 +1168,127 @@ main
 }
 
 @media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  /* —— Mobil hero: sıkı kart, marka / kullanıcı ayrımı, pill aksiyonlar —— */
+  .home-hero-visual {
+    width: calc(100% - 28px);
+    margin: 12px auto 22px auto !important;
+    border-radius: 18px;
+  }
+
   .home-hero-visual__image {
-    height: 160px;
+    height: 190px !important;
+    object-fit: cover;
+    object-position: center center;
+    border-radius: 18px;
+  }
+
+  .home-hero-visual__shade {
+    border-radius: 18px;
+    background:
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.92) 100%),
+      linear-gradient(to right, rgba(0, 0, 0, 0.42), transparent 62%);
+  }
+
+  .home-hero-content {
+    left: 18px !important;
+    bottom: 44px !important;
+    max-width: 70%;
+  }
+
+  .home-hero-content h1 {
+    font-size: 25px !important;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .home-hero-content p {
+    font-size: 11px !important;
+    line-height: 1.35;
+    max-width: 220px;
   }
 
   .home-hero-user {
-    right: 20px;
-    bottom: 18px;
-    gap: 10px;
-    font-size: 12px;
+    left: 18px !important;
+    right: 18px !important;
+    bottom: 14px !important;
+    display: flex !important;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  /* Pill: yalnız dış link ve hesap tetikleyici; iç span’a çift kutu verme */
+  .home-hero-user > a,
+  .home-hero-user .account-menu-name-trigger {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font-size: 11px !important;
+    line-height: 1;
+    padding: 7px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .home-hero-user .account-menu-trigger-inner {
+    min-height: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+  }
+
+  .home-hero-user .site-account-name,
+  .home-hero-user .header-user {
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    max-width: min(7.5rem, 42vw);
+  }
+
+  .home-hero-user a,
+  .home-hero-user .account-menu-name-trigger {
+    text-decoration: none;
+  }
+
+  /* Ana gövde: arama + köprü nefesi */
+  .home-search-wrap,
+  .home-editorial-columns-bridge__search-shell {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: calc(100% - 28px);
+  }
+
+  /* Footer: alt bağlantılar tek satır, taşarsa yatay kaydır */
+  .home-page-footer__nav {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 14px !important;
+    white-space: nowrap !important;
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .home-page-footer__nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-page-footer__nav .footer-link-btn,
+  .home-page-footer__nav a.footer-link-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 }
 
@@ -2656,6 +2768,22 @@ main > section
 .home-ticker--lower {
   margin-top: 0;
   margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .home-page-editorial--section-stack
+    .home-editorial-columns-bridge:not(.home-editorial-columns-bridge--in-explore)
+    .home-editorial-columns-bridge__midstack
+    > .home-ticker.home-ticker--divider {
+    margin-top: 14px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .home-explore--faz51 .home-ticker.home-ticker--lower,
+  .home-explore-head--transition-has-ticker .home-ticker.home-ticker--lower {
+    margin-top: 14px !important;
+    margin-bottom: 18px !important;
+  }
 }
 
 .home-ticker:hover,
@@ -8639,7 +8767,7 @@ footer#site-footer.home-page-footer .home-page-container {
 }
 
 /* =============================================================================
-   Mobil (max-width: 768px) — tek kolon akış, sıkı üst blok, ticker kapalı, v2
+   Mobil (max-width: 768px) — tek kolon akış, sıkı üst blok, v3 (ticker açık)
    Masaüstü: bu blok dışındaki kurallar aynen kalır.
    ============================================================================= */
 @media (max-width: 768px) {
@@ -8730,15 +8858,6 @@ footer#site-footer.home-page-footer .home-page-container {
     margin-bottom: 0.4rem;
     padding-bottom: 0;
     min-height: 0;
-  }
-
-  /* —— Ticker: mobilde kaldır (üst + alt) —— */
-  .home-ticker,
-  .home-ticker--divider,
-  .home-ticker--lower,
-  .home-page-editorial--section-stack > .home-ticker,
-  .home-explore-head .home-ticker {
-    display: none !important;
   }
 
   /* —— Bugün 61Sözlük'te: tek kolon, tam genişlik —— */

@@ -1699,7 +1699,7 @@ export default function HomePageClient({
                 aria-hidden="true"
               />
               <div className="home-editorial-columns-bridge__midstack">
-                <div className="home-editorial-columns-bridge__search-shell">
+                <div className="home-editorial-columns-bridge__search-shell home-search-wrap">
             <div
               ref={searchSuggestRootRef}
               className="home-manifesto home-manifesto--bridge home-search-bridge home-global-search home-manifesto-inner--bridge home-search-field relative z-50 min-w-0 w-full max-w-full"
@@ -2217,7 +2217,7 @@ export default function HomePageClient({
                   {SITE_BRAND}
                 </button>
                 <nav
-                  className="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-normal md:justify-center md:gap-x-5"
+                  className="home-page-footer__nav flex flex-wrap items-center gap-x-4 gap-y-1.5 font-normal md:justify-center md:gap-x-5"
                   aria-label="Alt bağlantılar"
                 >
                   <button
