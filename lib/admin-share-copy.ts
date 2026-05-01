@@ -35,7 +35,7 @@ function firstExcerpt(s: string, max: number): string {
 
 function withLink(body: string): string {
   let b = stripForbidden(body.trim());
-  if (!b) b = "61LARUS’ta yeni bir yazı.";
+  if (!b) b = "61Sözlük'te yeni bir yazı.";
   let full = b + LINK_PLACEHOLDER;
   if (full.length > MAX_LEN) {
     const maxBody = MAX_LEN - LINK_PLACEHOLDER.length;
@@ -73,7 +73,7 @@ export function buildShareCopySuggestions(
 
   const safeBody = ex
     ? `${titleT}. ${ex}`
-    : `${titleT}. 61LARUS’ta yayındaki metin, bilgilendirme amaçlıdır.`;
+    : `${titleT}. 61Sözlük'te yayındaki metin, bilgilendirme amaçlıdır.`;
 
   const curiousBody = `«${titleT}» — tamamı ve ayrıntılar bu yazıda; buradaki sadece yönlendirme, tüm cevabı vermez.`;
 
