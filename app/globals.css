@@ -1909,7 +1909,7 @@ main > section
   }
 }
 
-/* --- Bugün 61Larus’ta — editorial vitrin (kart pano değil) --- */
+/* --- Bugün 61Sözlük'te — editorial vitrin (kart pano değil) --- */
 .today-discovery {
   width: 100%;
   max-width: 100%;
@@ -2205,7 +2205,7 @@ main > section
   opacity: 0.92;
 }
 
-/* --- FAZ 5: “Bugün 61Larus’ta” — giriş notu; ana odak değil (max 4, today-strip) --- */
+/* --- FAZ 5: “Bugün 61Sözlük'te” — giriş notu; ana odak değil (max 4, today-strip) --- */
 .today-discovery--faz5 {
   padding-top: 0.65rem !important;
   padding-bottom: 0.9rem !important;
@@ -8303,7 +8303,7 @@ footer#site-footer.home-page-footer .home-page-container {
     display: none !important;
   }
 
-  /* —— Bugün 61Larus’ta: tek kolon, tam genişlik —— */
+  /* —— Bugün 61Sözlük'te: tek kolon, tam genişlik —— */
   .today-strip .today-discovery-grid {
     grid-template-columns: minmax(0, 1fr) !important;
   }
@@ -8659,7 +8659,7 @@ footer#site-footer.home-page-footer .home-page-container {
   }
 }
 
-/* ─── X panel (61Larus Dağıtım Motoru) — scoped .xpanel-root ─── */
+/* ─── X panel (61Sözlük Dağıtım Motoru) — scoped .xpanel-root ─── */
 .xpanel-root {
   min-height: 100%;
   background: linear-gradient(to bottom, #0f0f10, #0b0b0c);

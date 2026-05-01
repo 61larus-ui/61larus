@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Libre_Baskerville } from "next/font/google";
 import "./globals.css";
+import {
+  HOME_PAGE_METADATA_TITLE,
+  SITE_BRAND,
+  SITE_DEFAULT_DESCRIPTION,
+} from "@/lib/entry-seo-metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,21 +26,21 @@ const libreBaskerville = Libre_Baskerville({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://61larus.com"),
-  title: "61LARUS",
-  description: "Trabzon’un yaşayan bilgi bankası",
+  title: HOME_PAGE_METADATA_TITLE,
+  description: SITE_DEFAULT_DESCRIPTION,
   keywords: ["trabzon", "trabzon tarih", "trabzon gündem", "karadeniz"],
   openGraph: {
-    title: "61LARUS",
-    description: "Trabzon’un yaşayan bilgi bankası",
+    title: HOME_PAGE_METADATA_TITLE,
+    description: SITE_DEFAULT_DESCRIPTION,
     url: "https://61larus.com",
-    siteName: "61LARUS",
+    siteName: SITE_BRAND,
     locale: "tr_TR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "61LARUS",
-    description: "Trabzon’un yaşayan bilgi bankası",
+    title: HOME_PAGE_METADATA_TITLE,
+    description: SITE_DEFAULT_DESCRIPTION,
   },
   alternates: {
     canonical: "https://61larus.com",

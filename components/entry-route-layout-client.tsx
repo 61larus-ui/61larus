@@ -9,6 +9,7 @@ import {
   resolveVisibleName,
   type DisplayNameModePref,
 } from "@/lib/visible-name";
+import { SITE_BRAND } from "@/lib/entry-seo-metadata";
 
 const HEADER_ATATURK_QUOTES = [
   "Ne mutlu Türküm diyene!",
@@ -196,7 +197,7 @@ export function EntryRouteLayoutClient({
         body = (
           <div className="site-info-stack">
             <p className="site-info-p">
-              <strong className="site-info-strong">61Larus</strong>, kayıtlar,
+              <strong className="site-info-strong">{SITE_BRAND}</strong>, kayıtlar,
               yorumlar ve başlıkların bir arada durduğu, Trabzon eksenli bir
               okuma ve yazım yüzeyidir. Akış gazete disiplinine yakındır;
               gürültüyü değil düşünce sırasını öne alır.
@@ -367,7 +368,7 @@ export function EntryRouteLayoutClient({
                     style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
                     aria-label="Ana sayfa — Akış"
                   >
-                    61Larus
+                    {SITE_BRAND}
                   </Link>
                 </h1>
                 <p className="site-header-tagline m-0 site-header-tagline--manifesto">
@@ -445,7 +446,7 @@ export function EntryRouteLayoutClient({
               scroll={false}
               className="site-wordmark border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-90"
             >
-              61Larus
+              {SITE_BRAND}
             </Link>
             <nav
               className="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-normal md:justify-center md:gap-x-5"
@@ -504,7 +505,7 @@ export function EntryRouteLayoutClient({
                 ·
               </span>
               <a
-                href="https://x.com/61Larus"
+                href="https://x.com/61sozluk"
                 className="footer-link-btn"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -549,7 +550,7 @@ export function EntryRouteLayoutClient({
                 className="inline cursor-pointer border-0 bg-transparent p-0 font-inherit text-inherit align-baseline transition-opacity duration-200 hover:opacity-100"
                 aria-label="Ana sayfa — Akış"
               >
-                61Larus
+                {SITE_BRAND}
               </Link>
             </p>
           </div>

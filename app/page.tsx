@@ -1,21 +1,24 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import HomePageClient from "./home-page-client";
-import { SITE_BRAND } from "@/lib/entry-seo-metadata";
+import {
+  HOME_PAGE_METADATA_TITLE,
+  SITE_BRAND,
+  SITE_DEFAULT_DESCRIPTION,
+} from "@/lib/entry-seo-metadata";
 import { getHomeClientProps } from "@/lib/home-client-props";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const SITE = "https://61larus.com";
-const DEFAULT_HOME_DESCRIPTION = "Trabzon'un gündemi, lafı ve hafızası";
 
 const defaultHomeMetadata = (): Metadata => ({
-  title: SITE_BRAND,
-  description: DEFAULT_HOME_DESCRIPTION,
+  title: HOME_PAGE_METADATA_TITLE,
+  description: SITE_DEFAULT_DESCRIPTION,
   openGraph: {
-    title: SITE_BRAND,
-    description: DEFAULT_HOME_DESCRIPTION,
+    title: HOME_PAGE_METADATA_TITLE,
+    description: SITE_DEFAULT_DESCRIPTION,
     url: SITE,
     type: "website",
     siteName: SITE_BRAND,
@@ -23,8 +26,8 @@ const defaultHomeMetadata = (): Metadata => ({
   },
   twitter: {
     card: "summary_large_image",
-    title: SITE_BRAND,
-    description: DEFAULT_HOME_DESCRIPTION,
+    title: HOME_PAGE_METADATA_TITLE,
+    description: SITE_DEFAULT_DESCRIPTION,
   },
   robots: { index: true, follow: true },
   alternates: { canonical: SITE },

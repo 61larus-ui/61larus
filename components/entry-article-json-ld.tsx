@@ -49,7 +49,7 @@ export function EntryArticleJsonLd({ title, content, createdAt }: Props) {
     datePublished: published.toISOString(),
     author: {
       "@type": "Organization",
-      name: "61Larus",
+      name: SITE_BRAND,
     },
   } as const;
 

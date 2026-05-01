@@ -23,6 +23,7 @@ import { normalizeEntrySlug } from "@/lib/slug";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import type { SearchEntryResult } from "@/app/api/search-entries/route";
 import { FeedEntryCard } from "./feed-entry-card";
+import { SITE_BRAND } from "@/lib/entry-seo-metadata";
 
 /** Ana sayfa blokları — admin `category` ile aynı sıra / slug seti. */
 const HOME_PUBLISH_SECTION_ORDER = [
@@ -1305,7 +1306,7 @@ export default function HomePageClient({
                 title={entry.title}
                 contentPreview={entry.content}
                 commentCount={cc}
-                authorLabel={entry.authorName?.trim() || "61Larus"}
+                authorLabel={entry.authorName?.trim() || SITE_BRAND}
                 metaDate={formatFeedLineDate(entry.created_at)}
                 createdAtRaw={entry.created_at}
                 isActive={false}
@@ -1341,7 +1342,7 @@ export default function HomePageClient({
         body = (
           <div className="site-info-stack">
             <p className="site-info-p">
-              <strong className="site-info-strong">61Larus</strong>, kayıtlar,
+              <strong className="site-info-strong">{SITE_BRAND}</strong>, kayıtlar,
               yorumlar ve başlıkların bir arada durduğu, Trabzon eksenli bir
               okuma ve yazım yüzeyidir. Akış gazete disiplinine yakındır;
               gürültüyü değil düşünce sırasını öne alır.
@@ -1513,7 +1514,7 @@ export default function HomePageClient({
                     style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
                     aria-label="Ana sayfa — Akış"
                   >
-                    61Larus
+                    {SITE_BRAND}
                   </button>
                 </h1>
                 <p className="site-header-tagline m-0 site-header-tagline--manifesto">
@@ -1710,7 +1711,7 @@ export default function HomePageClient({
                   />
                   <div className="home-hero-faz1__inner">
                     <span className="home-hero-faz1__eyebrow">
-                      Bugün 61Larus&apos;ta
+                      Bugün {SITE_BRAND}&apos;te
                     </span>
                     <h2 className="home-hero-faz1__title">
                       {homeHeroEntry.title}
@@ -2189,7 +2190,7 @@ export default function HomePageClient({
                   onClick={goToBrandHome}
                   className="site-wordmark border-0 bg-transparent p-0 text-left transition-opacity duration-200 hover:opacity-90"
                 >
-                  61Larus
+                  {SITE_BRAND}
                 </button>
                 <nav
                   className="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-normal md:justify-center md:gap-x-5"
@@ -2236,7 +2237,7 @@ export default function HomePageClient({
                     ·
                   </span>
                   <a
-                    href="https://x.com/61Larus"
+                    href="https://x.com/61sozluk"
                     className="footer-link-btn"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -2274,7 +2275,7 @@ export default function HomePageClient({
                     className="inline cursor-pointer border-0 bg-transparent p-0 font-inherit text-inherit align-baseline transition-opacity duration-200 hover:opacity-100"
                     aria-label="Ana sayfa — Akış"
                   >
-                    61Larus
+                    {SITE_BRAND}
                   </button>
                 </p>
               </div>

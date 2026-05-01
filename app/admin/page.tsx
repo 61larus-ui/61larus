@@ -1043,11 +1043,11 @@ export default function AdminPage() {
     return publicSiteEntryUrl(justPublishedEntry.id, justPublishedEntry.slug);
   }, [justPublishedEntry]);
 
-  /** WhatsApp / X: başlık + canlı link + 61larus.com (çift satır sonu ile) */
+  /** WhatsApp / X: başlık + canlı link + 61sozluk.com (çift satır sonu ile) */
   const justPublishedShareText = useMemo(() => {
     if (!justPublishedEntry || !justPublishedLiveUrl) return null;
     const title = (justPublishedEntry.title ?? "").trim();
-    return `${title}\n\n${justPublishedLiveUrl}\n\n61larus.com`;
+    return `${title}\n\n${justPublishedLiveUrl}\n\n61sozluk.com`;
   }, [justPublishedEntry, justPublishedLiveUrl]);
 
   const applyTemplate = (text: string) => {
@@ -1068,7 +1068,7 @@ export default function AdminPage() {
       <main className="admin-page flex min-h-screen items-center justify-center bg-slate-950 px-4 text-slate-200">
         <div className="w-full max-w-[400px] rounded-2xl border border-slate-800 bg-slate-900/90 p-8 shadow-xl">
           <div className="mb-8 text-center">
-            <p className="admin-eyebrow">61Larus</p>
+            <p className="admin-eyebrow">61Sözlük</p>
             <h1 className="admin-title-gate">Yönetim girişi</h1>
             <p className="admin-lede-gate">
               Bu alan yalnızca yetkili kullanıcılar içindir.

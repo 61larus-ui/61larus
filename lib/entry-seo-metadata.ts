@@ -4,8 +4,16 @@ import {
   entryBodySnippetForMeta,
 } from "@/lib/seo-entry-description";
 
-export const SITE_BRAND = "61Larus";
-const DEFAULT_TAGLINE = "Trabzon'un gündemi, lafı ve hafızası";
+export const SITE_BRAND = "61Sözlük";
+
+/** Ana sayfa `<title>` / OG başlığı (tam cümle). */
+export const HOME_PAGE_METADATA_TITLE =
+  "61Sözlük — Trabzon'un gündemi, lafı ve hafızası";
+
+export const SITE_DEFAULT_DESCRIPTION =
+  "Trabzon'un dijital hafızası. Başlıklar, yorumlar ve şehir kültürü.";
+
+const DEFAULT_TAGLINE = SITE_DEFAULT_DESCRIPTION;
 
 /**
  * Canonical entry sayfaları için ortak: başlık, gövde snippet (önce ~150 karakter),

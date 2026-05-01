@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
-export const AGREEMENT_COPY = `61Larus Topluluk Sözleşmesi
+export const AGREEMENT_COPY = `61Sözlük Topluluk Sözleşmesi
 
-61Larus; Trabzon eksenli, metin öncelikli bir okuma ve yazım alanıdır. Bu metin, platformu kullanırken uyman beklenen asgari çerçeveyi özetler.
+61Sözlük; Trabzon eksenli, metin öncelikli bir okuma ve yazım alanıdır. Bu metin, platformu kullanırken uyman beklenen asgari çerçeveyi özetler.
 
 Paylaştığın yazı ve yorumların yürürlükteki mevzuata, başkalarının haklarına ve yayın ilkelerine uygun olması gerekir. Hukuka aykırı veya topluluk düzenini bozan içerikler uyarılmaksızın kaldırılabilir veya erişime kapatılabilir.
 

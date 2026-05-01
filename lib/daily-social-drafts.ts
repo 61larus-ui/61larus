@@ -59,14 +59,14 @@ const PROVOKE_LINES = [
 ] as const;
 
 const FB_FILLERS = [
-  "Bağlam 61Larus’ta toparlandı; katkılarınla güçlenir.",
+  "Bağlam 61Sözlük'te toparlandı; katkılarınla güçlenir.",
   "Kent gündeminde sessiz kalması zor bir not.",
   "Topluluk tarafında okunup tartışılmaya değer bir giriş.",
 ] as const;
 
 export function publicEntryUrl(entryId: string, slug?: string | null): string {
   const seg = (slug && String(slug).trim()) || String(entryId).trim();
-  return `https://61larus.com/${encodeURI(seg)}`;
+  return `https://61sozluk.com/${encodeURI(seg)}`;
 }
 
 export function todayYmd(d = new Date()): string {
@@ -122,10 +122,10 @@ function buildXText(entry: LarusEntry, url: string, seed: number): string {
     hookLine = `${hookLine.slice(0, 94).trim()}…`;
   }
   const provoke = PROVOKE_LINES[(seed >>> 3) % PROVOKE_LINES.length]!;
-  const mid = `61Larus’ta “${shortT}” konusu açıldı.`;
+  const mid = `61Sözlük'te “${shortT}” konusu açıldı.`;
 
   const assemble = (st: string, hk: string, prLine: string) =>
-    `${hk}\n\n61Larus’ta “${st}” konusu açıldı.\n\n${prLine}\n\n${url}`;
+    `${hk}\n\n61Sözlük'te “${st}” konusu açıldı.\n\n${prLine}\n\n${url}`;
 
   let st = shortT;
   let hk: string = hookLine;
@@ -162,7 +162,7 @@ function buildFacebookText(entry: LarusEntry, url: string, seed: number): string
 
 “${shortT}”
 
-61Larus’ta bu başlık açıldı.
+61Sözlük'te bu başlık açıldı.
 Bu konuyu bilmiyorsan öğrenebilir, biliyorsan yorumlarınla katkı katabilirsin.
 
 ${filler}`;

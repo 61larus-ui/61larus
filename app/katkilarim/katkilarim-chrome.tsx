@@ -16,6 +16,7 @@ import { anonymizeCurrentUserAccount } from "@/lib/anonymize-account";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { normalizeEntrySlug } from "@/lib/slug";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
+import { SITE_BRAND } from "@/lib/entry-seo-metadata";
 
 const HEADER_ATATURK_QUOTES = [
   "Ne mutlu Türküm diyene!",
@@ -248,7 +249,7 @@ export function KatkilarimChrome({
                     style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
                     aria-label="Ana sayfa — Akış"
                   >
-                    61Larus
+                    {SITE_BRAND}
                   </Link>
                 </h1>
                 <p className="site-header-tagline m-0 site-header-tagline--manifesto">

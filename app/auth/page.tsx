@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { SITE_BRAND } from "@/lib/entry-seo-metadata";
 
 export default function AuthPage() {
   const supabase = createSupabaseBrowserClient();
@@ -24,7 +25,7 @@ export default function AuthPage() {
     <main className="auth-page py-6 md:py-8">
       <header className="auth-page-header">
         <Link href="/" className="auth-page-wordmark site-wordmark">
-          61Larus
+          {SITE_BRAND}
         </Link>
         <p className="auth-page-tagline m-0">
           Trabzon’un gündemi, lafı ve hafızası

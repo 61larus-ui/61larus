@@ -20,7 +20,7 @@ export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
 export const metadata: Metadata = {
-  title: "Katkılarım | 61Larus",
+  title: "Katkılarım | 61Sözlük",
   description: "Yorum yaptığın başlıklar",
   robots: { index: false, follow: true },
 };

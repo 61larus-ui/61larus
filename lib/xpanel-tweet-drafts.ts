@@ -25,7 +25,7 @@ export type TweetDraft = {
 
 export const TWEET_MAX_LENGTH = 260;
 
-const PUBLIC_ORIGIN = "https://61larus.com";
+const PUBLIC_ORIGIN = "https://61sozluk.com";
 const TWEET_MAX = TWEET_MAX_LENGTH;
 const SLUG_MIN_LEN = 3;
 
@@ -87,10 +87,10 @@ function joinTweetBodyAndUrl(body: string, url: string | null, max: number): str
 function composeHook(entry: LarusEntry, url: string): { text: string; hasLink: boolean } {
   const oz = contentMicroExcerpt(entry, 72);
   let line =
-    `61Larus’ta Trabzon’un bilgi, arka plan ve hafıza dokunuşu bir arada. Kısa bir kesit: ${oz} Tam metin:`;
+    `61Sözlük'te Trabzon’un bilgi, arka plan ve hafıza dokunuşu bir arada. Kısa bir kesit: ${oz} Tam metin:`;
   let text = joinTweetBodyAndUrl(line, url, TWEET_MAX);
   if (text.length > TWEET_MAX || !text.includes(url)) {
-    line = `Trabzon odaklı kaynaklı okuma; 61Larus’ta bağlam derlenmiş. Özet: ${clipWords(oz, 50)} Devamı:`;
+    line = `Trabzon odaklı kaynaklı okuma; 61Sözlük'te bağlam derlenmiş. Özet: ${clipWords(oz, 50)} Devamı:`;
     text = joinTweetBodyAndUrl(line, url, TWEET_MAX);
   }
   return { text, hasLink: true };
@@ -101,7 +101,7 @@ function composeInfo(entry: LarusEntry, url: string): { text: string; hasLink: b
   let line = `Okuma notu: Trabzon gündemi ve arşiv üzerinden tek parça halinde. Giriş cümlesi şöyle akıyor — ${oz} Tümü:`;
   let text = joinTweetBodyAndUrl(line, url, TWEET_MAX);
   if (text.length > TWEET_MAX || !text.includes(url)) {
-    line = `61Larus arşiv notu: ${clipWords(oz, 56)} Metin:`;
+    line = `61Sözlük arşiv notu: ${clipWords(oz, 56)} Metin:`;
     text = joinTweetBodyAndUrl(line, url, TWEET_MAX);
   }
   return { text, hasLink: true };

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { EntryItem } from "@/app/home-page-client";
 import { EntryDetailCommentCompose } from "@/components/entry-detail-comment-compose";
 import { EntryDetailShareClient } from "@/components/entry-detail-share-client";
+import { SITE_BRAND } from "@/lib/entry-seo-metadata";
 
 function formatEntryDetailDate(value: string) {
   const date = new Date(value);
@@ -28,7 +29,7 @@ export function EntryDetailBodyRsc({
   /** Entry detail yorum listesi (RSC) */
   commentsSlot: ReactNode;
 }) {
-  const authorName = entry.authorName?.trim() || "61Larus";
+  const authorName = entry.authorName?.trim() || SITE_BRAND;
   const formattedDate = formatEntryDetailDate(entry.created_at);
 
   return (
