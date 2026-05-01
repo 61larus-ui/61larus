@@ -6,6 +6,7 @@ import {
   SITE_BRAND,
   SITE_DEFAULT_DESCRIPTION,
 } from "@/lib/entry-seo-metadata";
+import { SITE_ORIGIN } from "@/lib/public-site-entry-url";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,14 +26,14 @@ const libreBaskerville = Libre_Baskerville({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://61larus.com"),
+  metadataBase: new URL(SITE_ORIGIN),
   title: HOME_PAGE_METADATA_TITLE,
   description: SITE_DEFAULT_DESCRIPTION,
   keywords: ["trabzon", "trabzon tarih", "trabzon gündem", "karadeniz"],
   openGraph: {
     title: HOME_PAGE_METADATA_TITLE,
     description: SITE_DEFAULT_DESCRIPTION,
-    url: "https://61larus.com",
+    url: SITE_ORIGIN,
     siteName: SITE_BRAND,
     locale: "tr_TR",
     type: "website",
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
     description: SITE_DEFAULT_DESCRIPTION,
   },
   alternates: {
-    canonical: "https://61larus.com",
+    canonical: SITE_ORIGIN,
   },
   verification: {
     google: "otK0EamJ7liIaIKzHTz4NKpVUbfYfdf9oGDZKBkYvpU",

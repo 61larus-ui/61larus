@@ -7,11 +7,10 @@ import {
   SITE_DEFAULT_DESCRIPTION,
 } from "@/lib/entry-seo-metadata";
 import { getHomeClientProps } from "@/lib/home-client-props";
+import { SITE_ORIGIN } from "@/lib/public-site-entry-url";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-const SITE = "https://61larus.com";
 
 const defaultHomeMetadata = (): Metadata => ({
   title: HOME_PAGE_METADATA_TITLE,
@@ -19,7 +18,7 @@ const defaultHomeMetadata = (): Metadata => ({
   openGraph: {
     title: HOME_PAGE_METADATA_TITLE,
     description: SITE_DEFAULT_DESCRIPTION,
-    url: SITE,
+    url: SITE_ORIGIN,
     type: "website",
     siteName: SITE_BRAND,
     locale: "tr_TR",
@@ -30,7 +29,7 @@ const defaultHomeMetadata = (): Metadata => ({
     description: SITE_DEFAULT_DESCRIPTION,
   },
   robots: { index: true, follow: true },
-  alternates: { canonical: SITE },
+  alternates: { canonical: SITE_ORIGIN },
 });
 
 export async function generateMetadata(): Promise<Metadata> {

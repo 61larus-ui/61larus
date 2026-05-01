@@ -12,6 +12,7 @@ import {
   saveDistributionHistory,
   type DistributionHistoryItem,
 } from "@/lib/distribution-history";
+import { PUBLIC_SITE_BASE } from "@/lib/public-site-entry-url";
 
 export const LARUS_DAILY_SOCIAL_DRAFTS_KEY = "larus_daily_social_drafts";
 export const LARUS_DAILY_ENTRY_SET_KEY = "larus_daily_entry_set";
@@ -66,7 +67,7 @@ const FB_FILLERS = [
 
 export function publicEntryUrl(entryId: string, slug?: string | null): string {
   const seg = (slug && String(slug).trim()) || String(entryId).trim();
-  return `https://61sozluk.com/${encodeURI(seg)}`;
+  return `${PUBLIC_SITE_BASE}/${encodeURI(seg)}`;
 }
 
 export function todayYmd(d = new Date()): string {

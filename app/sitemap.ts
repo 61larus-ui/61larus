@@ -1,10 +1,11 @@
 import { MetadataRoute } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
+import { SITE_ORIGIN } from "@/lib/public-site-entry-url";
 
 export const dynamic = "force-dynamic";
 
-const BASE = "https://61larus.com";
+const BASE = SITE_ORIGIN;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const home: MetadataRoute.Sitemap[0] = {

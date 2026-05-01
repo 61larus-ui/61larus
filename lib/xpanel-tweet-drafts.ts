@@ -4,6 +4,7 @@
 
 import type { LarusEntry } from "@/lib/larus-entry-pool";
 import { normalizeEntrySlug } from "@/lib/slug";
+import { PUBLIC_SITE_BASE } from "@/lib/public-site-entry-url";
 
 export const LARUS_TWEET_DRAFTS_KEY = "larus_tweet_drafts";
 
@@ -25,7 +26,6 @@ export type TweetDraft = {
 
 export const TWEET_MAX_LENGTH = 260;
 
-const PUBLIC_ORIGIN = "https://61sozluk.com";
 const TWEET_MAX = TWEET_MAX_LENGTH;
 const SLUG_MIN_LEN = 3;
 
@@ -33,7 +33,7 @@ const SLUG_MIN_LEN = 3;
 export function buildPublicEntryUrl(entry: LarusEntry): string {
   const slug = normalizeEntrySlug(entry.title);
   const path = slug.length >= SLUG_MIN_LEN ? slug : entry.id.trim();
-  return `${PUBLIC_ORIGIN}/${path}`;
+  return `${PUBLIC_SITE_BASE}/${path}`;
 }
 
 export function normalizeTweetTextForDedupe(text: string): string {

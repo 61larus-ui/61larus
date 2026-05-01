@@ -9,6 +9,7 @@ import type { EntryItem } from "@/app/home-page-client";
 import { loadEntryPageShell } from "@/lib/entry-route-data";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
+import { SITE_ORIGIN } from "@/lib/public-site-entry-url";
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 import { normalizeEntrySlug } from "@/lib/slug";
 
@@ -18,8 +19,6 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 export const runtime = "nodejs";
-
-const SITE = "https://61larus.com";
 
 type PageParams = { slug?: string | string[] };
 type PageProps = { params: Promise<PageParams> };
@@ -64,7 +63,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       data.id
     ) ||
     pathSegment;
-  const canonical = `${SITE}/${encodeURI(canonicalSlug)}`;
+  const canonical = `${SITE_ORIGIN}/${encodeURI(canonicalSlug)}`;
 
   return buildEntrySeoMetadata({
     pageTitle,

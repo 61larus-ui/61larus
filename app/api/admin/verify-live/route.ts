@@ -2,11 +2,13 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-session-cookies";
 import { publicSiteEntryUrl } from "@/lib/public-site-entry-url";
 
+const ALLOWED_VERIFY_HOSTS = new Set(["61larus.com", "61sozluk.com"]);
+
 function isAllowedPublicUrl(href: string): boolean {
   try {
     const u = new URL(href);
     if (u.protocol !== "https:") return false;
-    if (u.host !== "61larus.com") return false;
+    if (!ALLOWED_VERIFY_HOSTS.has(u.host)) return false;
     return true;
   } catch {
     return false;
@@ -16,7 +18,7 @@ function isAllowedPublicUrl(href: string): boolean {
 type Outcome = "ok" | "not_ready" | "pending";
 
 /**
- * Yönetim oturumu: canlı sitede entry URL’ine HTTP isteği (SSRF sınırı: yalnız 61larus.com).
+ * Yönetim oturumu: canlı sitede entry URL’ine HTTP isteği (SSRF: yalnız 61larus.com / 61sozluk.com).
  */
 export async function GET(req: NextRequest) {
   const session = await getAdminSession();
