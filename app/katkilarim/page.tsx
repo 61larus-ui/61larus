@@ -27,12 +27,12 @@ export const metadata: Metadata = {
 
 function KatkilarimFlowBackLink() {
   return (
-    <p className="my-comments-flow-back-row m-0">
+    <p className="my-comments-flow-back-row katkilarim-back-row m-0">
       <Link
         href="/"
         prefetch
         scroll={false}
-        className="my-comments-flow-back"
+        className="my-comments-flow-back katkilarim-back"
       >
         ← Akışa dön
       </Link>
@@ -99,7 +99,7 @@ export default async function KatkilarimPage() {
         headerDisplayName={null}
       >
         <div className="my-comments-page my-comments-page-inner">
-          <div className="home-page-container mx-auto w-full py-8 md:py-10">
+          <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
             <p className="my-comments-empty m-0 font-serif text-[1.05rem] leading-relaxed text-[color:var(--text-secondary)]">
               Katkılarını görmek için giriş yapmalısın.
             </p>
@@ -125,7 +125,7 @@ export default async function KatkilarimPage() {
         headerDisplayName={headerLabel}
       >
         <div className="my-comments-page my-comments-page-inner">
-          <div className="home-page-container mx-auto w-full py-8 md:py-10">
+          <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
             <p className="my-comments-empty m-0 text-[color:var(--text-secondary)]">
               Katkılar yüklenirken bir sorun oluştu. Daha sonra tekrar dene.
             </p>
@@ -172,11 +172,13 @@ export default async function KatkilarimPage() {
         headerDisplayName={headerLabel}
       >
         <div className="my-comments-page my-comments-page-inner">
-          <div className="home-page-container mx-auto w-full py-8 md:py-10">
-            <h1 className="my-comments-heading">Katkılarım</h1>
-            <p className="my-comments-meta my-comments-page-intro">
-              Yorum yaptığın başlıklar burada birikir.
-            </p>
+          <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
+            <header className="katkilarim-header">
+              <h1 className="my-comments-heading">Katkılarım</h1>
+              <p className="my-comments-meta my-comments-page-intro">
+                Yorum yaptığın başlıklar burada birikir.
+              </p>
+            </header>
             <KatkilarimFlowBackLink />
             <p className="my-comments-empty my-comments-empty--below-back mt-8 m-0 font-serif text-[1.05rem] leading-relaxed text-[color:var(--text-secondary)]">
               Henüz katkın yok — akışa dön, bir başlık seç.
@@ -200,7 +202,7 @@ export default async function KatkilarimPage() {
         headerDisplayName={headerLabel}
       >
         <div className="my-comments-page my-comments-page-inner">
-          <div className="home-page-container mx-auto w-full py-8 md:py-10">
+          <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
             <p className="my-comments-empty m-0 text-[color:var(--text-secondary)]">
               Başlıklar yüklenirken bir sorun oluştu. Daha sonra tekrar dene.
             </p>
@@ -222,11 +224,13 @@ export default async function KatkilarimPage() {
   return (
     <KatkilarimChrome isAuthenticated headerDisplayName={headerLabel}>
       <div className="my-comments-page my-comments-page-inner">
-        <div className="home-page-container mx-auto w-full py-8 md:py-10">
-          <h1 className="my-comments-heading">Katkılarım</h1>
-          <p className="my-comments-meta my-comments-page-intro">
-            Yorum yaptığın başlıklar burada birikir.
-          </p>
+        <div className="home-page-container katkilarim-wrapper mx-auto w-full py-8 md:py-10">
+          <header className="katkilarim-header">
+            <h1 className="my-comments-heading">Katkılarım</h1>
+            <p className="my-comments-meta my-comments-page-intro">
+              Yorum yaptığın başlıklar burada birikir.
+            </p>
+          </header>
           <KatkilarimFlowBackLink />
 
           <ul className="my-comments-list flex list-none flex-col p-0 m-0">
@@ -248,12 +252,14 @@ export default async function KatkilarimPage() {
                     href={entryDetailHref(row)}
                     prefetch
                     scroll={false}
-                    className="my-comments-card"
+                    className="my-comments-card katkilarim-card"
                   >
                     <div className="my-comments-card-row flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                       <div className="my-comments-card-main min-w-0 flex-1">
-                        <p className="my-comments-title">{title}</p>
-                        <p className="my-comments-meta my-comments-card-meta-row mt-2 m-0">
+                        <p className="my-comments-title katkilarim-card-title">
+                          {title}
+                        </p>
+                        <p className="my-comments-meta my-comments-card-meta-row katkilarim-meta mt-2 m-0">
                           {dateLabel ? (
                             <>
                               <span className="my-comments-meta-quiet">
@@ -270,7 +276,7 @@ export default async function KatkilarimPage() {
                           {countLabel}
                         </p>
                       </div>
-                      <span className="my-comments-card-cta shrink-0 sm:mt-0.5">
+                      <span className="my-comments-card-cta katkilarim-cta shrink-0 sm:mt-0.5">
                         Devamını oku →
                       </span>
                     </div>
