@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { type KeyboardEvent, useCallback } from "react";
+import { useT } from "@/lib/useT";
 
 export type FeedEntryCardProps = {
   title: string;
@@ -30,6 +31,7 @@ export function FeedEntryCard({
   prefetchHref,
 }: FeedEntryCardProps) {
   const router = useRouter();
+  const t = useT("tr");
   const onPointerEnter = useCallback(() => {
     if (!prefetchHref) return;
     if (typeof router.prefetch === "function") {
@@ -93,11 +95,11 @@ export function FeedEntryCard({
             >
               {commentCount === 0
                 ? "Henüz yazılmamış"
-                : `${commentCount} yorum`}
+                : `${commentCount} ${t.comments_count}`}
             </span>
           </p>
           <span className="feed-entry-cta read-more-link shrink-0 text-left sm:text-right">
-            Devamını oku →
+            {t.read_more} →
           </span>
         </div>
       </div>
