@@ -148,6 +148,12 @@ function globalTranslationWorkflowClass(raw: string | undefined | null): string 
   }
 }
 
+function globalTranslationWorkflowIsNone(raw: string | undefined | null): boolean {
+  if (raw == null) return true;
+  const t = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+  return t.length === 0 || t === "none";
+}
+
 type AdminUserRow = {
   id: string;
   username: string;
@@ -311,6 +317,8 @@ export default function AdminPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [globalCandidatePromotingId, setGlobalCandidatePromotingId] =
+    useState<string | null>(null);
 
   const [editRow, setEditRow] = useState<EntryRow | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -938,6 +946,34 @@ export default function AdminPage() {
     } catch {
       setDeletingId(null);
       setDeleteError("Ağ hatası.");
+    }
+  }
+
+  async function promoteEntryToGlobalCandidate(entryId: string) {
+    if (!canManageEntriesFully) {
+      setListBanner(
+        "Bu işlem yalnızca tam yetkili yönetici (super_admin) içindir."
+      );
+      return;
+    }
+    setListBanner(null);
+    setGlobalCandidatePromotingId(entryId);
+    try {
+      const res = await fetch(
+        `/api/admin/entries/${encodeURIComponent(entryId)}/global-candidate`,
+        { method: "POST", credentials: "include" }
+      );
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setGlobalCandidatePromotingId(null);
+        setListBanner(data.error ?? "Global adaya eklenemedi.");
+        return;
+      }
+      setGlobalCandidatePromotingId(null);
+      void loadEntries();
+    } catch {
+      setGlobalCandidatePromotingId(null);
+      setListBanner("Ağ hatası.");
     }
   }
 
@@ -2036,6 +2072,24 @@ export default function AdminPage() {
                                 row.global_translation_status
                               )}
                             </span>
+                            {canManageEntriesFully &&
+                            globalAssessment.level === "strong" &&
+                            globalTranslationWorkflowIsNone(
+                              row.global_translation_status
+                            ) ? (
+                              <button
+                                type="button"
+                                disabled={globalCandidatePromotingId === row.id}
+                                onClick={() =>
+                                  void promoteEntryToGlobalCandidate(row.id)
+                                }
+                                className="admin-btn-text shrink-0 rounded border border-slate-600/90 bg-slate-950/60 px-1.5 py-0.5 text-[0.625rem] font-medium leading-tight text-slate-400 hover:border-slate-500 hover:text-slate-200 disabled:opacity-45"
+                              >
+                                {globalCandidatePromotingId === row.id
+                                  ? "…"
+                                  : "Global adaya ekle"}
+                              </button>
+                            ) : null}
                           </div>
                         </div>
                       </td>
