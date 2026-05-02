@@ -8,7 +8,7 @@ import { RelatedEntries } from "@/components/related-entries";
 import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
 import { getCommentAuth } from "@/lib/comment-auth";
 import type { EntryItem } from "@/app/home-page-client";
-import { loadEntryPageShell } from "@/lib/entry-route-data";
+import { getRelatedEntrySummaries, loadEntryPageShell } from "@/lib/entry-route-data";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { buildEntrySeoMetadata, SITE_BRAND } from "@/lib/entry-seo-metadata";
 import { SITE_ORIGIN } from "@/lib/public-site-entry-url";
@@ -166,6 +166,8 @@ export default async function EntrySlugPage({ params }: PageProps) {
     permanentRedirect(`/${encodeURI(canonicalPath)}`);
   }
 
+  const relatedEntries = await getRelatedEntrySummaries(entryRow.id);
+
   const heroUserLabel = heroUserDisplayLabel(
     auth.isAuthenticated,
     headerAuthUser.email,
@@ -276,25 +278,7 @@ export default async function EntrySlugPage({ params }: PageProps) {
                 <>
                   <EntryDetailCommentsRsc row={entryRow} />
 
-                  <RelatedEntries
-                    items={[
-                      {
-                        id: "1",
-                        title: "Trabzon’un 1916 Rus işgali",
-                        slug: "trabzon-1916-rus-isgali",
-                      },
-                      {
-                        id: "2",
-                        title: "Pontus meselesinin Trabzon’daki yansımaları",
-                        slug: "pontus-meselesi-trabzon",
-                      },
-                      {
-                        id: "3",
-                        title: "Doğu Karadeniz’de eşkıyalık hareketleri",
-                        slug: "dogu-karadeniz-eskıyalık",
-                      },
-                    ]}
-                  />
+                  <RelatedEntries items={relatedEntries} />
                 </>
               }
             />
