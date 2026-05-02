@@ -1522,7 +1522,7 @@ export default function HomePageClient({
           <div className="home-hero-user z-10">
             {!isAuthenticated ? (
               <Link href="/auth" prefetch className="!text-white">
-                Giriş
+                {t.login_short}
               </Link>
             ) : (
               <>
@@ -1575,7 +1575,7 @@ export default function HomePageClient({
                         onClick={() => void handleLogout()}
                         className="account-menu-item account-menu-item--default"
                       >
-                        Çıkış yap
+                        {t.logout}
                       </button>
                       {accountDeleteStep === "idle" ? (
                         <button
