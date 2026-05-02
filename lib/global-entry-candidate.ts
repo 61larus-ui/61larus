@@ -240,17 +240,17 @@ export function evaluateGlobalEntryCandidate(
       }
     }
   }
-  if (academicMatched) {
+  const historicalOrAcademicMatch = academicMatched;
+  if (historicalOrAcademicMatch) {
     score += 25;
     reasons.push("historical_or_academic_value");
   }
 
-  const strongPlace = hasStrongLocalPlaceSignal(bodyFold, tokens);
-  const cityMemoryLinguistic = hasCityMemoryLinguistic(bodyFold, tokens);
-  const eligibleCityMemory =
-    cityMemoryLinguistic && strongPlace;
+  const strongPlaceMatch = hasStrongLocalPlaceSignal(bodyFold, tokens);
+  const cityMemoryMatch = hasCityMemoryLinguistic(bodyFold, tokens);
+  const cityMemoryValueApplied = cityMemoryMatch && strongPlaceMatch;
 
-  if (eligibleCityMemory) {
+  if (cityMemoryValueApplied) {
     score += 15;
     reasons.push("city_memory_value");
   }
@@ -267,15 +267,15 @@ export function evaluateGlobalEntryCandidate(
     reasons.push("evergreen_topic");
   }
 
-  const notGeneric = strongPlace;
-  if (notGeneric) {
+  if (strongPlaceMatch) {
     score += 10;
     reasons.push("not_generic");
   } else {
     notes.push("Topic may be too generic for global publication.");
   }
 
-  const internationalEligible = academicMatched || eligibleCityMemory;
+  const internationalEligible =
+    historicalOrAcademicMatch || cityMemoryValueApplied;
   if (internationalEligible) {
     score += 10;
     reasons.push("international_reader_value");
