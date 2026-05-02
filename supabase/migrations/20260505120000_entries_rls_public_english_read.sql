@@ -1,4 +1,4 @@
--- FAZ 10B FIX — Public read for approved English entries via anon JWT (/en/[slug]).
+-- FAZ 10B FIX — public.entries SELECT için yalnızca bu dosya (INSERT/UPDATE/DELETE policy yok).
 --
 -- Postgres RLS: permissive SELECT policies are OR-ed. Pairing avoids:
 -- - EN 404: anon must see approved rows with title_en/content_en filled.
