@@ -31,6 +31,8 @@ type EntryRow = {
   created_at: string;
   category: string | null;
   slug: string | null;
+  /** DB global çeviri workflow; eksik/`none` için UI "Global yok". */
+  global_translation_status?: string | null;
 };
 
 const ADMIN_PUBLISH_SECTIONS = [
@@ -101,6 +103,50 @@ const ADMIN_GLOBAL_ENTRY_FILTERS: ReadonlyArray<{
   { value: "weak", label: "Global zayıf" },
   { value: "not_eligible", label: "Global uygun değil" },
 ];
+
+/** DB kolonundan – global aday rozeti (canlı puanlama) ile karışmasın (bu = workflow). */
+function globalTranslationWorkflowLabel(
+  raw: string | undefined | null
+): string {
+  const k = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+  if (!k || k === "none") return "Global yok";
+  switch (k) {
+    case "candidate":
+      return "Aday";
+    case "draft":
+      return "Taslak";
+    case "review":
+      return "İncelemede";
+    case "approved":
+      return "Onaylı";
+    case "rejected":
+      return "Reddedildi";
+    default:
+      return "Global yok";
+  }
+}
+
+/** Çeviri workflow rozeti renkleri: none/bilinmeyen → gri. */
+function globalTranslationWorkflowClass(raw: string | undefined | null): string {
+  const k = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+  if (!k || k === "none") {
+    return "border-slate-600/45 bg-slate-800/50 text-slate-400";
+  }
+  switch (k) {
+    case "candidate":
+      return "border-sky-500/40 bg-sky-500/12 text-sky-200";
+    case "draft":
+      return "border-amber-400/40 bg-amber-400/12 text-amber-100";
+    case "review":
+      return "border-orange-500/38 bg-orange-500/12 text-orange-200";
+    case "approved":
+      return "border-emerald-500/40 bg-emerald-500/14 text-emerald-200";
+    case "rejected":
+      return "border-red-500/40 bg-red-500/14 text-red-200";
+    default:
+      return "border-slate-600/45 bg-slate-800/50 text-slate-400";
+  }
+}
 
 type AdminUserRow = {
   id: string;
@@ -1967,7 +2013,6 @@ export default function AdminPage() {
                         title: row.title,
                         content: row.content,
                       });
-                    const globalBadgeTitle = `Global score: ${globalAssessment.score} | ${globalAssessment.reasons.join(", ") || "reason yok"}`;
                     return (
                     <tr
                       key={row.id}
@@ -1976,12 +2021,22 @@ export default function AdminPage() {
                       <td className="admin-td-strong max-w-[220px] px-3 py-2">
                         <div className="flex min-w-0 flex-col gap-1">
                           <span className="line-clamp-2">{row.title}</span>
-                          <span
-                            className={`inline-flex w-fit max-w-full rounded border px-1.5 py-0.5 text-[0.625rem] font-medium leading-tight ${globalCandidateBadgeClass(globalAssessment.level)}`}
-                            title={globalBadgeTitle}
-                          >
-                            {globalCandidateBadgeLabel(globalAssessment.level)}
-                          </span>
+                          <div className="flex min-w-0 flex-wrap items-center gap-1">
+                            <span
+                              className={`inline-flex w-fit max-w-full shrink rounded border px-1.5 py-0.5 text-[0.625rem] font-medium leading-tight ${globalCandidateBadgeClass(globalAssessment.level)}`}
+                              title={`Adaylık (canlı): Global score ${globalAssessment.score}; ${globalAssessment.reasons.join(", ") || "reason yok"}`}
+                            >
+                              {globalCandidateBadgeLabel(globalAssessment.level)}
+                            </span>
+                            <span
+                              className={`inline-flex w-fit max-w-full shrink rounded border px-1.5 py-0.5 text-[0.625rem] font-medium leading-tight ${globalTranslationWorkflowClass(row.global_translation_status)}`}
+                              title={`Çeviri workflow (DB): ${row.global_translation_status ?? "none"}`}
+                            >
+                              {globalTranslationWorkflowLabel(
+                                row.global_translation_status
+                              )}
+                            </span>
+                          </div>
                         </div>
                       </td>
                       <td className="admin-td whitespace-nowrap px-3 py-2">

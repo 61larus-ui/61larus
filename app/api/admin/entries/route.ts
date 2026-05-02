@@ -22,6 +22,7 @@ type EntryListRow = {
   created_at: string;
   category: string | null;
   slug: string | null;
+  global_translation_status?: string | null;
 };
 
 function logEntriesDebugPgErr(step: string, err: PostgrestError | null) {
@@ -115,14 +116,18 @@ export async function GET() {
   let rows: EntryListRow[] = [];
   const withCat = await service
     .from("entries")
-    .select("id, title, content, created_at, category, slug")
+    .select(
+      "id, title, content, created_at, category, slug, global_translation_status"
+    )
     .order("created_at", { ascending: false })
     .limit(500);
 
   if (withCat.error && /slug|column|schema|not exist/i.test(withCat.error.message)) {
     const noSlug = await service
       .from("entries")
-      .select("id, title, content, created_at, category")
+      .select(
+        "id, title, content, created_at, category, global_translation_status"
+      )
       .order("created_at", { ascending: false })
       .limit(500);
     if (noSlug.error) {
@@ -138,7 +143,7 @@ export async function GET() {
   } else if (withCat.error) {
     const plain = await service
       .from("entries")
-      .select("id, title, content, created_at")
+      .select("id, title, content, created_at, global_translation_status")
       .order("created_at", { ascending: false })
       .limit(500);
     if (plain.error) {
