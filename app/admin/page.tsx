@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -165,6 +166,20 @@ function globalTranslationWorkflowIsCandidate(
 
 function entryHasSavedEnglishTitle(raw: string | undefined | null): boolean {
   return typeof raw === "string" && raw.trim().length > 0;
+}
+
+function globalTranslationWorkflowIsDraft(
+  raw: string | undefined | null
+): boolean {
+  return (typeof raw === "string" ? raw.trim().toLowerCase() : "") === "draft";
+}
+
+function draftRowHasEnglishText(
+  row: Pick<EntryRow, "title_en" | "content_en">
+): boolean {
+  const te = typeof row.title_en === "string" ? row.title_en.trim() : "";
+  const ce = typeof row.content_en === "string" ? row.content_en.trim() : "";
+  return te.length > 0 || ce.length > 0;
 }
 
 type AdminUserRow = {
@@ -333,6 +348,8 @@ export default function AdminPage() {
   const [globalCandidatePromotingId, setGlobalCandidatePromotingId] =
     useState<string | null>(null);
   const [englishDraftGeneratingId, setEnglishDraftGeneratingId] =
+    useState<string | null>(null);
+  const [englishDraftPreviewEntryId, setEnglishDraftPreviewEntryId] =
     useState<string | null>(null);
 
   const [editRow, setEditRow] = useState<EntryRow | null>(null);
@@ -2092,9 +2109,14 @@ export default function AdminPage() {
                         title: row.title,
                         content: row.content,
                       });
+                    const isDraft = globalTranslationWorkflowIsDraft(
+                      row.global_translation_status
+                    );
+                    const draftEnOk = draftRowHasEnglishText(row);
+                    const enPreviewOpen = englishDraftPreviewEntryId === row.id;
                     return (
+                    <Fragment key={row.id}>
                     <tr
-                      key={row.id}
                       className="border-b border-slate-800/80 hover:bg-slate-900/50"
                     >
                       <td className="admin-td-strong max-w-[220px] px-3 py-2">
@@ -2151,7 +2173,28 @@ export default function AdminPage() {
                                   : "İngilizce taslak oluştur"}
                               </button>
                             ) : null}
+                            {isDraft && draftEnOk ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setEnglishDraftPreviewEntryId((cur) =>
+                                    cur === row.id ? null : row.id
+                                  )
+                                }
+                                className="admin-btn-text shrink-0 rounded border border-amber-500/35 bg-amber-500/8 px-1.5 py-0.5 text-[0.625rem] font-medium leading-tight text-amber-100/90 hover:border-amber-400/50 hover:bg-amber-500/12"
+                                aria-expanded={enPreviewOpen}
+                              >
+                                {enPreviewOpen
+                                  ? "Önizlemeyi gizle"
+                                  : "EN taslağı gör"}
+                              </button>
+                            ) : null}
                           </div>
+                          {isDraft && !draftEnOk ? (
+                            <p className="m-0 max-w-full text-[0.625rem] leading-snug text-amber-200/80">
+                              Taslak status var ama İngilizce içerik bulunamadı.
+                            </p>
+                          ) : null}
                         </div>
                       </td>
                       <td className="admin-td whitespace-nowrap px-3 py-2">
@@ -2194,6 +2237,43 @@ export default function AdminPage() {
                         )}
                       </td>
                     </tr>
+                    {enPreviewOpen && isDraft && draftEnOk ? (
+                      <tr className="border-b border-slate-800/80 bg-slate-950/55">
+                        <td
+                          colSpan={6}
+                          className="px-4 py-3 align-top border-l-2 border-amber-500/35"
+                        >
+                          <div className="grid max-w-3xl gap-3 text-left">
+                            <p className="m-0 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                              İngilizce taslak (salt okunur)
+                            </p>
+                            <div>
+                              <p className="m-0 mb-1 text-[0.65rem] font-medium text-slate-500">
+                                İngilizce başlık
+                              </p>
+                              <p className="m-0 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-200">
+                                {typeof row.title_en === "string" &&
+                                row.title_en.trim()
+                                  ? row.title_en.trim()
+                                  : "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="m-0 mb-1 text-[0.65rem] font-medium text-slate-500">
+                                İngilizce içerik
+                              </p>
+                              <p className="m-0 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-300">
+                                {typeof row.content_en === "string" &&
+                                row.content_en.trim()
+                                  ? row.content_en.trim()
+                                  : "—"}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null}
+                    </Fragment>
                     );
                   })
                 )}
