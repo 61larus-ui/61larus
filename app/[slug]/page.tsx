@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { EntryArticleJsonLd } from "@/components/entry-article-json-ld";
 import { EntryDetailBodyRsc } from "@/components/entry-detail-body-rsc";
 import { EntryDetailCommentsRsc } from "@/components/entry-detail-comments-rsc";
+import { RelatedEntries } from "@/components/related-entries";
 import { EntryRouteLayoutClient } from "@/components/entry-route-layout-client";
 import { getCommentAuth } from "@/lib/comment-auth";
 import type { EntryItem } from "@/app/home-page-client";
@@ -271,7 +272,31 @@ export default async function EntrySlugPage({ params }: PageProps) {
                 initialAgreementDone: auth.agreementAccepted,
                 initialPlatformAccessSuspended: auth.isSuspended,
               }}
-              commentsSlot={<EntryDetailCommentsRsc row={entryRow} />}
+              commentsSlot={
+                <>
+                  <EntryDetailCommentsRsc row={entryRow} />
+
+                  <RelatedEntries
+                    items={[
+                      {
+                        id: "1",
+                        title: "Trabzon’un 1916 Rus işgali",
+                        slug: "trabzon-1916-rus-isgali",
+                      },
+                      {
+                        id: "2",
+                        title: "Pontus meselesinin Trabzon’daki yansımaları",
+                        slug: "pontus-meselesi-trabzon",
+                      },
+                      {
+                        id: "3",
+                        title: "Doğu Karadeniz’de eşkıyalık hareketleri",
+                        slug: "dogu-karadeniz-eskıyalık",
+                      },
+                    ]}
+                  />
+                </>
+              }
             />
           </div>
         </div>

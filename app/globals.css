@@ -10856,3 +10856,37 @@ main
     color: var(--accent-hover) !important;
   }
 }
+
+.entry-related-block {
+  margin-top: 2.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(120, 80, 40, 0.12);
+}
+
+.entry-related-kicker {
+  margin-bottom: 0.75rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b45309;
+  font-weight: 700;
+}
+
+.entry-related-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.entry-related-link {
+  display: block;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #3f2f24;
+  text-decoration: none;
+}
+
+.entry-related-link:hover {
+  color: #b45309;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
