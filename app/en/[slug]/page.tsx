@@ -67,18 +67,18 @@ export async function generateMetadata({
     return { title: SITE_BRAND };
   }
 
-  const row = await loadApprovedEnglishEntryPublic(pathSegment);
-  if (!row) {
+  const entryRow = await loadApprovedEnglishEntryPublic(pathSegment);
+  if (!entryRow) {
     return { title: SITE_BRAND };
   }
 
-  const pageTitle = `${row.title_en} | ${SITE_BRAND}`;
+  const pageTitle = `${entryRow.title_en} | ${SITE_BRAND}`;
   const description = trimMetaDescription(
-    normalizeMetaWhitespace(row.content_en),
+    normalizeMetaWhitespace(entryRow.content_en),
     160
   );
-  const trUrl = `${SITE_ORIGIN}/${encodeURI(row.slug)}`;
-  const enUrl = `${SITE_ORIGIN}/en/${encodeURI(row.slug)}`;
+  const trUrl = `${SITE_ORIGIN}/${encodeURI(entryRow.slug)}`;
+  const enUrl = `${SITE_ORIGIN}/en/${encodeURI(entryRow.slug)}`;
 
   return {
     title: pageTitle,
