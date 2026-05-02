@@ -274,13 +274,8 @@ export default async function EntrySlugPage({ params }: PageProps) {
                 initialAgreementDone: auth.agreementAccepted,
                 initialPlatformAccessSuspended: auth.isSuspended,
               }}
-              commentsSlot={
-                <>
-                  <EntryDetailCommentsRsc row={entryRow} />
-
-                  <RelatedEntries items={relatedEntries} />
-                </>
-              }
+              commentsSlot={<EntryDetailCommentsRsc row={entryRow} />}
+              relatedSlot={<RelatedEntries items={relatedEntries} />}
             />
           </div>
         </div>

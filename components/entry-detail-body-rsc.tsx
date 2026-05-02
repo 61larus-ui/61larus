@@ -19,6 +19,7 @@ export function EntryDetailBodyRsc({
   entry,
   commentAuth,
   commentsSlot,
+  relatedSlot,
 }: {
   entry: EntryItem;
   commentAuth: {
@@ -28,6 +29,8 @@ export function EntryDetailBodyRsc({
   };
   /** Entry detail yorum listesi (RSC) */
   commentsSlot: ReactNode;
+  /** İlgili girişler (ör. DEVAM OKU); yorum kutusundan sonra */
+  relatedSlot?: ReactNode;
 }) {
   const authorName = entry.authorName?.trim() || SITE_BRAND;
   const formattedDate = formatEntryDetailDate(entry.created_at);
@@ -67,6 +70,7 @@ export function EntryDetailBodyRsc({
         slug={entry.slug}
       />
 
+      {commentsSlot}
       <EntryDetailCommentCompose
         entryId={entry.id}
         isAuthenticated={commentAuth.isAuthenticated}
@@ -75,7 +79,7 @@ export function EntryDetailBodyRsc({
           commentAuth.initialPlatformAccessSuspended
         }
       />
-      {commentsSlot}
+      {relatedSlot}
     </div>
   );
 }
