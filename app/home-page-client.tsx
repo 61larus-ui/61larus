@@ -24,6 +24,7 @@ import { slugifyEntryTitle } from "@/lib/entry-slug";
 import type { SearchEntryResult } from "@/app/api/search-entries/route";
 import { FeedEntryCard } from "./feed-entry-card";
 import { SITE_BRAND } from "@/lib/entry-seo-metadata";
+import { useT } from "@/lib/useT";
 
 /** Ana sayfa blokları — admin `category` ile aynı sıra / slug seti. */
 const HOME_PUBLISH_SECTION_ORDER = [
@@ -578,6 +579,7 @@ export default function HomePageClient({
   profileNickname,
   profileDisplayMode,
 }: Props) {
+  const t = useT("tr");
   const headerDisplayName = useMemo(
     () =>
       resolveVisibleName({
@@ -1700,7 +1702,7 @@ export default function HomePageClient({
                         className="home-hero-faz1__cta read-more-link"
                         aria-hidden="true"
                       >
-                        Devamını oku →
+                        {t.read_more} →
                       </span>
                     </div>
                   </div>

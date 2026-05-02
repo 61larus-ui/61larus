@@ -6,7 +6,7 @@ const translations = {
   tr: {
     brand_name: "61Larus",
     search_placeholder: "Başlık ara",
-    read_more: "devamını oku",
+    read_more: "Devamını oku",
     login: "Giriş yap",
     logout: "Çıkış yap",
     loading: "Yükleniyor",
