@@ -1,7 +1,7 @@
 import { slugifyEntryTitle } from "@/lib/entry-slug";
 
-/** Canlı canonical origin — metadata, sitemap, OG, robots; geçiş DNS hazır olana dek 61larus.com. */
-export const SITE_ORIGIN = "https://61larus.com";
+/** Canlı canonical origin — metadata, sitemap, OG, robots. */
+export const SITE_ORIGIN = "https://61sozluk.com";
 
 /** Canlı sitede indeks / paylaşım için kullanılan mutlak taban. */
 export const PUBLIC_SITE_BASE = SITE_ORIGIN;

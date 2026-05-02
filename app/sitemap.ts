@@ -1,15 +1,14 @@
 import { MetadataRoute } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
-import { SITE_ORIGIN } from "@/lib/public-site-entry-url";
 
 export const dynamic = "force-dynamic";
 
-const BASE = SITE_ORIGIN;
+const BASE_URL = "https://61sozluk.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const home: MetadataRoute.Sitemap[0] = {
-    url: BASE,
+    url: `${BASE_URL}/`,
     lastModified: new Date(),
     changeFrequency: "hourly",
     priority: 1,
@@ -48,16 +47,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             : null;
         if (!slug) return null;
         return {
-          url: `${BASE}/${encodeURI(slug)}`,
+          url: `${BASE_URL}/${encodeURI(slug)}`,
           lastModified: last,
           changeFrequency: "daily" as const,
           priority: 0.8,
         };
       }
     )
-    .filter(
-      (row): row is NonNullable<typeof row> => row != null
-    );
+    .filter((row): row is NonNullable<typeof row> => row != null);
 
   return [home, ...entryUrls];
 }
