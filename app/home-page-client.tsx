@@ -1491,7 +1491,11 @@ export default function HomePageClient({
             className="home-hero-visual__image"
           />
           <div className="home-hero-visual__shade" aria-hidden="true" />
-          <div className="home-hero-content max-w-[420px]">
+          <div
+            className="absolute inset-0 z-[2] bg-black/50 md:bg-black/40 pointer-events-none rounded-[16px]"
+            aria-hidden="true"
+          />
+          <div className="home-hero-content relative z-10 max-w-[420px] text-white">
             <h1 className="text-white font-bold">
               <button
                 type="button"
@@ -1504,16 +1508,16 @@ export default function HomePageClient({
               </button>
             </h1>
             <div
-              className="mt-2 mb-3 h-[2px] w-12 bg-[var(--accent)]"
+              className="mt-2 mb-3 h-[2px] w-10 bg-[var(--accent)] md:w-12"
               aria-hidden="true"
             />
-            <p className="home-hero-tagline text-gray-300 md:whitespace-nowrap">
+            <p className="home-hero-tagline text-gray-300 text-sm md:text-base">
               Trabzon&apos;un gündemi,{" "}
               <span className="text-[var(--accent)]">lafı ve hafızası</span>
             </p>
           </div>
 
-          <div className="home-hero-user">
+          <div className="home-hero-user z-10">
             {!isAuthenticated ? (
               <Link href="/auth" prefetch className="!text-white">
                 Giriş

@@ -1094,12 +1094,12 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   position: absolute;
   bottom: 24px;
   left: 32px;
-  z-index: 2;
+  z-index: 10;
 }
 
 .home-hero-content h1 {
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 700;
   color: #fff;
   margin: 0 0 6px;
   letter-spacing: -0.3px;
@@ -1118,8 +1118,6 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
 }
 
 .home-hero-content p {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.65);
   margin: 0;
 }
 
@@ -1146,7 +1144,7 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   position: absolute;
   right: 32px;
   bottom: 28px;
-  z-index: 3;
+  z-index: 10;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -1301,6 +1299,8 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   .home-hero-content p.home-hero-tagline {
     color: rgb(209 213 219) !important;
     -webkit-text-fill-color: rgb(209 213 219) !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
   }
 
   .home-hero-content p.home-hero-tagline span {
@@ -1312,12 +1312,6 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
     opacity: 1 !important;
     font-size: inherit !important;
     line-height: inherit !important;
-  }
-
-  .home-hero-content p.home-hero-tagline {
-    font-size: 13px !important;
-    line-height: 1.25 !important;
-    margin: 0 !important;
   }
 
   .home-hero-user {
@@ -1588,6 +1582,17 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   .home-hero-visual .account-menu-panel *,
   .home-hero-visual .user-menu * {
     color: #ffffff !important;
+  }
+
+  /* Slogan: gri + turuncu (.home-hero-visual genel beyaz kurallarından sonra) */
+  .home-hero-visual .home-hero-content p.home-hero-tagline {
+    color: rgb(209 213 219) !important;
+    -webkit-text-fill-color: rgb(209 213 219) !important;
+  }
+
+  .home-hero-visual .home-hero-content p.home-hero-tagline span {
+    color: var(--accent) !important;
+    -webkit-text-fill-color: var(--accent) !important;
   }
 
   /* Ana gövde: arama + köprü nefesi */
