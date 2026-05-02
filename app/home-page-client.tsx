@@ -1495,7 +1495,7 @@ export default function HomePageClient({
             className="absolute inset-0 z-[2] bg-black/50 md:bg-black/40 pointer-events-none rounded-[16px]"
             aria-hidden="true"
           />
-          <div className="home-hero-content relative z-10 max-w-[420px] text-white">
+          <div className="home-hero-content z-10 max-w-[420px] text-white">
             <h1 className="text-white font-bold">
               <button
                 type="button"
