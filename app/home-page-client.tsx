@@ -1532,7 +1532,7 @@ export default function HomePageClient({
                   scroll={false}
                   className="site-account-link shrink-0 !text-white"
                 >
-                  Katkılarım
+                  {t.contributions}
                 </Link>
                 <div
                   className="relative z-30 min-w-0 shrink-0"
@@ -1673,7 +1673,7 @@ export default function HomePageClient({
                     prefetchEntryRoute(homeHeroEntry.id)
                   }
                   onFocus={() => prefetchEntryRoute(homeHeroEntry.id)}
-                  aria-label={`Devamını oku: ${homeHeroEntry.title}`}
+                  aria-label={`${t.read_more}: ${homeHeroEntry.title}`}
                 >
                   <span
                     className="home-hero-faz1__layer home-hero-faz1__base"
@@ -1689,7 +1689,7 @@ export default function HomePageClient({
                   />
                   <div className="home-hero-faz1__inner">
                     <span className="home-hero-faz1__eyebrow">
-                      Bugün {SITE_BRAND}&apos;te
+                      {t.today_on_61larus.replace("{brand}", SITE_BRAND)}
                     </span>
                     <h2 className="home-hero-faz1__title">
                       {homeHeroEntry.title}
@@ -1762,7 +1762,7 @@ export default function HomePageClient({
                     onChange={onHomeSearchInputChange}
                     onFocus={onHomeSearchInputFocus}
                     onKeyDown={onHomeSearchKeyDown}
-                    placeholder="Ne arıyorsun?"
+                    placeholder={t.search_placeholder}
                     autoComplete="off"
                     spellCheck={false}
                     enterKeyHint="search"
@@ -1790,11 +1790,11 @@ export default function HomePageClient({
                   >
                     {homeSearchLoading ? (
                       <li className="home-global-search__state">
-                        Aranıyor…
+                        {t.search_loading}
                       </li>
                     ) : homeSearchApiResults.length === 0 ? (
                       <li className="home-global-search__state">
-                        Sonuç bulunamadı.
+                        {t.no_results}
                       </li>
                     ) : (
                       homeSearchApiResults.map((row) => {
@@ -1980,7 +1980,7 @@ export default function HomePageClient({
                           >
                             {cc === 0
                               ? "Henüz yazılmamış"
-                              : `${cc} yorum`}
+                              : `${cc} ${t.comments_count}`}
                           </span>
                         </div>
                       </button>
@@ -1996,7 +1996,7 @@ export default function HomePageClient({
                     className="col-section-head__title col-section-head__title--rail"
                     id="main-feed-title"
                   >
-                    Hafızaya eklenenler
+                    {t.memory_added}
                   </h2>
                   <p className="col-section-head__micro col-subtext">
                     Trabzon&apos;un unutulmayanları.
@@ -2099,10 +2099,10 @@ export default function HomePageClient({
                                       >
                                         {cc === 0
                                           ? "Henüz yazılmamış"
-                                          : `${cc} yorum`}
+                                          : `${cc} ${t.comments_count}`}
                                       </span>
                                       <span className="home-explore-cta home-explore-cta--row read-more-link">
-                                        Devamını oku →
+                                        {t.read_more} →
                                       </span>
                                     </div>
                                   </button>
@@ -2148,10 +2148,10 @@ export default function HomePageClient({
                                     >
                                       {wcc === 0
                                         ? "Henüz yazılmamış"
-                                        : `${wcc} yorum`}
+                                        : `${wcc} ${t.comments_count}`}
                                     </span>
                                     <span className="home-explore-cta home-explore-cta--row read-more-link">
-                                      Devamını oku →
+                                      {t.read_more} →
                                     </span>
                                   </div>
                                 </button>
@@ -2202,10 +2202,10 @@ export default function HomePageClient({
                                     >
                                       {cc === 0
                                         ? "Henüz yazılmamış"
-                                        : `${cc} yorum`}
+                                        : `${cc} ${t.comments_count}`}
                                     </span>
                                     <span className="home-explore-cta home-explore-cta--row read-more-link">
-                                      Devamını oku →
+                                      {t.read_more} →
                                     </span>
                                   </div>
                                 </button>
