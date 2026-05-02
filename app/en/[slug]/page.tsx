@@ -111,10 +111,14 @@ export default async function EnglishEntrySlugPage({ params }: PageProps) {
   const p = await params;
   const pathSegment = pathSegmentFromParams(p);
   if (!pathSegment) {
+    console.log("[EN ROUTE NOT FOUND]", {
+      slug: p.slug,
+      reason: "missing path segment",
+    });
     notFound();
   }
 
-  const [row, auth, headerAuthUser] = await Promise.all([
+  const [entryRow, auth, headerAuthUser] = await Promise.all([
     loadApprovedEnglishEntryPublic(pathSegment),
     getCommentAuth(),
     (async () => {
@@ -133,7 +137,16 @@ export default async function EnglishEntrySlugPage({ params }: PageProps) {
     })(),
   ]);
 
-  if (!row) {
+  console.log("[EN ROUTE DEBUG]", {
+    slug: p.slug,
+    data: entryRow,
+  });
+
+  if (!entryRow) {
+    console.log("[EN ROUTE NOT FOUND]", {
+      slug: p.slug,
+      reason: "entryRow null or invalid",
+    });
     notFound();
   }
 
@@ -143,8 +156,8 @@ export default async function EnglishEntrySlugPage({ params }: PageProps) {
     headerAuthUser.userMetadata
   );
 
-  const formattedDate = row.created_at
-    ? formatEntryDetailDateEn(row.created_at)
+  const formattedDate = entryRow.created_at
+    ? formatEntryDetailDateEn(entryRow.created_at)
     : "";
 
   return (
@@ -240,7 +253,7 @@ export default async function EnglishEntrySlugPage({ params }: PageProps) {
                 ← Akışa dön
               </Link>
               <Link
-                href={`/${encodeURI(row.slug)}`}
+                href={`/${encodeURI(entryRow.slug)}`}
                 prefetch
                 scroll={false}
                 className="entry-detail-back"
@@ -252,7 +265,7 @@ export default async function EnglishEntrySlugPage({ params }: PageProps) {
             <article className="entry-detail-article entry-detail-card m-0">
               <header className="m-0 border-0 p-0">
                 <h1 id="entry-detail-title-en" className="entry-detail-title">
-                  {row.title_en}
+                  {entryRow.title_en}
                 </h1>
                 <div className="entry-meta entry-detail-meta">
                   <span className="entry-author">{SITE_BRAND}</span>
@@ -269,7 +282,7 @@ export default async function EnglishEntrySlugPage({ params }: PageProps) {
                 className="m-0 border-0 p-0"
               >
                 <p className="entry-detail-body entry-detail-content">
-                  {row.content_en}
+                  {entryRow.content_en}
                 </p>
               </section>
             </article>
