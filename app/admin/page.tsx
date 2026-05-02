@@ -15,7 +15,6 @@ import {
   type AdminRole,
 } from "@/lib/admin-role";
 import { SILINMIS_KULLANICI_LABEL } from "@/lib/deleted-user-label";
-import { AdminShareCopyBlock } from "@/components/admin-share-copy-block";
 import { publicSiteEntryUrl } from "@/lib/public-site-entry-url";
 import {
   useAdminComposeTitle,
@@ -1807,13 +1806,6 @@ export default function AdminPage() {
                         : "Canlı kontrol bekleniyor"}
                 </p>
               ) : null}
-              <p className="admin-label mb-2 mt-6">Paylaşım (son kayıt)</p>
-              <AdminShareCopyBlock
-                title={justPublishedEntry.title}
-                content={justPublishedEntry.content}
-                entryId={justPublishedEntry.id}
-                entrySlug={justPublishedEntry.slug}
-              />
             </div>
           ) : null}
         </section>
@@ -2200,12 +2192,6 @@ export default function AdminPage() {
                 className="admin-field mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
               />
             </label>
-            <AdminShareCopyBlock
-              title={editTitle}
-              content={editContent}
-              entryId={editRow.id}
-              entrySlug={editRow.slug}
-            />
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
