@@ -442,6 +442,28 @@ export default async function KatkilarimPage() {
               );
             })}
           </ul>
+          {suggestedRows.length > 0 && (
+            <div className="katkilarim-related-block">
+              <div className="katkilarim-related-kicker">
+                BU BAŞLIKTA YORUMUNU BEKLİYOR
+              </div>
+
+              <ul className="katkilarim-related-list">
+                {suggestedRows.map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      href={
+                        item.slug ? `/${item.slug}` : `/?entry=${item.id}`
+                      }
+                      className="katkilarim-related-link"
+                    >
+                      {item.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
