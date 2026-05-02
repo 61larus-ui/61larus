@@ -182,6 +182,21 @@ function draftRowHasEnglishText(
   return te.length > 0 || ce.length > 0;
 }
 
+/** Taslak yayına almak için başlık ve gövdenin dolu olması gerekir. */
+function draftRowEnglishReadyForPublish(
+  row: Pick<EntryRow, "title_en" | "content_en">
+): boolean {
+  const te = typeof row.title_en === "string" ? row.title_en.trim() : "";
+  const ce = typeof row.content_en === "string" ? row.content_en.trim() : "";
+  return te.length > 0 && ce.length > 0;
+}
+
+function globalTranslationWorkflowIsApproved(
+  raw: string | undefined | null
+): boolean {
+  return (typeof raw === "string" ? raw.trim().toLowerCase() : "") === "approved";
+}
+
 type AdminUserRow = {
   id: string;
   username: string;
@@ -348,6 +363,8 @@ export default function AdminPage() {
   const [globalCandidatePromotingId, setGlobalCandidatePromotingId] =
     useState<string | null>(null);
   const [englishDraftGeneratingId, setEnglishDraftGeneratingId] =
+    useState<string | null>(null);
+  const [englishTranslationApprovingEntryId, setEnglishTranslationApprovingEntryId] =
     useState<string | null>(null);
   const [englishDraftPreviewEntryId, setEnglishDraftPreviewEntryId] =
     useState<string | null>(null);
@@ -1034,6 +1051,42 @@ export default function AdminPage() {
     } catch {
       setEnglishDraftGeneratingId(null);
       setListBanner("Ağ hatası.");
+    }
+  }
+
+  async function approveGlobalEnglishTranslation(entryId: string) {
+    if (!canManageEntriesFully) {
+      setListBanner(
+        "Bu işlem yalnızca tam yetkili yönetici (super_admin) içindir."
+      );
+      return;
+    }
+    setListBanner(null);
+    setEnglishTranslationApprovingEntryId(entryId);
+    try {
+      const res = await fetch("/api/admin/global-translation/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ entryId }),
+      });
+      if (!res.ok) {
+        await res.json().catch(() => null);
+        setEnglishTranslationApprovingEntryId(null);
+        setListBanner("İngilizce yayın onayı tamamlanamadı.");
+        return;
+      }
+      setEnglishTranslationApprovingEntryId(null);
+      setEntries((prev) =>
+        prev.map((e) =>
+          e.id === entryId
+            ? { ...e, global_translation_status: "approved" }
+            : e
+        )
+      );
+    } catch {
+      setEnglishTranslationApprovingEntryId(null);
+      setListBanner("İngilizce yayın onayı tamamlanamadı.");
     }
   }
 
@@ -2137,6 +2190,16 @@ export default function AdminPage() {
                                 row.global_translation_status
                               )}
                             </span>
+                            {globalTranslationWorkflowIsApproved(
+                              row.global_translation_status
+                            ) ? (
+                              <span
+                                className="inline-flex w-fit shrink rounded border border-emerald-500/45 bg-emerald-500/16 px-1.5 py-0.5 text-[0.625rem] font-semibold leading-tight text-emerald-100"
+                                title="İngilizce çeviri onaylı (yayımda)"
+                              >
+                                EN yayında
+                              </span>
+                            ) : null}
                             {canManageEntriesFully &&
                             globalAssessment.level === "strong" &&
                             globalTranslationWorkflowIsNone(
@@ -2173,7 +2236,8 @@ export default function AdminPage() {
                                   : "İngilizce taslak oluştur"}
                               </button>
                             ) : null}
-                            {isDraft && draftEnOk ? (
+                            {englishDraftPreviewEntryId === row.id ||
+                            (isDraft && draftEnOk) ? (
                               <button
                                 type="button"
                                 onClick={() =>
@@ -2184,7 +2248,7 @@ export default function AdminPage() {
                                 className="admin-btn-text shrink-0 rounded border border-amber-500/35 bg-amber-500/8 px-1.5 py-0.5 text-[0.625rem] font-medium leading-tight text-amber-100/90 hover:border-amber-400/50 hover:bg-amber-500/12"
                                 aria-expanded={enPreviewOpen}
                               >
-                                {enPreviewOpen
+                                {englishDraftPreviewEntryId === row.id
                                   ? "Önizlemeyi gizle"
                                   : "EN taslağı gör"}
                               </button>
@@ -2237,7 +2301,7 @@ export default function AdminPage() {
                         )}
                       </td>
                     </tr>
-                    {enPreviewOpen && isDraft && draftEnOk ? (
+                    {enPreviewOpen && draftEnOk ? (
                       <tr className="border-b border-slate-800/80 bg-slate-950/55">
                         <td
                           colSpan={6}
@@ -2269,6 +2333,38 @@ export default function AdminPage() {
                                   : "—"}
                               </p>
                             </div>
+                            {canManageEntriesFully &&
+                            globalTranslationWorkflowIsDraft(
+                              row.global_translation_status
+                            ) &&
+                            draftRowEnglishReadyForPublish(row) ? (
+                              <div className="border-t border-slate-700/55 pt-3">
+                                <button
+                                  type="button"
+                                  disabled={
+                                    englishTranslationApprovingEntryId === row.id
+                                  }
+                                  onClick={() =>
+                                    void approveGlobalEnglishTranslation(row.id)
+                                  }
+                                  className="rounded-lg border border-emerald-600/55 bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-100 hover:border-emerald-500/70 hover:bg-emerald-950/60 disabled:cursor-not-allowed disabled:opacity-45"
+                                >
+                                  {englishTranslationApprovingEntryId === row.id
+                                    ? "Yayına alınıyor..."
+                                    : "İngilizceyi yayına al"}
+                                </button>
+                              </div>
+                            ) : null}
+                            {globalTranslationWorkflowIsApproved(
+                              row.global_translation_status
+                            ) &&
+                            englishDraftPreviewEntryId === row.id ? (
+                              <div className="border-t border-slate-700/55 pt-3">
+                                <span className="inline-flex rounded-md border border-emerald-500/40 bg-emerald-500/14 px-2.5 py-1 text-[0.7rem] font-semibold text-emerald-100">
+                                  İngilizce yayında
+                                </span>
+                              </div>
+                            ) : null}
                           </div>
                         </td>
                       </tr>
