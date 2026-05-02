@@ -19,6 +19,10 @@ import { publicSiteEntryUrl } from "@/lib/public-site-entry-url";
 import {
   useAdminComposeTitle,
 } from "@/hooks/use-admin-compose-title";
+import {
+  evaluateGlobalEntryCandidate,
+  type GlobalCandidateLevel,
+} from "@/lib/global-entry-candidate";
 
 type EntryRow = {
   id: string;
@@ -51,6 +55,33 @@ function getPublishSectionLabel(value?: string | null): string {
 
 function isValidEditPublishSection(cat: string): boolean {
   return PUBLISH_SECTION_VALUE_SET.has(cat) || cat === "today";
+}
+
+function globalCandidateBadgeLabel(level: GlobalCandidateLevel): string {
+  switch (level) {
+    case "strong":
+      return "Global güçlü aday";
+    case "medium":
+      return "Global orta aday";
+    case "weak":
+      return "Global zayıf aday";
+    default:
+      return "Global uygun değil";
+  }
+}
+
+/** Admin listesi rozetleri: sade tonlar, hover’da skor/reason için title kullanılır. */
+function globalCandidateBadgeClass(level: GlobalCandidateLevel): string {
+  switch (level) {
+    case "strong":
+      return "border-emerald-500/30 bg-emerald-500/12 text-emerald-200/95";
+    case "medium":
+      return "border-amber-500/30 bg-amber-500/10 text-amber-200/90";
+    case "weak":
+      return "border-slate-500/35 bg-slate-500/12 text-slate-400";
+    default:
+      return "border-slate-600/45 bg-slate-800/50 text-slate-500";
+  }
 }
 
 type AdminUserRow = {
@@ -389,6 +420,20 @@ export default function AdminPage() {
     const start = (entryListPage - 1) * ENTRY_LIST_PAGE_SIZE;
     return sortedEntryRows.slice(start, start + ENTRY_LIST_PAGE_SIZE);
   }, [sortedEntryRows, entryListPage]);
+
+  const globalAssessmentByEntryId = useMemo(() => {
+    const m: Record<
+      string,
+      ReturnType<typeof evaluateGlobalEntryCandidate>
+    > = {};
+    for (const row of entries) {
+      m[row.id] = evaluateGlobalEntryCandidate({
+        title: row.title,
+        content: row.content,
+      });
+    }
+    return m;
+  }, [entries]);
 
   const loadPlatformMembers = useCallback(async () => {
     setMembersLoading(true);
@@ -1860,13 +1905,29 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ) : (
-                  paginatedEntryRows.map((row) => (
+                  paginatedEntryRows.map((row) => {
+                    const globalAssessment =
+                      globalAssessmentByEntryId[row.id] ??
+                      evaluateGlobalEntryCandidate({
+                        title: row.title,
+                        content: row.content,
+                      });
+                    const globalBadgeTitle = `Global score: ${globalAssessment.score} | ${globalAssessment.reasons.join(", ") || "reason yok"}`;
+                    return (
                     <tr
                       key={row.id}
                       className="border-b border-slate-800/80 hover:bg-slate-900/50"
                     >
                       <td className="admin-td-strong max-w-[220px] px-3 py-2">
-                        <span className="line-clamp-2">{row.title}</span>
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <span className="line-clamp-2">{row.title}</span>
+                          <span
+                            className={`inline-flex w-fit max-w-full rounded border px-1.5 py-0.5 text-[0.625rem] font-medium leading-tight ${globalCandidateBadgeClass(globalAssessment.level)}`}
+                            title={globalBadgeTitle}
+                          >
+                            {globalCandidateBadgeLabel(globalAssessment.level)}
+                          </span>
+                        </div>
                       </td>
                       <td className="admin-td whitespace-nowrap px-3 py-2">
                         {getPublishSectionLabel(row.category)}
@@ -1908,7 +1969,8 @@ export default function AdminPage() {
                         )}
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
