@@ -84,6 +84,24 @@ function globalCandidateBadgeClass(level: GlobalCandidateLevel): string {
   }
 }
 
+type AdminGlobalEntryFilter =
+  | "all"
+  | "strong"
+  | "medium"
+  | "weak"
+  | "not_eligible";
+
+const ADMIN_GLOBAL_ENTRY_FILTERS: ReadonlyArray<{
+  value: AdminGlobalEntryFilter;
+  label: string;
+}> = [
+  { value: "all", label: "Tümü" },
+  { value: "strong", label: "Global güçlü" },
+  { value: "medium", label: "Global orta" },
+  { value: "weak", label: "Global zayıf" },
+  { value: "not_eligible", label: "Global uygun değil" },
+];
+
 type AdminUserRow = {
   id: string;
   username: string;
@@ -398,12 +416,26 @@ export default function AdminPage() {
   }, [sessionOk, loadEntries]);
 
   const ENTRY_LIST_PAGE_SIZE = 20;
+
+  const [globalFilter, setGlobalFilter] = useState<AdminGlobalEntryFilter>("all");
+
+  const filteredEntries = useMemo(() => {
+    return entries.filter((entry) => {
+      if (globalFilter === "all") return true;
+      const assessment = evaluateGlobalEntryCandidate({
+        title: entry.title,
+        content: entry.content,
+      });
+      return assessment.level === globalFilter;
+    });
+  }, [entries, globalFilter]);
+
   const sortedEntryRows = useMemo(() => {
-    return [...entries].sort(
+    return [...filteredEntries].sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-  }, [entries]);
+  }, [filteredEntries]);
 
   const entryListTotalPages = Math.max(
     1,
@@ -1873,6 +1905,29 @@ export default function AdminPage() {
           {deleteError ? (
             <p className="admin-msg-error mt-2 text-[var(--accent)]">{deleteError}</p>
           ) : null}
+          <div
+            className="mt-4 flex flex-wrap items-center gap-2"
+            role="group"
+            aria-label="Global aday filtresi"
+          >
+            {ADMIN_GLOBAL_ENTRY_FILTERS.map(({ value, label }) => {
+              const active = globalFilter === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setGlobalFilter(value)}
+                  className={`admin-btn-text shrink-0 rounded-full border px-2.5 py-1 text-[0.75rem] font-medium leading-tight transition ${
+                    active
+                      ? "border-emerald-500/60 bg-emerald-500/18 text-emerald-100"
+                      : "border-slate-600 bg-slate-950/50 text-slate-400 hover:border-slate-500 hover:text-slate-300"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
           <div className="mt-4 overflow-x-auto rounded-xl border border-slate-800">
             <table className="w-full min-w-[720px] border-collapse text-left">
               <thead>
