@@ -16,6 +16,10 @@ import {
 } from "@/lib/visible-name";
 import { KatkilarimChrome } from "./katkilarim-chrome";
 
+type KatkilarimEntryRowLite = EntryRowLite & {
+  category?: string | null;
+};
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
@@ -262,6 +266,49 @@ export default async function KatkilarimPage() {
     if (ca) lastCommentAtByEntry.set(eid, ca);
   }
 
+  const entriesClient = createSupabaseServiceClient() ?? supabase;
+
+  let suggestedQuery = entriesClient
+    .from("entries")
+    .select("id, title, slug, category")
+    .not("slug", "is", null)
+    .neq("slug", "")
+    .order("created_at", { ascending: false });
+  if (entryOrder.length > 0) {
+    suggestedQuery = suggestedQuery.not(
+      "id",
+      "in",
+      `(${entryOrder.join(",")})`,
+    );
+  }
+  const { data: suggestedRaw, error: suggestedError } =
+    await suggestedQuery.limit(3);
+
+  if (suggestedError) {
+    console.error(
+      "[katkilarim] suggested entries",
+      suggestedError.message,
+    );
+  }
+
+  const suggestedRows = suggestedError
+    ? []
+    : (suggestedRaw ?? [])
+        .filter(
+          (r) =>
+            typeof r.slug === "string" &&
+            typeof r.id === "string" &&
+            r.slug.trim().length > 0,
+        )
+        .map((r) => ({
+          id: r.id,
+          title: typeof r.title === "string" ? r.title : "",
+          slug: r.slug.trim(),
+          category:
+            typeof r.category === "string" ? r.category : null,
+        }))
+        .slice(0, 3);
+
   if (entryOrder.length === 0) {
     return (
       <KatkilarimChrome
@@ -292,10 +339,9 @@ export default async function KatkilarimPage() {
     );
   }
 
-  const entriesClient = createSupabaseServiceClient() ?? supabase;
   const { data: entryRows, error: entriesError } = await entriesClient
     .from("entries")
-    .select("id, title, slug, created_at")
+    .select("id, title, slug, created_at, category")
     .in("id", entryOrder);
 
   if (entriesError) {
@@ -324,9 +370,9 @@ export default async function KatkilarimPage() {
     );
   }
 
-  const byId = new Map<string, EntryRowLite>();
+  const byId = new Map<string, KatkilarimEntryRowLite>();
   for (const r of entryRows ?? []) {
-    const row = r as EntryRowLite;
+    const row = r as KatkilarimEntryRowLite;
     if (row?.id) byId.set(row.id, row);
   }
 
