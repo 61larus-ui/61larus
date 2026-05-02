@@ -1054,7 +1054,7 @@ export default function AdminPage() {
     }
   }
 
-  async function approveGlobalEnglishTranslation(entryId: string) {
+  async function approveGlobalEnglishTranslation(entry: EntryRow) {
     if (!canManageEntriesFully) {
       setListBanner(
         "Bu işlem yalnızca tam yetkili yönetici (super_admin) içindir."
@@ -1062,37 +1062,36 @@ export default function AdminPage() {
       return;
     }
     setListBanner(null);
-    setEnglishTranslationApprovingEntryId(entryId);
+    setEnglishTranslationApprovingEntryId(entry.id);
     try {
+      console.log("[APPROVE CLICK]", entry.id);
       const res = await fetch("/api/admin/global-translation/approve", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         credentials: "include",
-        body: JSON.stringify({ entryId }),
+        body: JSON.stringify({
+          entryId: entry.id,
+        }),
       });
-      const status = res.status;
-      const raw = await res.text();
-      let body: unknown = null;
-      try {
-        body = raw.length > 0 ? (JSON.parse(raw) as unknown) : null;
-      } catch {
-        body = raw;
-      }
-      console.log("[EN APPROVE CLIENT]", {
-        entryId,
+
+      const text = await res.text();
+
+      console.log("[APPROVE RESPONSE]", {
+        status: res.status,
         ok: res.ok,
-        status,
-        body,
+        body: text,
       });
+
       if (!res.ok) {
-        setEnglishTranslationApprovingEntryId(null);
-        setListBanner("İngilizce yayın onayı tamamlanamadı.");
-        return;
+        throw new Error("Approve failed");
       }
+
       setEnglishTranslationApprovingEntryId(null);
       setEntries((prev) =>
         prev.map((e) =>
-          e.id === entryId
+          e.id === entry.id
             ? { ...e, global_translation_status: "approved" }
             : e
         )
@@ -2358,7 +2357,7 @@ export default function AdminPage() {
                                     englishTranslationApprovingEntryId === row.id
                                   }
                                   onClick={() =>
-                                    void approveGlobalEnglishTranslation(row.id)
+                                    void approveGlobalEnglishTranslation(row)
                                   }
                                   className="rounded-lg border border-emerald-600/55 bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-100 hover:border-emerald-500/70 hover:bg-emerald-950/60 disabled:cursor-not-allowed disabled:opacity-45"
                                 >

@@ -87,10 +87,9 @@ export async function POST(req: Request) {
     .from("entries")
     .update({
       global_translation_status: "approved",
-      updated_at: new Date().toISOString(),
     })
     .eq("id", entryId)
-    .select("id, slug, global_translation_status, updated_at");
+    .select("id, slug, global_translation_status");
 
   if (updateError) {
     console.error("[global-translation/approve] update error:", updateError);
