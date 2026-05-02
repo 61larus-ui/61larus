@@ -33,6 +33,8 @@ type EntryRow = {
   slug: string | null;
   /** DB global çeviri workflow; eksik/`none` için UI "Global yok". */
   global_translation_status?: string | null;
+  title_en?: string | null;
+  content_en?: string | null;
 };
 
 const ADMIN_PUBLISH_SECTIONS = [
@@ -152,6 +154,17 @@ function globalTranslationWorkflowIsNone(raw: string | undefined | null): boolea
   if (raw == null) return true;
   const t = typeof raw === "string" ? raw.trim().toLowerCase() : "";
   return t.length === 0 || t === "none";
+}
+
+function globalTranslationWorkflowIsCandidate(
+  raw: string | undefined | null
+): boolean {
+  const t = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+  return t === "candidate";
+}
+
+function entryHasSavedEnglishTitle(raw: string | undefined | null): boolean {
+  return typeof raw === "string" && raw.trim().length > 0;
 }
 
 type AdminUserRow = {
@@ -318,6 +331,8 @@ export default function AdminPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [globalCandidatePromotingId, setGlobalCandidatePromotingId] =
+    useState<string | null>(null);
+  const [englishDraftGeneratingId, setEnglishDraftGeneratingId] =
     useState<string | null>(null);
 
   const [editRow, setEditRow] = useState<EntryRow | null>(null);
@@ -973,6 +988,34 @@ export default function AdminPage() {
       void loadEntries();
     } catch {
       setGlobalCandidatePromotingId(null);
+      setListBanner("Ağ hatası.");
+    }
+  }
+
+  async function generateEnglishDraft(entryId: string) {
+    if (!canManageEntriesFully) {
+      setListBanner(
+        "Bu işlem yalnızca tam yetkili yönetici (super_admin) içindir."
+      );
+      return;
+    }
+    setListBanner(null);
+    setEnglishDraftGeneratingId(entryId);
+    try {
+      const res = await fetch(
+        `/api/admin/entries/${encodeURIComponent(entryId)}/generate-en-draft`,
+        { method: "POST", credentials: "include" }
+      );
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setEnglishDraftGeneratingId(null);
+        setListBanner(data.error ?? "İngilizce taslak oluşturulamadı.");
+        return;
+      }
+      setEnglishDraftGeneratingId(null);
+      void loadEntries();
+    } catch {
+      setEnglishDraftGeneratingId(null);
       setListBanner("Ağ hatası.");
     }
   }
@@ -2088,6 +2131,24 @@ export default function AdminPage() {
                                 {globalCandidatePromotingId === row.id
                                   ? "…"
                                   : "Global adaya ekle"}
+                              </button>
+                            ) : null}
+                            {canManageEntriesFully &&
+                            globalTranslationWorkflowIsCandidate(
+                              row.global_translation_status
+                            ) &&
+                            !entryHasSavedEnglishTitle(row.title_en) ? (
+                              <button
+                                type="button"
+                                disabled={englishDraftGeneratingId === row.id}
+                                onClick={() =>
+                                  void generateEnglishDraft(row.id)
+                                }
+                                className="admin-btn-text shrink-0 rounded border border-slate-500/80 bg-slate-900/50 px-1.5 py-0.5 text-[0.625rem] font-medium leading-tight text-slate-300 hover:border-slate-400 hover:text-slate-100 disabled:opacity-45"
+                              >
+                                {englishDraftGeneratingId === row.id
+                                  ? "…"
+                                  : "İngilizce taslak oluştur"}
                               </button>
                             ) : null}
                           </div>
