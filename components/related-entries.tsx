@@ -12,7 +12,7 @@ export function RelatedEntries({ items }: { items: RelatedEntry[] }) {
   return (
     <section className="entry-related-block" aria-labelledby="related-entries-title">
       <div id="related-entries-title" className="entry-related-kicker">
-        DEVAM OKU
+        BU BAŞLIKLARI DA GÖZDEN GEÇİR
       </div>
 
       <div className="entry-related-list">
