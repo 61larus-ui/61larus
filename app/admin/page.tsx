@@ -1070,8 +1070,21 @@ export default function AdminPage() {
         credentials: "include",
         body: JSON.stringify({ entryId }),
       });
+      const status = res.status;
+      const raw = await res.text();
+      let body: unknown = null;
+      try {
+        body = raw.length > 0 ? (JSON.parse(raw) as unknown) : null;
+      } catch {
+        body = raw;
+      }
+      console.log("[EN APPROVE CLIENT]", {
+        entryId,
+        ok: res.ok,
+        status,
+        body,
+      });
       if (!res.ok) {
-        await res.json().catch(() => null);
         setEnglishTranslationApprovingEntryId(null);
         setListBanner("İngilizce yayın onayı tamamlanamadı.");
         return;

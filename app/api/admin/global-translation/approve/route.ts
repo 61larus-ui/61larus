@@ -30,21 +30,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "entryId gerekli." }, { status: 400 });
   }
 
-  const service = createSupabaseServiceClient();
-  if (!service) {
+  const supabase = createSupabaseServiceClient();
+  if (!supabase) {
     return NextResponse.json(
       { error: "SUPABASE_SERVICE_ROLE_KEY tanımlanmalıdır." },
       { status: 503 }
     );
   }
 
-  const cur = await service
+  const cur = await supabase
     .from("entries")
     .select("id, global_translation_status, title_en, content_en")
     .eq("id", entryId)
     .maybeSingle();
 
   if (cur.error) {
+    console.error("[global-translation/approve] read:", cur.error);
     return NextResponse.json(
       { error: cur.error.message || "Entry okunamadı." },
       { status: 500 }
@@ -82,21 +83,43 @@ export async function POST(req: Request) {
     );
   }
 
-  const updatedAt = new Date().toISOString();
-  const upd = await service
+  const { data: updatedRows, error: updateError } = await supabase
     .from("entries")
     .update({
       global_translation_status: "approved",
-      updated_at: updatedAt,
+      updated_at: new Date().toISOString(),
     })
-    .eq("id", entryId);
+    .eq("id", entryId)
+    .select("id, slug, global_translation_status, updated_at");
 
-  if (upd.error) {
+  if (updateError) {
+    console.error("[global-translation/approve] update error:", updateError);
     return NextResponse.json(
-      { error: upd.error.message || "Güncellenemedi." },
+      { ok: false, error: "Update failed" },
       { status: 500 }
     );
   }
 
-  return NextResponse.json({ ok: true, status: "approved" });
+  if (!updatedRows || updatedRows.length !== 1) {
+    console.error("[global-translation/approve] update row count mismatch:", {
+      entryId,
+      updatedRows,
+    });
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Entry update did not affect exactly one row",
+      },
+      { status: 500 }
+    );
+  }
+
+  console.log("[global-translation/approve] success:", updatedRows[0]);
+
+  return NextResponse.json({
+    ok: true,
+    status: "approved",
+    entry: updatedRows[0],
+  });
 }
