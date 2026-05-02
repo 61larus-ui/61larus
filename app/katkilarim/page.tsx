@@ -445,7 +445,7 @@ export default async function KatkilarimPage() {
           {suggestedRows.length > 0 && (
             <div className="katkilarim-related-block">
               <div className="katkilarim-related-kicker">
-                BU BAŞLIKTA YORUMUNU BEKLİYOR
+                BU BAŞLIK SESSİZ KALMIŞ — SEN NE DİYORSUN?
               </div>
 
               <ul className="katkilarim-related-list">
