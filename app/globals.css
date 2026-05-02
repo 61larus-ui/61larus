@@ -10858,8 +10858,8 @@ main
 }
 
 .entry-related-block {
-  margin-top: 3rem;
-  padding: 1.4rem 1.4rem 1.5rem;
+  margin-top: 2.4rem;
+  padding: 1.15rem 1.25rem 1.25rem;
   border-top: 1px solid rgba(255, 122, 0, 0.35);
   background: linear-gradient(
     to bottom,
@@ -10869,7 +10869,7 @@ main
 }
 
 .entry-related-kicker {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   font-size: 0.68rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -10879,15 +10879,15 @@ main
 
 .entry-related-list {
   display: grid;
-  gap: 0.9rem;
+  gap: 0.65rem;
 }
 
 .entry-related-link {
   display: block;
   max-width: 720px;
   font-family: var(--font-serif);
-  font-size: clamp(1.05rem, 1.2vw, 1.2rem);
-  line-height: 1.5;
+  font-size: clamp(1rem, 1.05vw, 1.12rem);
+  line-height: 1.42;
   color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
   transition: all 0.2s ease;
@@ -10902,8 +10902,8 @@ main
 
 @media (max-width: 768px) {
   .entry-related-block {
-    margin-top: 2.2rem;
-    padding: 1.1rem 0.3rem 1.2rem;
+    margin-top: 1.9rem;
+    padding: 1rem 0.25rem 1.05rem;
   }
 
   .entry-related-link {
