@@ -1639,25 +1639,6 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
     white-space: nowrap !important;
     flex: 0 0 auto !important;
   }
-
-  .footer-social-row {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 18px !important;
-    width: 100% !important;
-    flex: 1 1 100%;
-    min-width: 0;
-    box-sizing: border-box;
-  }
-
-  footer nav .footer-social-row .footer-link-btn,
-  .footer-social-row a {
-    white-space: nowrap !important;
-    flex: 0 0 auto !important;
-  }
 }
 
 main > header.site-header {

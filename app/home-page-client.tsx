@@ -2271,26 +2271,38 @@ export default function HomePageClient({
                   <span className="text-[color:rgba(240,241,244,0.25)]" aria-hidden>
                     ·
                   </span>
-                  <div className="footer-social-row">
+                  <div className="flex w-full shrink-0 basis-full flex-wrap items-center justify-center gap-3 text-sm text-gray-400 md:w-auto md:basis-auto md:justify-start md:gap-4">
                     <a
-                      href="https://x.com/61sozluk"
-                      className="footer-link-btn"
+                      href="https://x.com/61Larus"
+                      className="footer-link-btn transition-colors hover:text-[var(--accent)]"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       X
                     </a>
+                    <span
+                      className="text-[color:rgba(240,241,244,0.25)]"
+                      aria-hidden
+                    >
+                      ·
+                    </span>
                     <a
                       href="https://www.instagram.com/61aktif/"
-                      className="footer-link-btn"
+                      className="footer-link-btn transition-colors hover:text-[var(--accent)]"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       Instagram
                     </a>
+                    <span
+                      className="text-[color:rgba(240,241,244,0.25)]"
+                      aria-hidden
+                    >
+                      ·
+                    </span>
                     <a
                       href="https://www.facebook.com/profile.php?id=61586158055479"
-                      className="footer-link-btn"
+                      className="footer-link-btn transition-colors hover:text-[var(--accent)]"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
