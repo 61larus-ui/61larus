@@ -5993,6 +5993,19 @@ main:has(.katkilarim-page-stack)
   opacity: 0.95;
 }
 
+@media (max-width: 768px) {
+  .entry-share-row {
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+
+  .entry-share-btn {
+    font-size: 0.7rem;
+    padding: 0.38rem 0.56rem;
+  }
+}
+
 /* Yorum listesi + compose — tipografi ve yüzey hizası */
 .entry-comments-section {
   margin-top: 1.25rem;
@@ -6281,6 +6294,22 @@ main:has(.katkilarim-page-stack)
 @media (min-width: 768px) {
   .entry-comment-submit {
     font-size: var(--type-meta-size-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .entry-comment-compose {
+    border-radius: 12px;
+  }
+
+  .entry-comment-textarea {
+    min-height: 108px;
+    font-size: 0.95rem;
+  }
+
+  .entry-comment-submit {
+    padding: 0.36rem 0.68rem;
+    font-size: 0.72rem;
   }
 }
 
@@ -9660,6 +9689,14 @@ footer#site-footer.home-page-footer .home-page-container {
 }
 
 @media (max-width: 768px) {
+  .home-global-search__shell {
+    border-radius: 18px;
+  }
+
+  .home-global-search__input {
+    font-size: 0.95rem;
+  }
+
   .home-global-search__title {
     white-space: normal;
     display: -webkit-box;
