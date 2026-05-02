@@ -198,25 +198,31 @@ export default async function EntrySlugPage({ params }: PageProps) {
                 className="home-hero-visual__image"
               />
               <div className="home-hero-visual__shade" aria-hidden="true" />
-              <div className="home-hero-content">
-                <h1 className="!text-white">
+              <div
+                className="absolute inset-0 z-[2] bg-black/50 md:bg-black/40 pointer-events-none rounded-[16px]"
+                aria-hidden="true"
+              />
+              <div className="home-hero-content z-10 max-w-[420px] text-white">
+                <h1 className="home-hero-title">
                   <Link
                     href="/"
                     prefetch
                     scroll={false}
-                    className="site-wordmark !text-white transition-opacity duration-200 hover:opacity-88"
+                    className="site-wordmark font-bold transition-opacity duration-200 hover:opacity-88"
                     style={{ fontFeatureSettings: '"ss01" 1, "cv01" 1' }}
                     aria-label="Ana sayfa — Akış"
                   >
                     {SITE_BRAND}
                   </Link>
                 </h1>
-                <p className="!text-white">
-                  Trabzon&apos;un gündemi, lafı ve hafızası
+                <div className="home-hero-accent-line" aria-hidden="true" />
+                <p className="home-hero-tagline">
+                  Trabzon&apos;un gündemi,{" "}
+                  <span>lafı ve hafızası</span>
                 </p>
               </div>
 
-              <div className="home-hero-user">
+              <div className="home-hero-user z-10">
                 {!auth.isAuthenticated ? (
                   <Link href="/auth" prefetch className="!text-white">
                     Giriş

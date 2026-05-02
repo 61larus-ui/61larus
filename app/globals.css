@@ -1034,6 +1034,12 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
 }
 
 /* Ana sayfa header — panoramik gece görseli (public/trabzon-gece-hafiza-banner.png) */
+/* Entry / Katkılar: trabzon banner varken üstteki manifesto + Atatürk şeridini gösterme */
+main:has(.entry-detail-page) > header.site-header:not(.home-header-banner),
+main:has(.katkilarim-page-stack) > header.site-header:not(.home-header-banner) {
+  display: none !important;
+}
+
 .home-hero-visual {
   position: relative;
   width: 100%;
@@ -1117,16 +1123,44 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   text-align: left;
 }
 
+.home-hero-content h1 a {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+}
+
+.home-hero-title {
+  color: #ffffff;
+}
+
+.home-hero-accent-line {
+  width: 48px;
+  height: 2px;
+  margin: 8px 0 10px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
 .home-hero-content p {
   margin: 0;
 }
 
 .home-hero-content p.home-hero-tagline {
-  color: rgb(209 213 219);
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  white-space: nowrap;
 }
 
 .home-hero-content p.home-hero-tagline span {
   color: var(--accent);
+  font-weight: 700;
 }
 
 :is(
@@ -1256,11 +1290,20 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
 
   .home-hero-visual__shade {
     border-radius: 18px;
-    background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.4) 0%,
-      rgba(0, 0, 0, 0.95) 100%
-    ) !important;
+    background:
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.94) 100%),
+      linear-gradient(to right, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.35)) !important;
+  }
+
+  .home-hero-title {
+    color: #ffffff !important;
+  }
+
+  .home-hero-accent-line {
+    width: 42px;
+    height: 2px;
+    margin: 7px 0 9px;
+    background: var(--accent) !important;
   }
 
   .home-hero-content {
@@ -1297,18 +1340,27 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   }
 
   .home-hero-content p.home-hero-tagline {
-    color: rgb(209 213 219) !important;
-    -webkit-text-fill-color: rgb(209 213 219) !important;
-    line-height: 1.25 !important;
+    color: rgba(255, 255, 255, 0.82) !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.82) !important;
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
     margin: 0 !important;
   }
 
   .home-hero-content p.home-hero-tagline span {
     color: var(--accent) !important;
     -webkit-text-fill-color: var(--accent) !important;
+    font-weight: 700 !important;
   }
 
   .home-hero-content h1 button {
+    opacity: 1 !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+  }
+
+  .home-hero-content h1 a {
     opacity: 1 !important;
     font-size: inherit !important;
     line-height: inherit !important;
@@ -1496,13 +1548,14 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   }
 
   .home-hero-content p.home-hero-tagline {
-    color: rgb(209 213 219) !important;
-    -webkit-text-fill-color: rgb(209 213 219) !important;
+    color: rgba(255, 255, 255, 0.82) !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.82) !important;
   }
 
   .home-hero-content p.home-hero-tagline span {
     color: var(--accent) !important;
     -webkit-text-fill-color: var(--accent) !important;
+    font-weight: 700 !important;
   }
 
   .home-hero-user,
@@ -1586,13 +1639,14 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
 
   /* Slogan: gri + turuncu (.home-hero-visual genel beyaz kurallarından sonra) */
   .home-hero-visual .home-hero-content p.home-hero-tagline {
-    color: rgb(209 213 219) !important;
-    -webkit-text-fill-color: rgb(209 213 219) !important;
+    color: rgba(255, 255, 255, 0.82) !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.82) !important;
   }
 
   .home-hero-visual .home-hero-content p.home-hero-tagline span {
     color: var(--accent) !important;
     -webkit-text-fill-color: var(--accent) !important;
+    font-weight: 700 !important;
   }
 
   /* Ana gövde: arama + köprü nefesi */
