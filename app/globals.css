@@ -10253,6 +10253,7 @@ footer#site-footer.home-page-footer .home-page-container {
 .my-comments-card.katkilarim-card,
 .katkilarim-card {
   margin-top: 18px;
+  margin-bottom: 28px;
   padding: 22px 24px;
   border-radius: 12px;
   background: #11161a !important;
@@ -10945,4 +10946,37 @@ main
   color: #ff6a00; /* markanın turuncusu */
   font-weight: 600;
   letter-spacing: 0.08em;
+}
+
+.katkilarim-related-block,
+.katkilarim-related {
+  margin-top: 8px;
+  padding-top: 12px;
+}
+
+.katkilarim-related + .home-global-search,
+.katkilarim-related-block + .home-global-search {
+  margin-top: 28px;
+}
+
+main:has(.katkilarim-wrapper)
+  .home-page-editorial.home-page-editorial--section-stack {
+  margin-bottom: 28px;
+}
+
+@media (max-width: 768px) {
+  .my-comments-card.katkilarim-card,
+  .katkilarim-card {
+    margin-bottom: 22px;
+  }
+
+  .katkilarim-related + .home-global-search,
+  .katkilarim-related-block + .home-global-search {
+    margin-top: 22px;
+  }
+
+  main:has(.katkilarim-wrapper)
+    .home-page-editorial.home-page-editorial--section-stack {
+    margin-bottom: 22px;
+  }
 }
