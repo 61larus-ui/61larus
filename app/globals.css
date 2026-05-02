@@ -10910,3 +10910,9 @@ main
     font-size: 1.02rem;
   }
 }
+
+.katkilarim-related-kicker {
+  color: #ff6a00; /* markanın turuncusu */
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
