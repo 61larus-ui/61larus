@@ -67,8 +67,6 @@ export function EntryDetailBodyRsc({
         slug={entry.slug}
       />
 
-      {commentsSlot}
-
       <EntryDetailCommentCompose
         entryId={entry.id}
         isAuthenticated={commentAuth.isAuthenticated}
@@ -77,6 +75,7 @@ export function EntryDetailBodyRsc({
           commentAuth.initialPlatformAccessSuspended
         }
       />
+      {commentsSlot}
     </div>
   );
 }
