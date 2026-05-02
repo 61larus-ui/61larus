@@ -60,6 +60,24 @@ function foldedContainsPhrase(body: string, phrase: string): boolean {
   return body.includes(normalizeForPhrase(phrase));
 }
 
+const KARADENIZ_TOKEN = foldAsciiLower("karadeniz");
+
+/** Trabzon / Doğu Karadeniz / ilçe / Sümela–Ayasofya–Boztepe vb.; tek başına "karadeniz" hariç. */
+function hasStrongLocalPlaceSignal(
+  bodyFold: string,
+  tokens: Set<string>
+): boolean {
+  for (const ph of TRABZON_PHRASES_FOLDED) {
+    if (bodyFold.includes(ph)) return true;
+  }
+  if (tokens.has("trabzon") || tokens.has("trabzonda")) return true;
+  for (const w of TRABZON_TOKENS) {
+    if (w === KARADENIZ_TOKEN) continue;
+    if (tokens.has(w)) return true;
+  }
+  return false;
+}
+
 /** Trabzon + ilçeler; fold edilmiş küçük token veya iki kelimeli ifade. */
 const TRABZON_PHRASES_FOLDED: string[] = [
   normalizeForPhrase("doğu karadeniz"),
@@ -118,22 +136,15 @@ const ACADEMIC_TOKENS = new Set(
   ).map((w) => foldAsciiLower(w))
 );
 
-/** Şehir hafızası - kelime grubu (+ çok kelimeli). */
+/** Şehir hafızası teması: "mahalle" / "yerel" yalnız başına sayılmaz. */
 const CITY_MEMORY_PHRASES_FOLDED: string[] = [
   normalizeForPhrase("gündelik hayat"),
+  normalizeForPhrase("şehir hafızası"),
+  normalizeForPhrase("kent hafızası"),
 ];
 
-const CITY_MEMORY_TOKENS = new Set(
-  (
-    [
-      "hafiza",
-      "kimlik",
-      "aidiyet",
-      "mahalle",
-      "yerel",
-      "gelenek",
-    ] as const
-  ).map((w) => foldAsciiLower(w))
+const CITY_MEMORY_WORD_TOKENS = new Set(
+  (["kimlik", "aidiyet", "gelenek"] as const).map((w) => foldAsciiLower(w))
 );
 
 const EVERGREEN_BLOCK_PHRASES_FOLDED: string[] = [
@@ -153,9 +164,16 @@ const GENERIC_TITLE_TOKENS = new Set([
   "tavsiye",
 ]);
 
-const NOT_GENERIC_EXTRA_TOKENS = new Set(
-  ["yerel", "mahalle", "ilce"].map((w) => foldAsciiLower(w))
-);
+function hasCityMemoryLinguistic(bodyFold: string, tokens: Set<string>): boolean {
+  for (const ph of CITY_MEMORY_PHRASES_FOLDED) {
+    if (bodyFold.includes(ph)) return true;
+  }
+  for (const w of CITY_MEMORY_WORD_TOKENS) {
+    if (tokens.has(w)) return true;
+  }
+  if (bodyFold.includes("hafiza")) return true;
+  return false;
+}
 
 export function evaluateGlobalEntryCandidate(
   input: GlobalEntryCandidateInput
@@ -227,22 +245,12 @@ export function evaluateGlobalEntryCandidate(
     reasons.push("historical_or_academic_value");
   }
 
-  let cityMemoryMatched = false;
-  for (const ph of CITY_MEMORY_PHRASES_FOLDED) {
-    if (bodyFold.includes(ph)) {
-      cityMemoryMatched = true;
-      break;
-    }
-  }
-  if (!cityMemoryMatched) {
-    for (const w of CITY_MEMORY_TOKENS) {
-      if (tokens.has(w)) {
-        cityMemoryMatched = true;
-        break;
-      }
-    }
-  }
-  if (cityMemoryMatched) {
+  const strongPlace = hasStrongLocalPlaceSignal(bodyFold, tokens);
+  const cityMemoryLinguistic = hasCityMemoryLinguistic(bodyFold, tokens);
+  const eligibleCityMemory =
+    cityMemoryLinguistic && strongPlace;
+
+  if (eligibleCityMemory) {
     score += 15;
     reasons.push("city_memory_value");
   }
@@ -259,9 +267,7 @@ export function evaluateGlobalEntryCandidate(
     reasons.push("evergreen_topic");
   }
 
-  const notGeneric =
-    trabzonMatched ||
-    [...NOT_GENERIC_EXTRA_TOKENS].some((w) => tokens.has(w));
+  const notGeneric = strongPlace;
   if (notGeneric) {
     score += 10;
     reasons.push("not_generic");
@@ -269,7 +275,8 @@ export function evaluateGlobalEntryCandidate(
     notes.push("Topic may be too generic for global publication.");
   }
 
-  if (academicMatched || cityMemoryMatched) {
+  const internationalEligible = academicMatched || eligibleCityMemory;
+  if (internationalEligible) {
     score += 10;
     reasons.push("international_reader_value");
   }
@@ -289,8 +296,6 @@ export function evaluateGlobalEntryCandidate(
     score -= 15;
   }
 
-  reasons.push("not_duplicate_like");
-
   score = Math.max(0, Math.min(100, score));
 
   let level: GlobalCandidateLevel;
@@ -298,6 +303,10 @@ export function evaluateGlobalEntryCandidate(
   else if (score >= 50) level = "medium";
   else if (score >= 25) level = "weak";
   else level = "not_eligible";
+
+  if (level !== "not_eligible") {
+    reasons.push("not_duplicate_like");
+  }
 
   return { level, score, reasons, notes };
 }
