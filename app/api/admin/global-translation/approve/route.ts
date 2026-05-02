@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 import { requireAdminSession, requireSuperAdminSession } from "@/lib/admin-api-auth";
+import { pingGoogleSitemap } from "@/lib/ping-google-sitemap";
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 
 function normalizeWorkflowStatus(raw: unknown): string {
@@ -115,6 +116,8 @@ export async function POST(req: Request) {
   }
 
   console.log("[global-translation/approve] success:", updatedRows[0]);
+
+  await pingGoogleSitemap();
 
   return NextResponse.json({
     ok: true,
