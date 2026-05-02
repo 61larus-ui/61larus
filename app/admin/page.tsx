@@ -18,7 +18,6 @@ import { SILINMIS_KULLANICI_LABEL } from "@/lib/deleted-user-label";
 import { AdminShareCopyBlock } from "@/components/admin-share-copy-block";
 import { publicSiteEntryUrl } from "@/lib/public-site-entry-url";
 import {
-  COMPOSE_TITLE_CHECKING_LABEL,
   useAdminComposeTitle,
 } from "@/hooks/use-admin-compose-title";
 
@@ -2021,14 +2020,6 @@ export default function AdminPage() {
                 {composeTitle.validation.phase === "blocked" ? (
                   <p className="admin-msg-error mt-2 text-sm text-[var(--accent)]">
                     {composeTitle.validation.message}
-                  </p>
-                ) : composeTitle.validation.phase === "warning" ? (
-                  <p className="mt-2 text-sm text-amber-200/90">
-                    {composeTitle.validation.message}
-                  </p>
-                ) : composeTitle.validation.phase === "checking" ? (
-                  <p className="mt-2 text-sm text-slate-500">
-                    {COMPOSE_TITLE_CHECKING_LABEL}
                   </p>
                 ) : null}
                 {composeTitleSuggestions.length > 0 ? (
