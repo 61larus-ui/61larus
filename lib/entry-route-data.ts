@@ -178,38 +178,113 @@ export type RelatedEntrySummary = {
 };
 
 /**
- * İlgili giriş listesi (hafif): mevcut giriş hariç, slug'ı olanlar, en yeniler.
+ * İlgili giriş listesi (hafif): önce aynı kategori (slug null/boş yok); eksik kalırsa genel yedek.
  */
 export async function getRelatedEntrySummaries(
   currentEntryId: string,
+  currentCategory?: string | null,
 ): Promise<RelatedEntrySummary[]> {
   unstable_noStore();
+
+  function mapSummaries(rows: unknown): RelatedEntrySummary[] {
+    if (!rows || !Array.isArray(rows)) return [];
+    return rows.map((row) => ({
+      id:
+        typeof (row as { id?: unknown }).id === "string"
+          ? (row as { id: string }).id
+          : String((row as { id?: unknown }).id),
+      title:
+        typeof (row as { title?: unknown }).title === "string"
+          ? (row as { title: string }).title
+          : "",
+      slug:
+        typeof (row as { slug?: unknown }).slug === "string" &&
+        (row as { slug: string }).slug.trim().length > 0
+          ? (row as { slug: string }).slug.trim()
+          : null,
+    }));
+  }
+
   try {
     const supabase = await createSupabaseServerClient();
     const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
 
-    const { data, error } = await client
+    const categoryEq =
+      typeof currentCategory === "string" &&
+      currentCategory.trim().length > 0
+        ? currentCategory.trim()
+        : null;
+
+    let merged: RelatedEntrySummary[] = [];
+
+    if (categoryEq !== null) {
+      const {
+        data: sameCategoryData,
+        error: sameCatError,
+      } = await client
+        .from("entries")
+        .select("id, title, slug, created_at")
+        .neq("id", currentEntryId)
+        .eq("category", categoryEq)
+        .not("slug", "is", null)
+        .neq("slug", "")
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (sameCatError) {
+        console.error(
+          "[getRelatedEntrySummaries] same-category",
+          sameCatError.message,
+        );
+      } else {
+        merged = mapSummaries(sameCategoryData);
+      }
+    }
+
+    if (merged.length >= 3) {
+      return merged.slice(0, 3);
+    }
+
+    const need = 3 - merged.length;
+    const seenIds = new Set([
+      currentEntryId,
+      ...merged.map((m) => m.id),
+    ]);
+
+    const { data: fallbackData, error: fallbackError } = await client
       .from("entries")
       .select("id, title, slug, created_at")
       .neq("id", currentEntryId)
       .not("slug", "is", null)
       .neq("slug", "")
       .order("created_at", { ascending: false })
-      .limit(3);
+      .limit(Math.min(need + Math.max(seenIds.size, 16), 48));
 
-    if (error) {
-      console.error("[getRelatedEntrySummaries]", error.message);
-      return [];
+    if (fallbackError) {
+      console.error(
+        "[getRelatedEntrySummaries] fallback",
+        fallbackError.message,
+      );
+      return merged;
     }
 
-    return (data ?? []).map((row) => ({
-      id: typeof row.id === "string" ? row.id : String(row.id),
-      title: typeof row.title === "string" ? row.title : "",
-      slug:
-        typeof row.slug === "string" && row.slug.trim().length > 0
-          ? row.slug.trim()
-          : null,
-    }));
+    const extras =
+      (fallbackData ?? []).filter((row) => {
+        const rid =
+          typeof row.id === "string" ? row.id : String(row.id);
+        return !seenIds.has(rid);
+      }) ?? [];
+
+    for (const row of extras) {
+      if (merged.length >= 3) break;
+      const mapped = mapSummaries([row])[0];
+      if (!mapped.slug) continue;
+      if (seenIds.has(mapped.id)) continue;
+      seenIds.add(mapped.id);
+      merged.push(mapped);
+    }
+
+    return merged;
   } catch (e) {
     console.error(
       "[getRelatedEntrySummaries]",
