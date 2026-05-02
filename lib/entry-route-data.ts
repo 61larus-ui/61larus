@@ -171,6 +171,54 @@ export async function resolveEntryRowBySegment(
   return getEntryByResolvedSlug(client, raw);
 }
 
+export type RelatedEntrySummary = {
+  id: string;
+  title: string;
+  slug: string | null;
+};
+
+/**
+ * İlgili giriş listesi (hafif): mevcut giriş hariç, slug'ı olanlar, en yeniler.
+ */
+export async function getRelatedEntrySummaries(
+  currentEntryId: string,
+): Promise<RelatedEntrySummary[]> {
+  unstable_noStore();
+  try {
+    const supabase = await createSupabaseServerClient();
+    const client = (createSupabaseServiceClient() ?? supabase) as DbClient;
+
+    const { data, error } = await client
+      .from("entries")
+      .select("id, title, slug, created_at")
+      .neq("id", currentEntryId)
+      .not("slug", "is", null)
+      .neq("slug", "")
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    if (error) {
+      console.error("[getRelatedEntrySummaries]", error.message);
+      return [];
+    }
+
+    return (data ?? []).map((row) => ({
+      id: typeof row.id === "string" ? row.id : String(row.id),
+      title: typeof row.title === "string" ? row.title : "",
+      slug:
+        typeof row.slug === "string" && row.slug.trim().length > 0
+          ? row.slug.trim()
+          : null,
+    }));
+  } catch (e) {
+    console.error(
+      "[getRelatedEntrySummaries]",
+      e instanceof Error ? e.message : e,
+    );
+    return [];
+  }
+}
+
 /**
  * Giriş sayfası hızı: yorum sorgusu yok; yazar için en fazla 1 yorum (fallback uid)
  * + ilgili kullanıcı(lar) çekilir. İçerik anında ekranlanabilir; yorumlar ayrı RSC.
