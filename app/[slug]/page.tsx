@@ -166,7 +166,7 @@ export default async function EntrySlugPage({ params }: PageProps) {
     permanentRedirect(`/${encodeURI(canonicalPath)}`);
   }
 
-  const relatedEntries = await getRelatedEntrySummaries(entryRow.id);
+  const relatedEntries = await getRelatedEntrySummaries(entryRow.id, entryRow.category);
 
   const heroUserLabel = heroUserDisplayLabel(
     auth.isAuthenticated,

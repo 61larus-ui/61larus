@@ -10858,35 +10858,50 @@ main
 }
 
 .entry-related-block {
-  margin-top: 2.25rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(120, 80, 40, 0.12);
+  margin-top: 2.75rem;
+  padding: 1.15rem 1.2rem 1.25rem;
+  border-top: 1px solid rgba(255, 122, 0, 0.28);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.018);
 }
 
 .entry-related-kicker {
-  margin-bottom: 0.75rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+  margin-bottom: 0.9rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #b45309;
-  font-weight: 700;
+  color: #ff7a00;
+  font-weight: 800;
 }
 
 .entry-related-list {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.72rem;
 }
 
 .entry-related-link {
   display: block;
-  font-size: 0.95rem;
+  max-width: 680px;
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.15vw, 1.13rem);
   line-height: 1.45;
-  color: #3f2f24;
+  color: rgba(255, 255, 255, 0.82);
   text-decoration: none;
 }
 
 .entry-related-link:hover {
-  color: #b45309;
+  color: #ff7a00;
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 768px) {
+  .entry-related-block {
+    margin-top: 2.1rem;
+    padding: 1rem 0.2rem 1.1rem;
+  }
+
+  .entry-related-link {
+    font-size: 1rem;
+  }
 }
