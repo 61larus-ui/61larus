@@ -1127,7 +1127,7 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
   color: rgb(209 213 219);
 }
 
-.home-hero-content p.home-hero-tagline .home-hero-tagline-accent {
+.home-hero-content p.home-hero-tagline span {
   color: var(--accent);
 }
 
@@ -1303,7 +1303,7 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
     -webkit-text-fill-color: rgb(209 213 219) !important;
   }
 
-  .home-hero-content p.home-hero-tagline .home-hero-tagline-accent {
+  .home-hero-content p.home-hero-tagline span {
     color: var(--accent) !important;
     -webkit-text-fill-color: var(--accent) !important;
   }
@@ -1506,7 +1506,7 @@ main > header.site-header.site-header--home-faz83 .site-header__bg-surface {
     -webkit-text-fill-color: rgb(209 213 219) !important;
   }
 
-  .home-hero-content p.home-hero-tagline .home-hero-tagline-accent {
+  .home-hero-content p.home-hero-tagline span {
     color: var(--accent) !important;
     -webkit-text-fill-color: var(--accent) !important;
   }

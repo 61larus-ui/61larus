@@ -1507,12 +1507,9 @@ export default function HomePageClient({
               className="mt-2 mb-3 h-[2px] w-12 bg-[var(--accent)]"
               aria-hidden="true"
             />
-            <p className="home-hero-tagline text-gray-300">
-              Trabzon&apos;un gündemi,
-              <br />
-              <span className="home-hero-tagline-accent text-[var(--accent)]">
-                lafı ve hafızası
-              </span>
+            <p className="home-hero-tagline text-gray-300 md:whitespace-nowrap">
+              Trabzon&apos;un gündemi,{" "}
+              <span className="text-[var(--accent)]">lafı ve hafızası</span>
             </p>
           </div>
 
