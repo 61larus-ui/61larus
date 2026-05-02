@@ -1696,7 +1696,10 @@ export default function HomePageClient({
                       <p className="home-hero-faz1__micro">
                         Bu başlık boş değil. Gir, oku, yorumunu bırak.
                       </p>
-                      <span className="home-hero-faz1__cta" aria-hidden="true">
+                      <span
+                        className="home-hero-faz1__cta read-more-link"
+                        aria-hidden="true"
+                      >
                         Devamını oku →
                       </span>
                     </div>
@@ -2096,7 +2099,7 @@ export default function HomePageClient({
                                           ? "Henüz yazılmamış"
                                           : `${cc} yorum`}
                                       </span>
-                                      <span className="home-explore-cta home-explore-cta--row">
+                                      <span className="home-explore-cta home-explore-cta--row read-more-link">
                                         Devamını oku →
                                       </span>
                                     </div>
@@ -2145,7 +2148,7 @@ export default function HomePageClient({
                                         ? "Henüz yazılmamış"
                                         : `${wcc} yorum`}
                                     </span>
-                                    <span className="home-explore-cta home-explore-cta--row">
+                                    <span className="home-explore-cta home-explore-cta--row read-more-link">
                                       Devamını oku →
                                     </span>
                                   </div>
@@ -2199,7 +2202,7 @@ export default function HomePageClient({
                                         ? "Henüz yazılmamış"
                                         : `${cc} yorum`}
                                     </span>
-                                    <span className="home-explore-cta home-explore-cta--row">
+                                    <span className="home-explore-cta home-explore-cta--row read-more-link">
                                       Devamını oku →
                                     </span>
                                   </div>

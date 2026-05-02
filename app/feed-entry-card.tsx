@@ -96,7 +96,7 @@ export function FeedEntryCard({
                 : `${commentCount} yorum`}
             </span>
           </p>
-          <span className="feed-entry-cta shrink-0 text-left sm:text-right">
+          <span className="feed-entry-cta read-more-link shrink-0 text-left sm:text-right">
             Devamını oku →
           </span>
         </div>

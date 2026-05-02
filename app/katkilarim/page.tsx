@@ -387,7 +387,7 @@ export default async function KatkilarimPage() {
                           {countLabel}
                         </p>
                       </div>
-                      <span className="my-comments-card-cta katkilarim-cta shrink-0 sm:mt-0.5">
+                      <span className="my-comments-card-cta katkilarim-cta read-more-link shrink-0 sm:mt-0.5">
                         Devamını oku →
                       </span>
                     </div>

@@ -10713,3 +10713,102 @@ main
   opacity: 1 !important;
 }
 
+/* —— Devamını oku →: marka turuncusu (.read-more-link) —— */
+.read-more-link {
+  color: var(--accent);
+  transition: all 0.2s ease;
+}
+
+.read-more-link:hover {
+  color: var(--accent-hover);
+  text-decoration: none;
+}
+
+.home-rail--faz5-primary .feed-entry-cta.read-more-link::after {
+  color: var(--accent);
+}
+
+.home-rail--faz5-primary .feed-entry-card--editorial:hover .feed-entry-cta.read-more-link::after,
+.home-rail--faz5-primary
+  .feed-entry-card--editorial:focus-within
+  .feed-entry-cta.read-more-link::after {
+  color: var(--accent-hover);
+}
+
+.home-hero-faz1__cta.read-more-link {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.home-hero-faz1:hover .home-hero-faz1__cta.read-more-link {
+  color: var(--accent-hover);
+}
+
+.home-explore--faz51 .home-explore-cta.read-more-link {
+  color: var(--accent);
+  border-bottom-color: color-mix(in srgb, var(--accent) 38%, transparent);
+}
+
+.home-explore--faz51 .home-explore-item:hover .home-explore-cta.read-more-link,
+.home-explore--faz51 .home-explore-item:focus-visible .home-explore-cta.read-more-link,
+.home-explore--faz51 .home-explore-question:hover .home-explore-cta.read-more-link,
+.home-explore--faz51 .home-explore-question:focus-visible .home-explore-cta.read-more-link {
+  color: var(--accent-hover);
+  border-bottom-color: color-mix(in srgb, var(--accent-hover) 42%, transparent);
+}
+
+.my-comments-card-cta.read-more-link {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.my-comments-card:hover .my-comments-card-cta.read-more-link {
+  color: var(--accent-hover);
+}
+
+@media (max-width: 768px) {
+  .read-more-link {
+    color: var(--accent) !important;
+    font-weight: 500;
+  }
+
+  .home-rail--faz5-primary .feed-entry-cta.read-more-link::after {
+    color: var(--accent) !important;
+    font-weight: 500;
+  }
+
+  .home-rail--faz5-primary .feed-entry-card--editorial:hover .feed-entry-cta.read-more-link::after,
+  .home-rail--faz5-primary
+    .feed-entry-card--editorial:focus-within
+    .feed-entry-cta.read-more-link::after {
+    color: var(--accent-hover) !important;
+  }
+
+  .home-explore--faz51 .home-explore-cta.read-more-link {
+    color: var(--accent) !important;
+    font-weight: 500;
+  }
+
+  .home-explore--faz51 .home-explore-item:hover .home-explore-cta.read-more-link,
+  .home-explore--faz51 .home-explore-item:focus-visible .home-explore-cta.read-more-link,
+  .home-explore--faz51 .home-explore-question:hover .home-explore-cta.read-more-link,
+  .home-explore--faz51 .home-explore-question:focus-visible .home-explore-cta.read-more-link {
+    color: var(--accent-hover) !important;
+  }
+
+  .my-comments-card-cta.read-more-link {
+    color: var(--accent) !important;
+  }
+
+  .my-comments-card:hover .my-comments-card-cta.read-more-link {
+    color: var(--accent-hover) !important;
+  }
+
+  .home-hero-faz1__cta.read-more-link {
+    color: var(--accent) !important;
+  }
+
+  .home-hero-faz1:hover .home-hero-faz1__cta.read-more-link {
+    color: var(--accent-hover) !important;
+  }
+}
