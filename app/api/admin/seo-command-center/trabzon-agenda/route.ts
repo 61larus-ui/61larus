@@ -13,6 +13,10 @@ const MESSAGE_NO_GEMINI =
   "Gemini anahtarı olmadığı için gündem önerisi üretilmedi; kaynak altyapısı hazır.";
 const ERROR_GEMINI_FAILED = "Gündem önerileri şu anda üretilemedi.";
 
+const FALLBACK_ENTRY_DESCRIPTION =
+  "Bu öneri yayınlanmadan önce kaynakla doğrulanmış kısa açıklama hazırlanmalıdır.";
+const SOURCE_VERIFY_PHRASE = "Kaynak doğrulaması gerekli.";
+
 const PRINCIPLES = [
   "Her gündem önerisi açık kaynakla desteklenmelidir.",
   "Akademik veya güvenilir kaynak yoksa öneri düşük güvenle işaretlenmelidir.",
@@ -45,19 +49,23 @@ const AGENDA_SUGGESTIONS_JSON_SCHEMA = {
       title: { type: "STRING" },
       reason: { type: "STRING" },
       suggestedEntryTitle: { type: "STRING" },
+      suggestedEntryDescription: { type: "STRING" },
       sourceIds: { type: "ARRAY", items: { type: "STRING" } },
       sourceNote: { type: "STRING" },
       confidence: { type: "STRING" },
       category: { type: "STRING" },
+      siteDuplicateRisk: { type: "STRING" },
     },
     required: [
       "title",
       "reason",
       "suggestedEntryTitle",
+      "suggestedEntryDescription",
       "sourceIds",
       "sourceNote",
       "confidence",
       "category",
+      "siteDuplicateRisk",
     ],
   },
 } as const;
@@ -119,15 +127,25 @@ const CATEGORY_SET = new Set([
   "akademik",
 ]);
 
+const DUPLICATE_RISK_SET = new Set(["low", "medium", "high"]);
+
 type AgendaSuggestionOut = {
   title: string;
   reason: string;
   suggestedEntryTitle: string;
+  suggestedEntryDescription: string;
   sourceIds: string[];
   sourceNote: string;
   confidence: "low" | "medium" | "high";
   category: "gundem" | "tarih" | "kultur" | "sehir" | "akademik";
+  siteDuplicateRisk: "low" | "medium" | "high";
 };
+
+function mergeSourceNoteWithVerificationRequired(note: string): string {
+  const t = note.trim();
+  if (t.toLowerCase().includes("kaynak doğrulaması gerekli")) return t;
+  return t ? `${t} ${SOURCE_VERIFY_PHRASE}` : SOURCE_VERIFY_PHRASE;
+}
 
 function normalizeSuggestion(raw: unknown): AgendaSuggestionOut | null {
   if (!raw || typeof raw !== "object") return null;
@@ -140,6 +158,15 @@ function normalizeSuggestion(raw: unknown): AgendaSuggestionOut | null {
       : "";
   if (!title || !reason || !suggestedEntryTitle) return null;
 
+  let suggestedEntryDescription =
+    typeof o.suggestedEntryDescription === "string"
+      ? o.suggestedEntryDescription.trim()
+      : "";
+  const descriptionMissing = !suggestedEntryDescription;
+  if (descriptionMissing) {
+    suggestedEntryDescription = FALLBACK_ENTRY_DESCRIPTION;
+  }
+
   const rawIds = Array.isArray(o.sourceIds)
     ? o.sourceIds
         .filter((x): x is string => typeof x === "string")
@@ -148,7 +175,7 @@ function normalizeSuggestion(raw: unknown): AgendaSuggestionOut | null {
     : [];
   const sourceIds = rawIds.filter((id) => SOURCE_ID_SET.has(id));
 
-  const sourceNote =
+  let sourceNote =
     typeof o.sourceNote === "string" ? o.sourceNote.trim() : "";
 
   let confidenceRaw =
@@ -158,8 +185,18 @@ function normalizeSuggestion(raw: unknown): AgendaSuggestionOut | null {
     typeof o.category === "string" ? o.category.toLowerCase().trim() : "";
   if (!CATEGORY_SET.has(categoryRaw)) categoryRaw = "gundem";
 
+  let riskRaw =
+    typeof o.siteDuplicateRisk === "string"
+      ? o.siteDuplicateRisk.toLowerCase().trim()
+      : "";
+  if (!DUPLICATE_RISK_SET.has(riskRaw)) riskRaw = "medium";
+
   let confidence = confidenceRaw as AgendaSuggestionOut["confidence"];
   if (sourceIds.length === 0) {
+    confidence = "low";
+    sourceNote = mergeSourceNoteWithVerificationRequired(sourceNote);
+  }
+  if (descriptionMissing) {
     confidence = "low";
   }
 
@@ -167,23 +204,30 @@ function normalizeSuggestion(raw: unknown): AgendaSuggestionOut | null {
     title,
     reason,
     suggestedEntryTitle,
+    suggestedEntryDescription,
     sourceIds,
     sourceNote,
     confidence,
     category: categoryRaw as AgendaSuggestionOut["category"],
+    siteDuplicateRisk: riskRaw as AgendaSuggestionOut["siteDuplicateRisk"],
   };
 }
 
 function buildAgendaPrompt(sourcesJson: string): string {
-  return `Sen 61Sözlük için Trabzon odaklı, kontrollü entry başlığı önerileri üreten bir yardımcısın.
+  return `Sen 61Sözlük için Trabzon odaklı, kontrollü YENİ ENTRY fırsatı önerileri üreten bir yardımcısın.
 
 KURALLAR:
+- Her öneri mutlaka 61Sözlük'te henüz işlenmemiş, yeni bir entry fırsatı gibi düşünülmelidir.
+- Daha önce sitede yoğun işlenmiş veya tekrar riski yüksek konuları önerme; siteDuplicateRisk alanını buna göre doldur ("low" | "medium" | "high").
+- Her öneri için suggestedEntryTitle ve suggestedEntryDescription ZORUNLUDUR.
+- suggestedEntryDescription tek kısa paragraf olmalı; giriş metninin özeti gibi, spekülasyondan kaçın.
+- Her öneri kaynak mantığı taşımalı; kaynak id'leri yalnızca aşağıdaki listeden seçilmeli. Kaynak yoksa veya zayıfsa confidence "low" olmalı.
 - Trabzon ve çevresiyle ilişkili öneriler üret.
-- Canlı haber veya güncel olay UYDURMA; bugünün tarihli spesifik olay iddiasında bulunma.
-- Aşağıdaki kaynak listesinde OLMAYAN sitelere veya spesifik haber URL'lerine atıf yapma; kaynak id'leri yalnızca bu listeden seç.
-- Tarihî, kültürel veya akademik iddia içeren önerilerde mutlaka kaynak notunda akademik/açık kaynak gerektiğini ve doğrulama ihtiyacını belirt.
-- suggestedEntryTitle kısa ve sözlük başlığı formatına uygun olsun (tek cümle, mümkünse soru veya net tema).
-- Sistem otomatik yayın YAPMAZ; metinler yalnızca admin incelemesi içindir.
+- Uydurma güncel olay, uydurma akademik yayın veya sahte kaynak ÜRETME.
+- Canlı haber veya bugüne özel spesifik olay iddiasında bulunma.
+- Aşağıdaki kaynak listesinde OLMAYAN sitelere veya spesifik haber URL'lerine atıf yapma.
+- Tarihî, kültürel veya akademik iddia içeren önerilerde akademik veya açık kaynak ihtiyacını sourceNote içinde AÇIKÇA belirt.
+- Sistem otomatik yayın YAPMAZ; yalnızca admin için öneri üretir.
 - Tam olarak 3 öneri üret. JSON dizi olarak döndür (başka metin yok).
 
 KAYNAK LİSTESİ (id, label, type, trustLevel, baseUrl, note?):
@@ -191,12 +235,14 @@ ${sourcesJson}
 
 Her öğe şeması:
 - title: kısa iç başlık / tema etiketi
-- reason: önerinin gerekçesi (genel, doğrulanabilir çerçeve)
-- suggestedEntryTitle: sözlük giriş başlığı önerisi
+- reason: neden bu yeni entry fırsatı önerildi (genel, doğrulanabilir çerçeve)
+- suggestedEntryTitle: sözlük giriş başlığı önerisi (kısa, sözlük formatına uygun)
+- suggestedEntryDescription: giriş için tek kısa paragraf açıklama özeti
 - sourceIds: yukarıdaki id'lerden bir veya daha fazla (yalnızca listedekiler)
-- sourceNote: hangi kaynak türüyle tutarlı olduğu ve gerekirse doğrulama notu
-- confidence: "low" | "medium" | "high" — kaynak zayıfsa veya iddia hassassa düşük kullan
-- category: "gundem" | "tarih" | "kultur" | "sehir" | "akademik"`;
+- sourceNote: kaynak türü, doğrulama ve akademik ihtiyaç notları
+- confidence: "low" | "medium" | "high" — kaynak yoksa veya zayıfsa mutlaka "low"
+- category: "gundem" | "tarih" | "kultur" | "sehir" | "akademik"
+- siteDuplicateRisk: "low" | "medium" | "high" — sitede benzer içerik olma ihtimali tahmini`;
 }
 
 function sourcesForPrompt() {

@@ -226,10 +226,12 @@ type TrabzonAgendaSuggestion = {
   title: string;
   reason: string;
   suggestedEntryTitle: string;
+  suggestedEntryDescription: string;
   sourceIds: string[];
   sourceNote: string;
   confidence: string;
   category: string;
+  siteDuplicateRisk: string;
 };
 
 function isValidTrabzonAgendaSuggestion(
@@ -239,9 +241,11 @@ function isValidTrabzonAgendaSuggestion(
   const o = item as Record<string, unknown>;
   if (typeof o.title !== "string" || typeof o.reason !== "string") return false;
   if (typeof o.suggestedEntryTitle !== "string") return false;
+  if (typeof o.suggestedEntryDescription !== "string") return false;
   if (typeof o.sourceNote !== "string") return false;
   if (typeof o.confidence !== "string" || typeof o.category !== "string")
     return false;
+  if (typeof o.siteDuplicateRisk !== "string") return false;
   if (!Array.isArray(o.sourceIds) || !o.sourceIds.every((x) => typeof x === "string"))
     return false;
   return true;
@@ -944,21 +948,46 @@ export default function SeoCommandCenterPage() {
                     key={`${s.suggestedEntryTitle}-${i}`}
                     className="rounded-lg border border-slate-800/90 bg-slate-950/40 px-3 py-3 text-sm"
                   >
-                    <p className="m-0 text-[0.7rem] text-slate-500">{s.title}</p>
-                    <p className="m-0 mt-1 font-medium text-slate-100">
+                    <p className="m-0 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                      Önerilen entry başlığı
+                    </p>
+                    <p className="m-0 mt-0.5 font-medium text-slate-100">
                       {s.suggestedEntryTitle}
                     </p>
-                    <p className="admin-helper m-0 mt-2 text-xs leading-relaxed text-slate-400">
+                    <p className="m-0 mt-3 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                      Açıklama
+                    </p>
+                    <p className="admin-helper m-0 mt-0.5 text-xs leading-relaxed text-slate-300">
+                      {s.suggestedEntryDescription}
+                    </p>
+                    <p className="m-0 mt-3 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                      Neden önerildi?
+                    </p>
+                    <p className="admin-helper m-0 mt-0.5 text-xs leading-relaxed text-slate-400">
                       {s.reason}
                     </p>
-                    <p className="m-0 mt-2 text-[0.7rem] text-slate-500">
-                      güven: {s.confidence} · kategori: {s.category}
+                    <p className="m-0 mt-1 text-[0.65rem] text-slate-600">
+                      Tema: {s.title}
                     </p>
-                    <p className="admin-helper m-0 mt-2 text-xs text-slate-500">
+                    <p className="m-0 mt-2 text-[0.7rem] text-slate-500">
+                      Güven seviyesi: {s.confidence} · Kategori: {s.category}{" "}
+                      · Site tekrar riski: {s.siteDuplicateRisk}
+                    </p>
+                    <p className="m-0 mt-2 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                      Kaynak notu
+                    </p>
+                    <p className="admin-helper m-0 mt-0.5 text-xs text-slate-500">
                       {s.sourceNote}
                     </p>
-                    <p className="m-0 mt-1 break-all font-mono text-[0.65rem] text-slate-600">
-                      Kaynak id: {s.sourceIds.length ? s.sourceIds.join(", ") : "—"}
+                    <p className="m-0 mt-2 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                      Kaynak id&apos;leri
+                    </p>
+                    <p className="m-0 mt-0.5 break-all font-mono text-[0.65rem] text-slate-600">
+                      {s.sourceIds.length ? s.sourceIds.join(", ") : "—"}
+                    </p>
+                    <p className="admin-helper m-0 mt-3 rounded-md border border-slate-700/60 bg-slate-900/50 px-2 py-1.5 text-[0.7rem] text-slate-400">
+                      Bu öneri otomatik yayınlanmaz; admin kaynak kontrolünden
+                      sonra entry&apos;ye dönüştürür.
                     </p>
                   </li>
                 ))}
