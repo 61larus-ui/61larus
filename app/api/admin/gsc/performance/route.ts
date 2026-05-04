@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 const SITE_URL = "sc-domain:61sozluk.com";
 
-function getDateDaysAgo(days: number) {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
-  return date.toISOString().slice(0, 10);
-}
-
 export async function GET(request: NextRequest) {
   const accessToken = request.cookies.get("gsc_access_token")?.value;
 
@@ -21,8 +15,16 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const endDate = getDateDaysAgo(1);
-  const startDate = getDateDaysAgo(28);
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() - 1);
+
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 28);
+
+  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
+  const start = formatDate(startDate);
+  const end = formatDate(endDate);
 
   const res = await fetch(
     `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(
@@ -35,8 +37,8 @@ export async function GET(request: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        startDate,
-        endDate,
+        startDate: start,
+        endDate: end,
         dimensions: ["query"],
         rowLimit: 25,
         startRow: 0,
@@ -51,8 +53,8 @@ export async function GET(request: NextRequest) {
     status: res.status,
     siteUrl: SITE_URL,
     range: {
-      startDate,
-      endDate,
+      startDate: start,
+      endDate: end,
     },
     data,
   });
