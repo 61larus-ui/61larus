@@ -126,7 +126,7 @@ async function fetchOpenAISuggestions(apiKey: string): Promise<
   const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
 
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       signal: ctrl.signal,
       headers: {
@@ -135,12 +135,19 @@ async function fetchOpenAISuggestions(apiKey: string): Promise<
       },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
-        input: `
+        messages: [
+          {
+            role: "system",
+            content:
+              "Sen Trabzon hakkında akademik içerik üreten bir asistansın.",
+          },
+          {
+            role: "user",
+            content: `
 Trabzon hakkında akademik ve açık kaynaklı konulara dayanarak TAM OLARAK 8 entry önerisi üret.
 
 SADECE JSON DÖNDÜR.
 Açıklama yazma.
-Başına/sonuna metin ekleme.
 Markdown kullanma.
 
 FORMAT:
@@ -160,17 +167,15 @@ FORMAT:
   ]
 }
 `,
-        text: {
-          format: {
-            type: "json_object",
           },
-        },
+        ],
+        temperature: 0.7,
       }),
     });
 
     const dataUnknown = await response.json().catch(() => null);
     const data = dataUnknown as {
-      output_text?: string;
+      choices?: Array<{ message?: { content?: string | null } }>;
       error?: { message?: string };
     } | null;
 
@@ -184,7 +189,7 @@ FORMAT:
       return { httpOk: false, apiMessage: apiMsg };
     }
 
-    const text = data?.output_text || "{}";
+    const text = data?.choices?.[0]?.message?.content || "{}";
 
     let rawSuggestions: unknown = [];
 
@@ -192,7 +197,7 @@ FORMAT:
       const parsed = JSON.parse(text) as { suggestions?: unknown };
       rawSuggestions = parsed.suggestions || [];
     } catch (e) {
-      console.error("[agenda] parse error", text);
+      console.error("PARSE ERROR:", text);
       rawSuggestions = [];
     }
 
