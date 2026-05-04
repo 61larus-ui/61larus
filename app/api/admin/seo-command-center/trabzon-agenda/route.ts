@@ -153,11 +153,13 @@ Kurallar:
             strict: true,
             schema: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 suggestions: {
                   type: "array",
                   items: {
                     type: "object",
+                    additionalProperties: false,
                     properties: {
                       suggestedEntryTitle: { type: "string" },
                       suggestedEntryDescription: { type: "string" },
