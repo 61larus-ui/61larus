@@ -5,6 +5,7 @@ import { requireAdminSession, requireSuperAdminSession } from "@/lib/admin-api-a
 import { createSupabaseServiceClient } from "@/lib/supabase-service";
 import { normalizeAdminEntryPublishSection } from "@/lib/admin-entry-publish-section";
 import { ensureUniqueEntrySlug, slugifyEntryTitle } from "@/lib/entry-slug";
+import { pingGoogleSitemap } from "@/lib/ping-google-sitemap";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -120,6 +121,15 @@ export async function PATCH(req: Request, ctx: Ctx) {
       { error: upd.error.message || "Güncellenemedi." },
       { status: 500 }
     );
+  }
+
+  // Sitemap yenileme bildirimi (Google ping); başarısızlık HTTP yanıtını etkilemez.
+  if (category !== "pending") {
+    try {
+      await pingGoogleSitemap();
+    } catch {
+      /* pingGoogleSitemap ağ hatalarında throw etmez; savunma amaçlı */
+    }
   }
 
   return NextResponse.json({ ok: true });

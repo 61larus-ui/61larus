@@ -14,6 +14,7 @@ import {
 } from "@/lib/visible-name";
 import { countPublicLiveEntries } from "@/lib/entry-public-live-count";
 import { validateTitleQuality } from "@/lib/entry-title-rules";
+import { pingGoogleSitemap } from "@/lib/ping-google-sitemap";
 
 type EntryListRow = {
   id: string;
@@ -331,6 +332,15 @@ export async function POST(req: Request) {
       created_at: created.created_at,
       slug: created.slug ?? null,
     });
+  }
+
+  // Sitemap yenileme bildirimi (Google ping); başarısızlık HTTP yanıtını etkilemez.
+  if (category !== "pending") {
+    try {
+      await pingGoogleSitemap();
+    } catch {
+      /* pingGoogleSitemap ağ hatalarında throw etmez; savunma amaçlı */
+    }
   }
 
   return NextResponse.json({
