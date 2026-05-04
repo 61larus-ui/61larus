@@ -3,15 +3,8 @@ import { requireAdminSession } from "@/lib/admin-api-auth";
 
 export const runtime = "nodejs";
 
-const DEFAULT_GEMINI_MODEL = "gemini-3-flash-preview";
-const GEMINI_TIMEOUT_MS = 60_000;
+const OPENAI_TIMEOUT_MS = 60_000;
 const TARGET_COUNT = 8;
-
-const MESSAGE_READY =
-  "Akademik entry önerileri üretildi. Yayın sürecinde admin onayı gereklidir.";
-const MESSAGE_NO_GEMINI =
-  "Gemini anahtarı tanımlı değil; öneri üretilmedi.";
-const ERROR_GEMINI_FAILED = "Akademik entry önerileri şu anda üretilemedi.";
 
 const FALLBACK_DESCRIPTION =
   "Konu özeti oluşturulamadı; makaleleri ve başlığı kontrol ederek editör yazımı gerekebilir.";
@@ -47,77 +40,6 @@ export type AcademicEntrySuggestionOut = {
     | "toplum";
   duplicateRisk: "low" | "medium" | "high";
 };
-
-const ACADEMIC_SUGGESTIONS_JSON_SCHEMA = {
-  type: "ARRAY",
-  items: {
-    type: "OBJECT",
-    properties: {
-      suggestedEntryTitle: { type: "STRING" },
-      suggestedEntryDescription: { type: "STRING" },
-      reason: { type: "STRING" },
-      sources: { type: "ARRAY", items: { type: "STRING" } },
-      sourceNote: { type: "STRING" },
-      confidence: { type: "STRING" },
-      categorySuggestion: { type: "STRING" },
-      duplicateRisk: { type: "STRING" },
-    },
-    required: [
-      "suggestedEntryTitle",
-      "suggestedEntryDescription",
-      "reason",
-      "sources",
-      "sourceNote",
-      "confidence",
-      "categorySuggestion",
-      "duplicateRisk",
-    ],
-  },
-} as const;
-
-function resolveGeminiModel(): string {
-  const fromEnv = process.env.GEMINI_MODEL?.trim();
-  return fromEnv && fromEnv.length > 0 ? fromEnv : DEFAULT_GEMINI_MODEL;
-}
-
-function extractGeminiText(data: unknown): string | null {
-  const root = data as {
-    candidates?: Array<{
-      content?: { parts?: Array<{ text?: string }> };
-    }>;
-  };
-  const text = root?.candidates?.[0]?.content?.parts?.[0]?.text;
-  return typeof text === "string" ? text : null;
-}
-
-function parseSuggestionsJson(text: string): unknown[] | null {
-  const trimmed = text.trim();
-  try {
-    const direct: unknown = JSON.parse(trimmed);
-    if (Array.isArray(direct)) return direct;
-  } catch {
-    /* continue */
-  }
-  const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const blob = fence ? fence[1].trim() : trimmed;
-  try {
-    const parsed: unknown = JSON.parse(blob);
-    if (Array.isArray(parsed)) return parsed;
-  } catch {
-    const start = blob.indexOf("[");
-    const end = blob.lastIndexOf("]");
-    if (start >= 0 && end > start) {
-      try {
-        const sliced: unknown = JSON.parse(blob.slice(start, end + 1));
-        if (Array.isArray(sliced)) return sliced;
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  }
-  return null;
-}
 
 function normalizeSuggestion(raw: unknown): AcademicEntrySuggestionOut | null {
   if (!raw || typeof raw !== "object") return null;
@@ -161,7 +83,6 @@ function normalizeSuggestion(raw: unknown): AcademicEntrySuggestionOut | null {
     typeof o.duplicateRisk === "string"
       ? o.duplicateRisk.toLowerCase().trim()
       : "";
-  /* Eski anahtar adı gelirse yakala */
   if (!DUPLICATE_RISK_SET.has(riskRaw)) {
     const alt =
       typeof o.siteDuplicateRisk === "string"
@@ -197,84 +118,85 @@ function normalizeSuggestion(raw: unknown): AcademicEntrySuggestionOut | null {
   };
 }
 
-function buildAcademicPrompt(): string {
-  return `61Sözlük yöneticisi için Gemini görevin: Trabzon ili, tarihi, kültürü, coğrafyası ve toplumu hakkında yayımlanmış veya güvenilir erişimi olan akademik makaleleri, kitap bölümleri, kamu araştırma raporları ve açık erişimli çalışmalar düşünerek YENİ entry fırsatları önermek.
-
-GÖREV: Tam olarak ${TARGET_COUNT} adet öneri üret. Her biri gerçekten var olabilecek veya doğrulanabilir kaynaklara dayalı konular seç; uydurma makale başlığı, uydurma DOI veya hayali olay yazma.
-
-KURALLAR:
-- Önerilen metinleri 61Sözlük'e uygun düşün: Türkçe sözlük girişi tarzı.
-- Kaynak olarak yalnızca doğrulanabilir referanslar kullan (yayın adı, yazar birliği, kurum, hakemli dergi, açık arşiv, resmî araştırma raporu özeti vb.). Kesin görmediğin spesifik URL uydurma; genel akademik tema ve doğrulanabilir çerçeve yeterliyse bile sources'da elle uydurulmuş http adresi yazma.
-- Kaynak çıkmıyorsa sources boş dizi yap; model confidence için "low" ve sourceNote tam olarak şu olmalı: "${SOURCE_VERIFY_PHRASE}"
-- suggestedEntryDescription: tek kısa paragraf, yayına yakın ciddilikte yaz; metinde "admin onayı", "otomatik yayınlanmaz" gibi uyarıları YAZMA — bu uyarıları yönetici arayüzü gösterir.
-- Tekrar riski için duplicateRisk kullan ("low"|"medium"|"high"): sitede popüler/yoğun işlenmiş klasik başlıklar için "high".
-- Çıktı YALNIZCA JSON dizisi olmalı (başka metin veya Markdown yok).
-
-Her öğe alanları (İngilizce anahtar adları kullan — şema zorunlu):
-- suggestedEntryTitle: önerilen sözlük başlığı
-- suggestedEntryDescription: yayına yakın kalitede tek kısa giriş metni özeti (uyarı içermesin)
-- reason: akademik/anlatı olarak neden yeni bir entry için anlamlı
-- sources: sıfır veya daha fazla string — URL veya başlık + kurum + yıl vb.
-- sourceNote: kaynak tipi veya doğrulama ihtiyacı (${
-    SOURCE_VERIFY_PHRASE
-  } durumunda birebir)
-- confidence: "low" | "medium" | "high"
-- categorySuggestion: "tarih" | "kultur" | "sehir" | "akademik" | "siyaset" | "ekonomi" | "toplum"
-- duplicateRisk: "low" | "medium" | "high"`;
-}
-
-async function fetchGeminiSuggestions(
-  apiKey: string
-): Promise<{ suggestions: AcademicEntrySuggestionOut[]; ok: boolean }> {
-  const modelId = resolveGeminiModel();
-  const prompt = buildAcademicPrompt();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-    modelId
-  )}:generateContent?key=${encodeURIComponent(apiKey)}`;
-
+async function fetchOpenAISuggestions(apiKey: string): Promise<
+  | { suggestions: AcademicEntrySuggestionOut[]; httpOk: true }
+  | { httpOk: false; apiMessage: string }
+> {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), GEMINI_TIMEOUT_MS);
+  const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
 
   try {
-    const res = await fetch(url, {
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       signal: ctrl.signal,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: ACADEMIC_SUGGESTIONS_JSON_SCHEMA,
-        },
+        model: "gpt-5-mini",
+        input: `
+Trabzon hakkında akademik ve açık kaynaklı konulara dayanarak 8 entry önerisi üret.
+
+Kurallar:
+- Uydurma makale veya kaynak üretme
+- Her öneri yeni entry fırsatı olsun
+- Her öneride:
+  - suggestedEntryTitle
+  - suggestedEntryDescription (1 paragraf)
+  - reason
+  - sources (varsa)
+  - sourceNote
+  - confidence
+  - categorySuggestion
+  - duplicateRisk
+
+JSON ARRAY döndür.
+`,
       }),
     });
 
-    const rawBody: unknown = await res.json().catch(() => null);
-    if (!res.ok) {
-      console.error("[trabzon-agenda] Gemini HTTP error:", res.status);
-      return { suggestions: [], ok: false };
+    const data = (await response.json().catch(() => null)) as {
+      output?: Array<{ content?: Array<{ text?: string }> }>;
+      error?: { message?: string };
+    };
+
+    if (!response.ok) {
+      const apiMsg =
+        (typeof data?.error?.message === "string" && data.error.message.trim()
+          ? data.error.message.trim()
+          : null) ??
+        `OpenAI HTTP ${response.status}`;
+      console.error("[trabzon-agenda] OpenAI HTTP error:", response.status);
+      return { httpOk: false, apiMessage: apiMsg };
     }
 
-    const text = extractGeminiText(rawBody);
-    if (!text) {
-      return { suggestions: [], ok: false };
+    const text =
+      data?.output?.[0]?.content?.[0]?.text || "[]";
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = [];
     }
 
-    const arr = parseSuggestionsJson(text);
-    if (!arr) {
-      return { suggestions: [], ok: false };
-    }
+    let rawList = Array.isArray(parsed) ? parsed : [];
 
-    const out: AcademicEntrySuggestionOut[] = [];
-    for (const item of arr) {
-      if (out.length >= TARGET_COUNT) break;
+    const suggestions: AcademicEntrySuggestionOut[] = [];
+    for (const item of rawList) {
+      if (suggestions.length >= TARGET_COUNT) break;
       const n = normalizeSuggestion(item);
-      if (n) out.push(n);
+      if (n) suggestions.push(n);
     }
-    return { suggestions: out, ok: out.length > 0 };
+
+    return { suggestions, httpOk: true };
   } catch (e) {
-    console.error("[trabzon-agenda] Gemini request failed:", e);
-    return { suggestions: [], ok: false };
+    console.error("[trabzon-agenda] OpenAI request failed:", e);
+    return {
+      httpOk: false,
+      apiMessage: "OpenAI isteği tamamlanamadı.",
+    };
   } finally {
     clearTimeout(timer);
   }
@@ -284,28 +206,37 @@ export async function GET() {
   const gate = await requireAdminSession();
   if (!gate.ok) return gate.response;
 
-  const key = process.env.GEMINI_API_KEY?.trim();
-  if (!key) {
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY?.trim();
+  if (!OPENAI_API_KEY) {
     return NextResponse.json({
-      ok: true,
-      message: MESSAGE_NO_GEMINI,
+      ok: false,
+      message: "OpenAI anahtarı tanımlı değil.",
+      error: "OpenAI anahtarı tanımlı değil.",
       suggestions: [] satisfies AcademicEntrySuggestionOut[],
     });
   }
 
-  const { suggestions, ok } = await fetchGeminiSuggestions(key);
-  if (!ok) {
+  const result = await fetchOpenAISuggestions(OPENAI_API_KEY);
+  if (!result.httpOk) {
     return NextResponse.json({
-      ok: true,
-      message: MESSAGE_READY,
+      ok: false,
+      message: result.apiMessage,
+      error: result.apiMessage,
       suggestions: [] satisfies AcademicEntrySuggestionOut[],
-      error: ERROR_GEMINI_FAILED,
     });
   }
+
+  const suggestions = result.suggestions;
 
   return NextResponse.json({
     ok: true,
-    message: MESSAGE_READY,
+    message: "8 akademik entry önerisi üretildi.",
     suggestions,
+    ...(suggestions.length === 0
+      ? {
+          error:
+            "Model yanıtı geçersiz veya öneriler ayrıştırılamadı.",
+        }
+      : {}),
   });
 }

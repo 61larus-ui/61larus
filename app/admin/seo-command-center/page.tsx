@@ -157,9 +157,7 @@ export default function SeoCommandCenterPage() {
   const [academicLoading, setAcademicLoading] = useState(false);
   const [academicError, setAcademicError] = useState<string | null>(null);
   const [academicMessage, setAcademicMessage] = useState<string | null>(null);
-  const [academicGeminiBanner, setAcademicGeminiBanner] = useState<
-    string | null
-  >(null);
+  const [academicAiBanner, setAcademicAiBanner] = useState<string | null>(null);
   const [academicSuggestions, setAcademicSuggestions] = useState<
     AcademicEntrySuggestion[] | null
   >(null);
@@ -290,7 +288,7 @@ export default function SeoCommandCenterPage() {
   const fetchAcademicSuggestions = useCallback(async () => {
     setAcademicError(null);
     setAcademicMessage(null);
-    setAcademicGeminiBanner(null);
+    setAcademicAiBanner(null);
     setAcademicSuggestions(null);
     setAcademicLoading(true);
     try {
@@ -333,7 +331,7 @@ export default function SeoCommandCenterPage() {
         typeof data.error === "string" && data.error.trim()
           ? data.error.trim()
           : null;
-      setAcademicGeminiBanner(warn);
+      setAcademicAiBanner(warn);
     } catch {
       setAcademicError("Ağ hatası.");
     } finally {
@@ -459,7 +457,7 @@ export default function SeoCommandCenterPage() {
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
         <p className="admin-helper max-w-3xl text-base leading-relaxed text-slate-300">
           Bu ekrandan canlı site için teknik SEO denetimi çalıştırılır; ayrıca
-          akademik içerik fırsatları için Gemini önerileri alınır. Öneriler
+          akademik içerik fırsatları için AI öneri motoru kullanılır. Öneriler
           otomatik yayınlanmaz.
         </p>
 
@@ -796,7 +794,7 @@ export default function SeoCommandCenterPage() {
             Günlük 8 akademik entry önerisi
           </h2>
           <p className="admin-helper mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-            Gemini, Trabzon hakkında akademik ve açık kaynaklı konuları tarama
+            AI öneri motoru, Trabzon hakkında akademik ve açık kaynaklı konuları tarama
             mantığıyla entry başlığı, açıklama ve kaynak önerir. Öneriler
             otomatik yayınlanmaz.
           </p>
@@ -817,12 +815,12 @@ export default function SeoCommandCenterPage() {
               {academicError}
             </p>
           ) : null}
-          {academicGeminiBanner ? (
+          {academicAiBanner ? (
             <p
               className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/95"
               role="status"
             >
-              {academicGeminiBanner}
+              {academicAiBanner}
             </p>
           ) : null}
           {academicMessage ? (
@@ -926,7 +924,7 @@ export default function SeoCommandCenterPage() {
 
           {academicSuggestions !== null && academicSuggestions.length === 0 ? (
             <p className="admin-helper mt-4 text-sm text-slate-500">
-              Bu çağrıda öneri dönmedi. Gemini anahtarını ve kota/limitleri
+              Bu çağrıda öneri dönmedi. OpenAI anahtarını ve kota/limitleri
               kontrol edin.
             </p>
           ) : null}
