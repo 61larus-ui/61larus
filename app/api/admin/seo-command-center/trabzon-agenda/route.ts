@@ -138,11 +138,10 @@ async function fetchOpenAISuggestions(apiKey: string): Promise<
         input: `
 Trabzon hakkında akademik ve açık kaynaklı konulara dayanarak TAM OLARAK 8 entry önerisi üret.
 
-ÇOK ÖNEMLİ:
-- SADECE JSON döndür
-- AÇIKLAMA yazma
-- Başına veya sonuna hiçbir metin ekleme
-- Markdown kullanma
+SADECE JSON DÖNDÜR.
+Açıklama yazma.
+Başına/sonuna metin ekleme.
+Markdown kullanma.
 
 FORMAT:
 
@@ -161,6 +160,11 @@ FORMAT:
   ]
 }
 `,
+        text: {
+          format: {
+            type: "json_object",
+          },
+        },
       }),
     });
 
@@ -185,15 +189,10 @@ FORMAT:
     let rawSuggestions: unknown = [];
 
     try {
-      const cleaned = text
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
-
-      const parsed = JSON.parse(cleaned) as { suggestions?: unknown };
+      const parsed = JSON.parse(text) as { suggestions?: unknown };
       rawSuggestions = parsed.suggestions || [];
-    } catch (error) {
-      console.error("[trabzon-agenda] parse error", text);
+    } catch (e) {
+      console.error("[agenda] parse error", text);
       rawSuggestions = [];
     }
 
