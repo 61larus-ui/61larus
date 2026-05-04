@@ -213,8 +213,26 @@ function normalizeSuggestion(raw: unknown): AgendaSuggestionOut | null {
   };
 }
 
-function buildAgendaPrompt(sourcesJson: string): string {
+function buildAgendaPrompt(
+  sourcesJson: string,
+  xSignals: string[] = []
+): string {
+  const trimmedSignals = xSignals
+    .map((s) => (typeof s === "string" ? s.trim() : ""))
+    .filter((s) => s.length > 0);
+  const signalsBlock =
+    trimmedSignals.length > 0
+      ? trimmedSignals.map((s) => `- ${s}`).join("\n")
+      : "Şu anda X sinyali yok.";
+
   return `Sen 61Sözlük için Trabzon odaklı, kontrollü YENİ ENTRY fırsatı önerileri üreten bir yardımcısın.
+
+Opsiyonel X sinyalleri:
+Bu sinyaller kaynak değildir. Sadece Trabzon bağlamında konuşulabilecek konu işareti olarak kullanılabilir.
+X sinyali tek başına öneri üretmek için yeterli değildir.
+Öneri yine güvenilir kaynak mantığı, suggestedEntryTitle, suggestedEntryDescription ve sourceIds ile desteklenmelidir.
+
+${signalsBlock}
 
 KURALLAR:
 - Her öneri mutlaka 61Sözlük'te henüz işlenmemiş, yeni bir entry fırsatı gibi düşünülmelidir.
@@ -257,10 +275,14 @@ function sourcesForPrompt() {
 }
 
 async function fetchGeminiSuggestions(
-  apiKey: string
+  apiKey: string,
+  xSignals: string[]
 ): Promise<{ suggestions: AgendaSuggestionOut[]; ok: boolean }> {
   const modelId = resolveGeminiModel();
-  const prompt = buildAgendaPrompt(JSON.stringify(sourcesForPrompt(), null, 0));
+  const prompt = buildAgendaPrompt(
+    JSON.stringify(sourcesForPrompt(), null, 0),
+    xSignals
+  );
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     modelId
   )}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -317,12 +339,21 @@ export async function GET() {
   const gate = await requireAdminSession();
   if (!gate.ok) return gate.response;
 
+  /** İleride canlı X sinyali buraya bağlanacak; şimdilik sabit boş dizi. */
+  const xSignals: string[] = [];
+
+  const signalMeta = {
+    xSignalMode: "optional_weak_signal" as const,
+    xSignalsUsed: xSignals.length,
+  };
+
   const base = {
     ok: true as const,
     mode: "manual_sources_first" as const,
     principles: [...PRINCIPLES],
     sourcePlan: [...SOURCE_PLAN],
     sources: TRABZON_AGENDA_SOURCES,
+    ...signalMeta,
   };
 
   const key = process.env.GEMINI_API_KEY?.trim();
@@ -334,7 +365,7 @@ export async function GET() {
     });
   }
 
-  const { suggestions, ok } = await fetchGeminiSuggestions(key);
+  const { suggestions, ok } = await fetchGeminiSuggestions(key, xSignals);
   if (!ok) {
     return NextResponse.json({
       ...base,

@@ -322,6 +322,9 @@ export default function SeoCommandCenterPage() {
   const [agendaSourcesPreview, setAgendaSourcesPreview] = useState<
     Array<{ label: string; type: string; trustLevel: string }> | null
   >(null);
+  const [agendaXSignalsUsedCount, setAgendaXSignalsUsedCount] = useState<
+    number | null
+  >(null);
   const [xSignalsCheckLoading, setXSignalsCheckLoading] = useState(false);
   const [xSignalsCheckError, setXSignalsCheckError] = useState<string | null>(
     null
@@ -554,6 +557,7 @@ export default function SeoCommandCenterPage() {
     setAgendaSuggestions(null);
     setAgendaGeminiWarning(null);
     setAgendaSourcesPreview(null);
+    setAgendaXSignalsUsedCount(null);
     setAgendaCheckLoading(true);
     try {
       const res = await fetch(
@@ -568,6 +572,7 @@ export default function SeoCommandCenterPage() {
         sources?: unknown;
         suggestions?: unknown;
         error?: string;
+        xSignalsUsed?: unknown;
       };
       if (res.status === 401) {
         setAgendaCheckError(
@@ -592,6 +597,12 @@ export default function SeoCommandCenterPage() {
         return;
       }
       setAgendaMessage(typeof data.message === "string" ? data.message : null);
+      const xUsed =
+        typeof data.xSignalsUsed === "number" &&
+        Number.isFinite(data.xSignalsUsed)
+          ? data.xSignalsUsed
+          : 0;
+      setAgendaXSignalsUsedCount(xUsed);
       const principles = Array.isArray(data.principles)
         ? data.principles.filter((x): x is string => typeof x === "string")
         : [];
@@ -947,6 +958,13 @@ export default function SeoCommandCenterPage() {
           {agendaMessage ? (
             <p className="admin-helper mt-3 text-sm text-slate-300">
               {agendaMessage}
+            </p>
+          ) : null}
+          {agendaXSignalsUsedCount !== null ? (
+            <p className="admin-helper m-0 mt-2 text-[0.7rem] leading-snug text-slate-500">
+              X sinyal modu: opsiyonel zayıf sinyal
+              <br />
+              Bu kontrolde kullanılan X sinyali: {agendaXSignalsUsedCount}
             </p>
           ) : null}
           {agendaGeminiWarning ? (
