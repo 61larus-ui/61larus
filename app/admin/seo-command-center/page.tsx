@@ -322,6 +322,18 @@ export default function SeoCommandCenterPage() {
   const [agendaSourcesPreview, setAgendaSourcesPreview] = useState<
     Array<{ label: string; type: string; trustLevel: string }> | null
   >(null);
+  const [xSignalsCheckLoading, setXSignalsCheckLoading] = useState(false);
+  const [xSignalsCheckError, setXSignalsCheckError] = useState<string | null>(
+    null
+  );
+  const [xSignalsMessage, setXSignalsMessage] = useState<string | null>(null);
+  const [xSignalsPrinciples, setXSignalsPrinciples] = useState<string[] | null>(
+    null
+  );
+  const [xSignalsSignalPlan, setXSignalsSignalPlan] = useState<
+    Array<{ type: string; label: string; status: string }> | null
+  >(null);
+  const [xSignalsEmpty, setXSignalsEmpty] = useState<boolean | null>(null);
 
   const checkSession = useCallback(async () => {
     try {
@@ -622,6 +634,74 @@ export default function SeoCommandCenterPage() {
       setAgendaCheckError("Ağ hatası.");
     } finally {
       setAgendaCheckLoading(false);
+    }
+  }, []);
+
+  const checkXSignals = useCallback(async () => {
+    setXSignalsCheckError(null);
+    setXSignalsMessage(null);
+    setXSignalsPrinciples(null);
+    setXSignalsSignalPlan(null);
+    setXSignalsEmpty(null);
+    setXSignalsCheckLoading(true);
+    try {
+      const res = await fetch("/api/admin/seo-command-center/x-signals", {
+        method: "GET",
+        credentials: "include",
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        message?: string;
+        principles?: unknown;
+        signalPlan?: unknown;
+        signals?: unknown;
+        error?: string;
+      };
+      if (res.status === 401) {
+        setXSignalsCheckError(
+          typeof data.error === "string"
+            ? data.error
+            : "Oturum gerekli veya yetkisiz."
+        );
+        return;
+      }
+      if (!res.ok) {
+        setXSignalsCheckError(
+          typeof data.error === "string"
+            ? data.error
+            : "İstek tamamlanamadı."
+        );
+        return;
+      }
+      if (data.ok !== true) {
+        setXSignalsCheckError(
+          typeof data.error === "string" ? data.error : "Yanıt reddedildi."
+        );
+        return;
+      }
+      setXSignalsMessage(typeof data.message === "string" ? data.message : null);
+      const principles = Array.isArray(data.principles)
+        ? data.principles.filter((x): x is string => typeof x === "string")
+        : [];
+      setXSignalsPrinciples(principles);
+      const rawPlan = Array.isArray(data.signalPlan) ? data.signalPlan : [];
+      const plan: Array<{ type: string; label: string; status: string }> = [];
+      for (const row of rawPlan) {
+        if (typeof row !== "object" || row === null) continue;
+        const r = row as Record<string, unknown>;
+        plan.push({
+          type: typeof r.type === "string" ? r.type : "—",
+          label: typeof r.label === "string" ? r.label : "—",
+          status: typeof r.status === "string" ? r.status : "—",
+        });
+      }
+      setXSignalsSignalPlan(plan);
+      const sig = data.signals;
+      setXSignalsEmpty(!Array.isArray(sig) || sig.length === 0);
+    } catch {
+      setXSignalsCheckError("Ağ hatası.");
+    } finally {
+      setXSignalsCheckLoading(false);
     }
   }, []);
 
@@ -997,6 +1077,91 @@ export default function SeoCommandCenterPage() {
           {agendaSuggestions !== null && agendaSuggestions.length === 0 ? (
             <p className="admin-helper mt-3 text-xs text-slate-500">
               Henüz otomatik gündem önerisi üretilmiyor.
+            </p>
+          ) : null}
+        </section>
+
+        <section
+          className="rounded-xl border border-slate-800 bg-slate-900/40 p-6"
+          aria-label="X sinyal motoru"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="admin-section-title text-base">X sinyal motoru</h2>
+              <p className="admin-helper mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+                X gündemi doğrudan entry&apos;ye çevrilmez; önce Trabzon bağlamı
+                ve güvenilir kaynaklarla doğrulanır.
+              </p>
+              <p className="admin-helper mt-2 rounded-md border border-amber-500/25 bg-amber-500/8 px-3 py-2 text-xs leading-relaxed text-amber-100/95">
+                X sinyalleri kaynak değildir; yalnızca gündem işareti olarak
+                kullanılır.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full border border-slate-700/90 bg-slate-950/50 px-2.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-400">
+              FAZ 7B: sinyal iskeleti hazır
+            </span>
+          </div>
+          <button
+            type="button"
+            disabled={xSignalsCheckLoading}
+            onClick={() => void checkXSignals()}
+            className="mt-4 rounded-lg border border-slate-600 bg-slate-950/60 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            {xSignalsCheckLoading
+              ? "Kontrol ediliyor..."
+              : "X sinyal motorunu kontrol et"}
+          </button>
+          {xSignalsCheckError ? (
+            <p
+              className="admin-msg-error mt-3 text-sm text-[var(--accent)]"
+              role="alert"
+            >
+              {xSignalsCheckError}
+            </p>
+          ) : null}
+          {xSignalsMessage ? (
+            <p className="admin-helper mt-3 text-sm text-slate-300">
+              {xSignalsMessage}
+            </p>
+          ) : null}
+          {xSignalsPrinciples && xSignalsPrinciples.length > 0 ? (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-slate-500">İlkeler</p>
+              <ul className="admin-helper m-0 mt-1 list-none space-y-1.5 p-0 text-sm text-slate-400">
+                {xSignalsPrinciples.map((p, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="text-slate-600" aria-hidden>
+                      ·
+                    </span>
+                    <span>{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {xSignalsSignalPlan && xSignalsSignalPlan.length > 0 ? (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-slate-500">Sinyal planı</p>
+              <ul className="admin-helper m-0 mt-1 list-none space-y-2 p-0 text-sm text-slate-400">
+                {xSignalsSignalPlan.map((item, i) => (
+                  <li
+                    key={i}
+                    className="rounded-lg border border-slate-800/80 bg-slate-950/30 px-3 py-2"
+                  >
+                    <span className="font-medium text-slate-300">
+                      {item.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-500">
+                      {item.type} · {item.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {xSignalsEmpty === true ? (
+            <p className="admin-helper mt-3 text-xs text-slate-500">
+              Henüz otomatik X sinyali üretilmiyor.
             </p>
           ) : null}
         </section>
