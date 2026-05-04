@@ -14,28 +14,30 @@ const SEO_MODULES: SeoModuleCard[] = [
   {
     title: "Teknik SEO",
     description:
-      "Sitemap, robots, canonical, 404 ve meta kontrolleri burada izlenecek.",
+      "Canlı sitede ana sayfa, robots.txt, sitemap ve örnek entry URL kontrolleri çalışır.",
     status: "Tarama aktif",
   },
   {
-    title: "Google Search Console",
+    title: "Google Search Console bağlantısı",
     description:
-      "Gösterim, tıklama, sıralama ve index durumu burada analiz edilecek.",
-    status: "Bağlantı bekliyor",
+      "OAuth bağlantısı aktifse öneri motoru GSC verisini kullanır. İsteğe bağlı sunucu kontrolü kartın altındadır.",
+    status: "OAuth ile kullanım",
   },
   {
-    title: "Gündem Motoru",
+    title: "Gündem motoru",
     description:
-      "Google trendleri ve X gündemi 61Sözlük’e uygun başlık fırsatları için taranacak.",
-    status: "Planlandı",
+      "Trend ve gündemden başlık önerileri için planlı geliştirme.",
+    status: "Planlı",
   },
   {
-    title: "Gemini Analiz",
+    title: "Gemini analizi",
     description:
-      "Toplanan veriler Gemini ile değerlendirilip admin onayına sunulacak.",
-    status: "Planlandı",
+      "Öneriler Gemini ile üretilir; teknik tarama ve isteğe bağlı GSC örnekleriyle beslenir.",
+    status: "Aktif",
   },
 ];
+
+const GSC_MODULE_TITLE = "Google Search Console bağlantısı";
 
 type SeoRecommendationItem = {
   title: string;
@@ -870,7 +872,7 @@ export default function SeoCommandCenterPage() {
               role="status"
             >
               {gscTrustLines.map((line, i) => (
-                <p key={`gsc-trust-${i}`} className="m-0 leading-relaxed">
+                <p key={`gsc-trust-${i}`} className="m-0 break-words leading-relaxed">
                   {line}
                 </p>
               ))}
@@ -889,176 +891,6 @@ export default function SeoCommandCenterPage() {
               {aiPrepMessage}
             </p>
           ) : null}
-          {aiSources ? (
-            <div
-              className="mt-4 rounded-lg border border-slate-800 bg-slate-950/35 p-4"
-              aria-label="Analiz kaynakları"
-            >
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Analiz kaynakları
-              </h3>
-              <dl className="admin-helper mt-3 space-y-2 text-xs leading-relaxed text-slate-400">
-                <div className="flex flex-wrap gap-x-2">
-                  <dt className="font-medium text-slate-500">Gemini modeli</dt>
-                  <dd className="font-mono text-slate-300">{aiSources.model}</dd>
-                </div>
-                <div className="flex flex-wrap gap-x-2">
-                  <dt className="font-medium text-slate-500">Çıktı formatı</dt>
-                  <dd className="font-mono text-slate-300">
-                    {aiSources.responseMimeType}
-                  </dd>
-                </div>
-                <div className="flex flex-wrap gap-x-2">
-                  <dt className="font-medium text-slate-500">GSC OAuth</dt>
-                  <dd className="text-slate-300">
-                    {aiSources.gscConnected
-                      ? aiSources.gscDataAvailable
-                        ? "Bağlı · örnek sorgular prompt’a eklendi"
-                        : "Bağlı · örnek sorgu yok veya API yanıt vermedi"
-                      : "Bağlı değil"}
-                  </dd>
-                </div>
-                {aiSources.auditCheckedAt ? (
-                  <div className="flex flex-wrap gap-x-2">
-                    <dt className="font-medium text-slate-500">
-                      SEO tarama zamanı
-                    </dt>
-                    <dd className="text-slate-300">
-                      {new Date(aiSources.auditCheckedAt).toLocaleString(
-                        "tr-TR",
-                        { dateStyle: "short", timeStyle: "medium" }
-                      )}
-                    </dd>
-                  </div>
-                ) : (
-                  <div className="text-slate-500">
-                    Kayıtlı tarama zamanı bulunamadı (henüz tarama yok veya
-                    geçmiş okunamadı).
-                  </div>
-                )}
-              </dl>
-              {aiSources.gscQueriesSample.length > 0 ? (
-                <div className="mt-3">
-                  <p className="text-xs font-medium text-slate-500">
-                    Prompt’a dahil GSC sorgu örnekleri
-                  </p>
-                  <ul className="m-0 mt-1 list-none space-y-1 p-0">
-                    {aiSources.gscQueriesSample.map((q, qi) => (
-                      <li
-                        key={`gsc-q-${qi}`}
-                        className="rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1 text-[0.7rem] text-slate-400"
-                      >
-                        {q}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              {aiSources.summary ? (
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
-                    <p className="admin-stat-label text-[0.6rem]">Puan</p>
-                    <p className="tabular-nums text-slate-200">
-                      {aiSources.summary.score ?? "—"}
-                    </p>
-                  </div>
-                  <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
-                    <p className="admin-stat-label text-[0.6rem]">URL</p>
-                    <p className="tabular-nums text-slate-200">
-                      {aiSources.summary.checkedUrls ?? "—"}
-                    </p>
-                  </div>
-                  <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
-                    <p className="admin-stat-label text-[0.6rem]">Kritik</p>
-                    <p className="tabular-nums text-slate-200">
-                      {aiSources.summary.criticalIssues ?? "—"}
-                    </p>
-                  </div>
-                  <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
-                    <p className="admin-stat-label text-[0.6rem]">Uyarı</p>
-                    <p className="tabular-nums text-slate-200">
-                      {aiSources.summary.warnings ?? "—"}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-              <div className="mt-3">
-                <p className="text-xs font-medium text-slate-500">
-                  Prompt’a dahil edilen sorunlar ({aiSources.issuesUsedCount})
-                </p>
-                {aiSources.issuesUsed.length === 0 ? (
-                  <p className="admin-helper mt-1 text-xs text-slate-600">
-                    Yok.
-                  </p>
-                ) : (
-                  <ul className="m-0 mt-1 max-h-40 list-none space-y-1 overflow-y-auto p-0">
-                    {aiSources.issuesUsed.map((issue, idx) => (
-                      <li
-                        key={`src-issue-${idx}`}
-                        className="rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1.5 text-[0.7rem] text-slate-400"
-                      >
-                        <span className="text-slate-300">
-                          {issue.title ?? "—"}
-                        </span>
-                        {issue.url ? (
-                          <span className="mt-0.5 block break-all font-mono text-[0.65rem] text-slate-600">
-                            {issue.url}
-                          </span>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div className="mt-3">
-                <p className="text-xs font-medium text-slate-500">
-                  Prompt’a dahil entry SEO örnekleri (
-                  {aiSources.entrySeoUsedCount})
-                </p>
-                {aiSources.entrySeoUsed.length === 0 ? (
-                  <p className="admin-helper mt-1 text-xs text-slate-600">
-                    Yok.
-                  </p>
-                ) : (
-                  <ul className="m-0 mt-1 max-h-40 list-none space-y-1 overflow-y-auto p-0">
-                    {aiSources.entrySeoUsed.map((row, idx) => (
-                      <li
-                        key={`src-entry-${idx}`}
-                        className="rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1.5 text-[0.7rem] text-slate-400"
-                      >
-                        <span className="break-all font-mono text-[0.65rem] text-slate-500">
-                          {row.url ?? "—"}
-                        </span>
-                        {(row.title != null && row.title !== "") ||
-                        (row.description != null &&
-                          row.description !== "") ? (
-                          <span className="mt-0.5 block space-y-0.5 text-slate-400">
-                            {row.title != null && row.title !== "" ? (
-                              <span className="block">
-                                Başlık:{" "}
-                                {row.title.length > 120
-                                  ? `${row.title.slice(0, 120)}…`
-                                  : row.title}
-                              </span>
-                            ) : null}
-                            {row.description != null &&
-                            row.description !== "" ? (
-                              <span className="block text-slate-500">
-                                Meta:{" "}
-                                {row.description.length > 120
-                                  ? `${row.description.slice(0, 120)}…`
-                                  : row.description}
-                              </span>
-                            ) : null}
-                          </span>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          ) : null}
           {aiOpportunities.length > 0 ? (
             <div className="mt-4 grid grid-cols-1 gap-3">
               {aiOpportunities.map((opp, idx) => {
@@ -1070,7 +902,7 @@ export default function SeoCommandCenterPage() {
                     className="rounded-xl border border-slate-700/90 bg-slate-950/40 p-4 shadow-none"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-slate-100">
+                      <h3 className="min-w-0 flex-1 break-words text-sm font-semibold text-slate-100">
                         {opp.title}
                       </h3>
                       <span className="shrink-0 rounded-full border border-slate-600/90 bg-slate-900/60 px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-300">
@@ -1080,14 +912,14 @@ export default function SeoCommandCenterPage() {
                     <p className="admin-helper mt-2 text-xs font-medium text-slate-500">
                       Kaynak tipi: {sourceTypeLabel(opp.sourceType)}
                     </p>
-                    <p className="admin-helper mt-2 text-sm leading-relaxed text-slate-400">
+                    <p className="admin-helper mt-2 break-words text-sm leading-relaxed text-slate-400">
                       <span className="font-medium text-slate-300">
                         Neden:{" "}
                       </span>
                       {opp.reason}
                     </p>
                     {opp.suggestedEntryTitle.trim() ? (
-                      <p className="admin-helper mt-2 text-sm text-slate-300">
+                      <p className="admin-helper mt-2 break-words text-sm text-slate-300">
                         <span className="font-medium text-slate-400">
                           Önerilen entry başlığı:{" "}
                         </span>
@@ -1121,19 +953,19 @@ export default function SeoCommandCenterPage() {
                             .map((src, srcIdx) => (
                               <li
                                 key={`${idx}-src-${srcIdx}`}
-                                className="text-[0.7rem] leading-snug text-slate-400"
+                                className="break-words text-[0.7rem] leading-snug text-slate-400"
                               >
                                 {looksLikeUrl(src) ? (
                                   <a
                                     href={src.trim()}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sky-400/95 underline-offset-2 hover:underline"
+                                    className="break-all text-sky-400/95 underline-offset-2 hover:underline"
                                   >
                                     {src.trim()}
                                   </a>
                                 ) : (
-                                  <span>{src}</span>
+                                  <span className="break-words">{src}</span>
                                 )}
                               </li>
                             ))}
@@ -1145,7 +977,7 @@ export default function SeoCommandCenterPage() {
                       )}
                     </div>
                     {opp.sourceNote.trim() ? (
-                      <p className="admin-helper mt-2 text-xs leading-relaxed text-slate-500">
+                      <p className="admin-helper mt-2 break-words text-xs leading-relaxed text-slate-500">
                         <span className="font-medium text-slate-400">
                           Kaynak notu:{" "}
                         </span>
@@ -1161,6 +993,180 @@ export default function SeoCommandCenterPage() {
             <p className="admin-helper mt-4 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2.5 text-sm text-slate-500">
               Henüz SEO önerisi üretilmedi. Yukarıdaki düğmeyi kullanın.
             </p>
+          ) : null}
+          {aiSources ? (
+            <details className="mt-4 rounded-lg border border-slate-800 bg-slate-950/35">
+              <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-300 marker:text-slate-500 hover:bg-slate-900/40">
+                Teknik analiz kaynaklarını göster
+              </summary>
+              <div
+                className="border-t border-slate-800 p-4"
+                aria-label="Analiz kaynakları"
+              >
+                <dl className="admin-helper mt-0 space-y-2 text-xs leading-relaxed text-slate-400">
+                  <div className="flex flex-wrap gap-x-2">
+                    <dt className="font-medium text-slate-500">Gemini modeli</dt>
+                    <dd className="break-all font-mono text-slate-300">
+                      {aiSources.model}
+                    </dd>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2">
+                    <dt className="font-medium text-slate-500">Çıktı formatı</dt>
+                    <dd className="break-all font-mono text-slate-300">
+                      {aiSources.responseMimeType}
+                    </dd>
+                  </div>
+                  <div className="flex flex-wrap gap-x-2">
+                    <dt className="font-medium text-slate-500">GSC OAuth</dt>
+                    <dd className="break-words text-slate-300">
+                      {aiSources.gscConnected
+                        ? aiSources.gscDataAvailable
+                          ? "Bağlı · örnek sorgular prompt’a eklendi"
+                          : "Bağlı · örnek sorgu yok veya API yanıt vermedi"
+                        : "Bağlı değil"}
+                    </dd>
+                  </div>
+                  {aiSources.auditCheckedAt ? (
+                    <div className="flex flex-wrap gap-x-2">
+                      <dt className="font-medium text-slate-500">
+                        SEO tarama zamanı
+                      </dt>
+                      <dd className="text-slate-300">
+                        {new Date(aiSources.auditCheckedAt).toLocaleString(
+                          "tr-TR",
+                          { dateStyle: "short", timeStyle: "medium" }
+                        )}
+                      </dd>
+                    </div>
+                  ) : (
+                    <div className="break-words text-slate-500">
+                      Kayıtlı tarama zamanı bulunamadı (henüz tarama yok veya
+                      geçmiş okunamadı).
+                    </div>
+                  )}
+                </dl>
+                {aiSources.gscQueriesSample.length > 0 ? (
+                  <div className="mt-3">
+                    <p className="text-xs font-medium text-slate-500">
+                      Prompt’a dahil GSC sorgu örnekleri
+                    </p>
+                    <ul className="m-0 mt-1 list-none space-y-1 p-0">
+                      {aiSources.gscQueriesSample.map((q, qi) => (
+                        <li
+                          key={`gsc-q-${qi}`}
+                          className="break-words rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1 text-[0.7rem] text-slate-400"
+                        >
+                          {q}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {aiSources.summary ? (
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
+                      <p className="admin-stat-label text-[0.6rem]">Puan</p>
+                      <p className="tabular-nums text-slate-200">
+                        {aiSources.summary.score ?? "—"}
+                      </p>
+                    </div>
+                    <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
+                      <p className="admin-stat-label text-[0.6rem]">URL</p>
+                      <p className="tabular-nums text-slate-200">
+                        {aiSources.summary.checkedUrls ?? "—"}
+                      </p>
+                    </div>
+                    <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
+                      <p className="admin-stat-label text-[0.6rem]">Kritik</p>
+                      <p className="tabular-nums text-slate-200">
+                        {aiSources.summary.criticalIssues ?? "—"}
+                      </p>
+                    </div>
+                    <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
+                      <p className="admin-stat-label text-[0.6rem]">Uyarı</p>
+                      <p className="tabular-nums text-slate-200">
+                        {aiSources.summary.warnings ?? "—"}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+                <div className="mt-3">
+                  <p className="text-xs font-medium text-slate-500">
+                    Prompt’a dahil edilen sorunlar ({aiSources.issuesUsedCount})
+                  </p>
+                  {aiSources.issuesUsed.length === 0 ? (
+                    <p className="admin-helper mt-1 text-xs text-slate-600">
+                      Yok.
+                    </p>
+                  ) : (
+                    <ul className="m-0 mt-1 max-h-40 list-none space-y-1 overflow-y-auto p-0">
+                      {aiSources.issuesUsed.map((issue, idx) => (
+                        <li
+                          key={`src-issue-${idx}`}
+                          className="rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1.5 text-[0.7rem] text-slate-400"
+                        >
+                          <span className="break-words text-slate-300">
+                            {issue.title ?? "—"}
+                          </span>
+                          {issue.url ? (
+                            <span className="mt-0.5 block break-all font-mono text-[0.65rem] text-slate-600">
+                              {issue.url}
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div className="mt-3">
+                  <p className="text-xs font-medium text-slate-500">
+                    Prompt’a dahil entry SEO örnekleri (
+                    {aiSources.entrySeoUsedCount})
+                  </p>
+                  {aiSources.entrySeoUsed.length === 0 ? (
+                    <p className="admin-helper mt-1 text-xs text-slate-600">
+                      Yok.
+                    </p>
+                  ) : (
+                    <ul className="m-0 mt-1 max-h-40 list-none space-y-1 overflow-y-auto p-0">
+                      {aiSources.entrySeoUsed.map((row, idx) => (
+                        <li
+                          key={`src-entry-${idx}`}
+                          className="rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1.5 text-[0.7rem] text-slate-400"
+                        >
+                          <span className="break-all font-mono text-[0.65rem] text-slate-500">
+                            {row.url ?? "—"}
+                          </span>
+                          {(row.title != null && row.title !== "") ||
+                          (row.description != null &&
+                            row.description !== "") ? (
+                            <span className="mt-0.5 block space-y-0.5 break-words text-slate-400">
+                              {row.title != null && row.title !== "" ? (
+                                <span className="block">
+                                  Başlık:{" "}
+                                  {row.title.length > 120
+                                    ? `${row.title.slice(0, 120)}…`
+                                    : row.title}
+                                </span>
+                              ) : null}
+                              {row.description != null &&
+                              row.description !== "" ? (
+                                <span className="block text-slate-500">
+                                  Meta:{" "}
+                                  {row.description.length > 120
+                                    ? `${row.description.slice(0, 120)}…`
+                                    : row.description}
+                                </span>
+                              ) : null}
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </details>
           ) : null}
         </section>
 
@@ -1183,7 +1189,7 @@ export default function SeoCommandCenterPage() {
                 <p className="admin-helper mt-3 text-sm leading-relaxed text-slate-400">
                   {m.description}
                 </p>
-                {m.title === "Google Search Console" ? (
+                {m.title === GSC_MODULE_TITLE ? (
                   <>
                     <button
                       type="button"
@@ -1192,8 +1198,8 @@ export default function SeoCommandCenterPage() {
                       className="mt-3 rounded-lg border border-slate-600 bg-slate-950/60 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
                     >
                       {gscTestLoading
-                        ? "Test ediliyor..."
-                        : "GSC BAĞLANTISINI TEST ET"}
+                        ? "Kontrol ediliyor..."
+                        : "Sunucu yapılandırmasını kontrol et"}
                     </button>
                     {gscTestBanner?.kind === "ok" ? (
                       <div
@@ -1201,7 +1207,8 @@ export default function SeoCommandCenterPage() {
                         role="status"
                       >
                         <p className="m-0">
-                          Google Search Console bağlantı bilgileri hazır.
+                          Sunucu ortamında GSC ile ilgili ek yapılandırma tanımlı
+                          görünüyor.
                         </p>
                         {gscTestBanner.siteUrl ? (
                           <p className="admin-helper m-0 mt-1 break-all font-mono text-[0.65rem] text-emerald-300/85">
@@ -1215,13 +1222,13 @@ export default function SeoCommandCenterPage() {
                         className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/95"
                         role="alert"
                       >
-                        <p className="m-0">{gscTestBanner.message}</p>
+                        <p className="m-0 break-words">{gscTestBanner.message}</p>
                         {gscTestBanner.missing.length > 0 ? (
                           <ul className="mb-0 mt-2 list-disc pl-4">
                             {gscTestBanner.missing.map((key) => (
                               <li
                                 key={key}
-                                className="font-mono text-[0.65rem] text-amber-50/90"
+                                className="break-all font-mono text-[0.65rem] text-amber-50/90"
                               >
                                 {key}
                               </li>
