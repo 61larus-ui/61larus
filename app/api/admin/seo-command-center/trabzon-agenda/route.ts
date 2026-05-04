@@ -136,77 +136,31 @@ async function fetchOpenAISuggestions(apiKey: string): Promise<
       body: JSON.stringify({
         model: "gpt-4.1-mini",
         input: `
-Trabzon hakkında akademik ve açık kaynaklı konulara dayanarak 8 entry önerisi üret.
+Trabzon hakkında akademik ve açık kaynaklı konulara dayanarak TAM OLARAK 8 entry önerisi üret.
 
-Kurallar:
-- Sadece JSON döndür.
-- Uydurma makale, uydurma kaynak, uydurma olay üretme.
-- Her öneri yeni entry fırsatı gibi düşünülmeli.
-- Her öneri 61Sözlük'te yayınlanabilecek başlık mantığı taşımalı.
-- Her öneride 1 kısa paragraf açıklama olmalı.
-- Kaynak yoksa sources boş dizi olsun, confidence low olsun, sourceNote "Kaynak doğrulaması gerekli." olsun.
+ÇOK ÖNEMLİ:
+- SADECE JSON döndür
+- AÇIKLAMA yazma
+- Başına veya sonuna hiçbir metin ekleme
+- Markdown kullanma
+
+FORMAT:
+
+{
+  "suggestions": [
+    {
+      "suggestedEntryTitle": "...",
+      "suggestedEntryDescription": "...",
+      "reason": "...",
+      "sources": [],
+      "sourceNote": "...",
+      "confidence": "low",
+      "categorySuggestion": "tarih",
+      "duplicateRisk": "low"
+    }
+  ]
+}
 `,
-        text: {
-          format: {
-            type: "json_schema",
-            name: "entry_suggestions",
-            strict: true,
-            schema: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                suggestions: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      suggestedEntryTitle: { type: "string" },
-                      suggestedEntryDescription: { type: "string" },
-                      reason: { type: "string" },
-                      sources: {
-                        type: "array",
-                        items: { type: "string" },
-                      },
-                      sourceNote: { type: "string" },
-                      confidence: {
-                        type: "string",
-                        enum: ["low", "medium", "high"],
-                      },
-                      categorySuggestion: {
-                        type: "string",
-                        enum: [
-                          "tarih",
-                          "kultur",
-                          "sehir",
-                          "akademik",
-                          "siyaset",
-                          "ekonomi",
-                          "toplum",
-                        ],
-                      },
-                      duplicateRisk: {
-                        type: "string",
-                        enum: ["low", "medium", "high"],
-                      },
-                    },
-                    required: [
-                      "suggestedEntryTitle",
-                      "suggestedEntryDescription",
-                      "reason",
-                      "sources",
-                      "sourceNote",
-                      "confidence",
-                      "categorySuggestion",
-                      "duplicateRisk",
-                    ],
-                  },
-                },
-              },
-              required: ["suggestions"],
-            },
-          },
-        },
       }),
     });
 
@@ -231,7 +185,12 @@ Kurallar:
     let rawSuggestions: unknown = [];
 
     try {
-      const parsed = JSON.parse(text) as { suggestions?: unknown };
+      const cleaned = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+      const parsed = JSON.parse(cleaned) as { suggestions?: unknown };
       rawSuggestions = parsed.suggestions || [];
     } catch (error) {
       console.error("[trabzon-agenda] parse error", text);
