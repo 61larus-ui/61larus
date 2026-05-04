@@ -48,7 +48,8 @@ type AiSeoOpportunityItem = {
   priority: string;
   title: string;
   reason: string;
-  status: string;
+  action?: string;
+  status?: string;
 };
 
 const AI_SEO_OPPORTUNITY_PLACEHOLDERS: AiSeoOpportunityPlaceholder[] = [
@@ -145,6 +146,7 @@ export default function SeoCommandCenterPage() {
   const [aiPrepLoading, setAiPrepLoading] = useState(false);
   const [aiPrepError, setAiPrepError] = useState<string | null>(null);
   const [aiPrepMessage, setAiPrepMessage] = useState<string | null>(null);
+  const [aiPrepMode, setAiPrepMode] = useState<string | null>(null);
   const [aiOpportunities, setAiOpportunities] = useState<AiSeoOpportunityItem[]>(
     []
   );
@@ -268,6 +270,7 @@ export default function SeoCommandCenterPage() {
   const prepareAiOpportunities = useCallback(async () => {
     setAiPrepError(null);
     setAiPrepMessage(null);
+    setAiPrepMode(null);
     setAiPrepLoading(true);
     try {
       const res = await fetch("/api/admin/seo-command-center/ai-opportunities", {
@@ -278,6 +281,7 @@ export default function SeoCommandCenterPage() {
         ok?: boolean;
         error?: string;
         message?: string;
+        mode?: string;
         opportunities?: unknown;
       };
       if (res.status === 401) {
@@ -319,6 +323,7 @@ export default function SeoCommandCenterPage() {
         : [];
       setAiOpportunities(list);
       setAiPrepError(null);
+      setAiPrepMode(typeof data.mode === "string" ? data.mode : null);
       setAiPrepMessage(
         typeof data.message === "string" ? data.message : null
       );
@@ -636,13 +641,14 @@ export default function SeoCommandCenterPage() {
           aria-label="AI SEO fırsatları"
         >
           <h2 className="admin-section-title text-base">AI SEO Fırsatları</h2>
+          {aiPrepMode === "live" ? (
+            <p className="admin-helper mt-2 text-xs font-medium text-sky-300/90">
+              Gemini tarafından analiz edildi
+            </p>
+          ) : null}
           <p className="admin-helper mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             Gündem, Search Console ve teknik SEO verileri Gemini ile analiz
             edildiğinde öneriler burada listelenecek.
-          </p>
-          <p className="admin-helper mt-3 max-w-3xl text-xs leading-relaxed text-slate-500">
-            Bu fazda gerçek Gemini analizi yapılmaz; bağlantı zemini test
-            edilir.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
@@ -683,7 +689,9 @@ export default function SeoCommandCenterPage() {
                         ? "Öncelik: yüksek"
                         : opp.priority === "medium"
                           ? "Öncelik: orta"
-                          : opp.priority}
+                          : opp.priority === "low"
+                            ? "Öncelik: düşük"
+                            : opp.priority}
                     </span>
                   </div>
                   <p className="admin-helper mt-2 text-xs text-slate-500">
@@ -692,9 +700,16 @@ export default function SeoCommandCenterPage() {
                   <p className="admin-helper mt-2 text-sm leading-relaxed text-slate-400">
                     {opp.reason}
                   </p>
-                  <p className="admin-helper mt-3 text-[0.7rem] uppercase tracking-wide text-slate-500">
-                    Durum: {opp.status}
-                  </p>
+                  {opp.action ? (
+                    <p className="admin-helper mt-2 text-xs leading-relaxed text-slate-300">
+                      Önerilen aksiyon: {opp.action}
+                    </p>
+                  ) : null}
+                  {opp.status ? (
+                    <p className="admin-helper mt-3 text-[0.7rem] uppercase tracking-wide text-slate-500">
+                      Durum: {opp.status}
+                    </p>
+                  ) : null}
                 </article>
               ))}
             </div>
