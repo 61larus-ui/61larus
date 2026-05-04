@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/admin-api-auth";
+import { createSupabaseServiceClient } from "@/lib/supabase-service";
 
 export const runtime = "nodejs";
 
@@ -24,6 +25,7 @@ type AuditIssue = {
 type AuditSuccessBody = {
   ok: true;
   checkedAt: string;
+  auditRunId: string | null;
   summary: {
     score: number;
     checkedUrls: number;
@@ -357,11 +359,62 @@ export async function POST() {
 
     const criticalIssues = issues.filter((i) => i.severity === "critical").length;
     const warnings = issues.filter((i) => i.severity === "warning").length;
-    const score = scoreFromChecksAndIssues(checks, issues);
+    let score = scoreFromChecksAndIssues(checks, issues);
+
+    let auditRunId: string | null = null;
+    const service = createSupabaseServiceClient();
+    const summaryPayload = {
+      score,
+      checkedUrls,
+      criticalIssues,
+      warnings,
+    };
+    const rawSnapshot = {
+      ok: true as const,
+      checkedAt,
+      summary: summaryPayload,
+      checks,
+      issues,
+    };
+
+    if (!service) {
+      checks.push({
+        name: "Geçmiş kaydı",
+        status: "warning",
+        message: "Tarama yapıldı fakat geçmiş kaydı oluşturulamadı.",
+      });
+      score = scoreFromChecksAndIssues(checks, issues);
+    } else {
+      const { data: inserted, error: insertError } = await service
+        .from("seo_audit_runs")
+        .insert({
+          score,
+          checked_urls: checkedUrls,
+          critical_issues: criticalIssues,
+          warnings,
+          checks,
+          issues,
+          raw_result: rawSnapshot,
+        })
+        .select("id")
+        .maybeSingle();
+
+      if (insertError || !inserted?.id) {
+        checks.push({
+          name: "Geçmiş kaydı",
+          status: "warning",
+          message: "Tarama yapıldı fakat geçmiş kaydı oluşturulamadı.",
+        });
+        score = scoreFromChecksAndIssues(checks, issues);
+      } else {
+        auditRunId = inserted.id;
+      }
+    }
 
     const body: AuditSuccessBody = {
       ok: true,
       checkedAt,
+      auditRunId,
       summary: {
         score,
         checkedUrls,

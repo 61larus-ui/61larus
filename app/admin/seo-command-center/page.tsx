@@ -42,6 +42,7 @@ type AuditCheckStatus = "pass" | "warning" | "fail";
 type SeoAuditReport = {
   ok: true;
   checkedAt: string;
+  auditRunId?: string | null;
   summary: {
     score: number;
     checkedUrls: number;
@@ -59,6 +60,15 @@ type SeoAuditReport = {
     detail: string;
     url: string;
   }>;
+};
+
+type SeoAuditHistoryRow = {
+  id: string;
+  created_at: string;
+  score: number;
+  checked_urls: number;
+  critical_issues: number;
+  warnings: number;
 };
 
 function checkStatusClass(s: AuditCheckStatus): string {
@@ -94,6 +104,9 @@ export default function SeoCommandCenterPage() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [auditReport, setAuditReport] = useState<SeoAuditReport | null>(null);
+  const [auditHistory, setAuditHistory] = useState<SeoAuditHistoryRow[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   const checkSession = useCallback(async () => {
     try {
@@ -129,6 +142,42 @@ export default function SeoCommandCenterPage() {
     void checkSession();
   }, [checkSession]);
 
+  const loadAuditHistory = useCallback(async () => {
+    setHistoryError(null);
+    setHistoryLoading(true);
+    try {
+      const res = await fetch("/api/admin/seo-command-center/history", {
+        credentials: "include",
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        runs?: SeoAuditHistoryRow[];
+        error?: string;
+      };
+      if (!res.ok) {
+        setHistoryError(
+          typeof data.error === "string"
+            ? data.error
+            : "Geçmiş yüklenemedi."
+        );
+        setAuditHistory([]);
+        return;
+      }
+      setAuditHistory(Array.isArray(data.runs) ? data.runs : []);
+    } catch {
+      setHistoryError("Ağ hatası.");
+      setAuditHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (sessionOk === true) {
+      void loadAuditHistory();
+    }
+  }, [sessionOk, loadAuditHistory]);
+
   const runTechnicalAudit = useCallback(async () => {
     setAuditError(null);
     setAuditLoading(true);
@@ -162,6 +211,7 @@ export default function SeoCommandCenterPage() {
         "checks" in data
       ) {
         setAuditReport(data as SeoAuditReport);
+        void loadAuditHistory();
       } else {
         setAuditError("Geçersiz yanıt.");
         setAuditReport(null);
@@ -172,7 +222,7 @@ export default function SeoCommandCenterPage() {
     } finally {
       setAuditLoading(false);
     }
-  }, []);
+  }, [loadAuditHistory]);
 
   if (sessionOk === null) {
     return (
@@ -283,6 +333,14 @@ export default function SeoCommandCenterPage() {
                     dateStyle: "short",
                     timeStyle: "medium",
                   })}
+                  {auditReport.auditRunId ? (
+                    <>
+                      {" · "}
+                      <span className="font-mono text-[0.7rem] text-slate-600">
+                        {auditReport.auditRunId}
+                      </span>
+                    </>
+                  ) : null}
                 </p>
               </div>
             </div>
@@ -327,9 +385,9 @@ export default function SeoCommandCenterPage() {
                 Kontroller
               </h3>
               <ul className="m-0 list-none space-y-2 p-0">
-                {auditReport.checks.map((c) => (
+                {auditReport.checks.map((c, idx) => (
                   <li
-                    key={c.name}
+                    key={`${c.name}-${idx}`}
                     className="flex flex-wrap items-start gap-2 rounded-lg border border-slate-800/90 bg-slate-950/30 px-3 py-2.5"
                   >
                     <span
@@ -392,6 +450,80 @@ export default function SeoCommandCenterPage() {
             </div>
           </section>
         ) : null}
+
+        <section
+          className="rounded-xl border border-slate-800 bg-slate-900/35 p-6"
+          aria-label="Son SEO taramaları"
+        >
+          <h2 className="admin-section-title text-base">Son SEO Taramaları</h2>
+          {historyError ? (
+            <p className="admin-msg-error mt-2 text-sm text-[var(--accent)]">
+              {historyError}
+            </p>
+          ) : null}
+          {historyLoading && auditHistory.length === 0 && !historyError ? (
+            <p className="admin-helper mt-3 text-sm text-slate-500">
+              Geçmiş yükleniyor…
+            </p>
+          ) : null}
+          {!historyLoading && auditHistory.length === 0 && !historyError ? (
+            <p className="admin-helper mt-3 text-sm text-slate-500">
+              Henüz kayıtlı SEO taraması yok.
+            </p>
+          ) : null}
+          {auditHistory.length > 0 ? (
+            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-800/90">
+              <table className="w-full min-w-[560px] border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-slate-800 bg-slate-950/50">
+                    <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
+                      Tarih
+                    </th>
+                    <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
+                      SEO puanı
+                    </th>
+                    <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
+                      URL
+                    </th>
+                    <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
+                      Kritik
+                    </th>
+                    <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
+                      Uyarı
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditHistory.map((row) => (
+                    <tr
+                      key={row.id}
+                      className="border-b border-slate-800/70 last:border-0 hover:bg-slate-900/40"
+                    >
+                      <td className="admin-td whitespace-nowrap px-3 py-2 text-slate-300">
+                        {new Date(row.created_at).toLocaleString("tr-TR", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </td>
+                      <td className="admin-td px-3 py-2 tabular-nums text-slate-100">
+                        {row.score}
+                      </td>
+                      <td className="admin-td px-3 py-2 tabular-nums text-slate-300">
+                        {row.checked_urls}
+                      </td>
+                      <td className="admin-td px-3 py-2 tabular-nums text-red-300/90">
+                        {row.critical_issues}
+                      </td>
+                      <td className="admin-td px-3 py-2 tabular-nums text-amber-200/85">
+                        {row.warnings}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </section>
 
         <section aria-label="SEO modülleri">
           <h2 className="admin-section-title mb-4 text-base">Modüller</h2>
