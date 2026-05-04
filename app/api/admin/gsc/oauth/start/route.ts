@@ -9,18 +9,16 @@ export async function GET() {
 
   const redirectUri = "https://61sozluk.com/api/admin/gsc/oauth/callback";
 
-  const scope = encodeURIComponent(
-    "https://www.googleapis.com/auth/webmasters.readonly"
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "https://www.googleapis.com/auth/webmasters.readonly",
+    access_type: "offline",
+    prompt: "consent",
+  });
+
+  return NextResponse.redirect(
+    `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
   );
-
-  const authUrl =
-    "https://accounts.google.com/o/oauth2/v2/auth" +
-    `?client_id=${clientId}` +
-    `&redirect_uri=${redirectUri}` +
-    `&response_type=code` +
-    `&scope=${scope}` +
-    `&access_type=offline` +
-    `&prompt=consent`;
-
-  return NextResponse.redirect(authUrl);
 }
