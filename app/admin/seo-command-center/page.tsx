@@ -287,6 +287,9 @@ export default function SeoCommandCenterPage() {
   const [agendaSuggestionsEmpty, setAgendaSuggestionsEmpty] = useState<
     boolean | null
   >(null);
+  const [agendaSourcesPreview, setAgendaSourcesPreview] = useState<
+    Array<{ label: string; type: string; trustLevel: string }> | null
+  >(null);
 
   const checkSession = useCallback(async () => {
     try {
@@ -505,6 +508,7 @@ export default function SeoCommandCenterPage() {
     setAgendaPrinciples(null);
     setAgendaSourcePlan(null);
     setAgendaSuggestionsEmpty(null);
+    setAgendaSourcesPreview(null);
     setAgendaCheckLoading(true);
     try {
       const res = await fetch(
@@ -516,6 +520,7 @@ export default function SeoCommandCenterPage() {
         message?: string;
         principles?: unknown;
         sourcePlan?: unknown;
+        sources?: unknown;
         suggestions?: unknown;
         error?: string;
       };
@@ -558,6 +563,20 @@ export default function SeoCommandCenterPage() {
         });
       }
       setAgendaSourcePlan(plan);
+      const rawSources = Array.isArray(data.sources) ? data.sources : [];
+      const preview: Array<{ label: string; type: string; trustLevel: string }> =
+        [];
+      for (const row of rawSources.slice(0, 3)) {
+        if (typeof row !== "object" || row === null) continue;
+        const r = row as Record<string, unknown>;
+        preview.push({
+          label: typeof r.label === "string" ? r.label : "—",
+          type: typeof r.type === "string" ? r.type : "—",
+          trustLevel:
+            typeof r.trustLevel === "string" ? r.trustLevel : "—",
+        });
+      }
+      setAgendaSourcesPreview(preview.length > 0 ? preview : null);
       const sugg = data.suggestions;
       setAgendaSuggestionsEmpty(!Array.isArray(sugg) || sugg.length === 0);
     } catch {
@@ -840,6 +859,31 @@ export default function SeoCommandCenterPage() {
                   </li>
                 ))}
               </ul>
+            </div>
+          ) : null}
+          {agendaSourcesPreview && agendaSourcesPreview.length > 0 ? (
+            <div className="mt-4 border-t border-slate-800/80 pt-4">
+              <p className="text-xs font-medium text-slate-500">
+                Kullanılan kaynaklar
+              </p>
+              <ul className="admin-helper m-0 mt-2 list-none space-y-2 p-0 text-sm text-slate-400">
+                {agendaSourcesPreview.map((s, i) => (
+                  <li
+                    key={`${s.label}-${i}`}
+                    className="rounded-lg border border-slate-800/80 bg-slate-950/30 px-3 py-2"
+                  >
+                    <span className="font-medium text-slate-300">
+                      {s.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-500">
+                      {s.type} · {s.trustLevel}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="admin-helper m-0 mt-2 text-xs leading-relaxed text-slate-500">
+                Tüm öneriler bu ve benzeri güvenilir kaynaklara dayanacaktır.
+              </p>
             </div>
           ) : null}
           {agendaSuggestionsEmpty === true ? (

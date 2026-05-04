@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/admin-api-auth";
+import { TRABZON_AGENDA_SOURCES } from "@/lib/trabzon-agenda-sources";
 
 export const runtime = "nodejs";
 
@@ -31,11 +32,14 @@ const TRABZON_AGENDA_SCAFFOLD = {
     },
   ],
   suggestions: [] as string[],
-};
+} as const;
 
 export async function GET() {
   const gate = await requireAdminSession();
   if (!gate.ok) return gate.response;
 
-  return NextResponse.json(TRABZON_AGENDA_SCAFFOLD);
+  return NextResponse.json({
+    ...TRABZON_AGENDA_SCAFFOLD,
+    sources: TRABZON_AGENDA_SOURCES,
+  });
 }
