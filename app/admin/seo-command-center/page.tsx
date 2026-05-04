@@ -222,6 +222,31 @@ type SeoAuditHistoryRow = {
   warnings: number;
 };
 
+type TrabzonAgendaSuggestion = {
+  title: string;
+  reason: string;
+  suggestedEntryTitle: string;
+  sourceIds: string[];
+  sourceNote: string;
+  confidence: string;
+  category: string;
+};
+
+function isValidTrabzonAgendaSuggestion(
+  item: unknown
+): item is TrabzonAgendaSuggestion {
+  if (typeof item !== "object" || item === null) return false;
+  const o = item as Record<string, unknown>;
+  if (typeof o.title !== "string" || typeof o.reason !== "string") return false;
+  if (typeof o.suggestedEntryTitle !== "string") return false;
+  if (typeof o.sourceNote !== "string") return false;
+  if (typeof o.confidence !== "string" || typeof o.category !== "string")
+    return false;
+  if (!Array.isArray(o.sourceIds) || !o.sourceIds.every((x) => typeof x === "string"))
+    return false;
+  return true;
+}
+
 function checkStatusClass(s: AuditCheckStatus): string {
   switch (s) {
     case "pass":
@@ -284,9 +309,12 @@ export default function SeoCommandCenterPage() {
   const [agendaSourcePlan, setAgendaSourcePlan] = useState<
     Array<{ type: string; label: string; status: string }> | null
   >(null);
-  const [agendaSuggestionsEmpty, setAgendaSuggestionsEmpty] = useState<
-    boolean | null
+  const [agendaSuggestions, setAgendaSuggestions] = useState<
+    TrabzonAgendaSuggestion[] | null
   >(null);
+  const [agendaGeminiWarning, setAgendaGeminiWarning] = useState<string | null>(
+    null
+  );
   const [agendaSourcesPreview, setAgendaSourcesPreview] = useState<
     Array<{ label: string; type: string; trustLevel: string }> | null
   >(null);
@@ -507,7 +535,8 @@ export default function SeoCommandCenterPage() {
     setAgendaMessage(null);
     setAgendaPrinciples(null);
     setAgendaSourcePlan(null);
-    setAgendaSuggestionsEmpty(null);
+    setAgendaSuggestions(null);
+    setAgendaGeminiWarning(null);
     setAgendaSourcesPreview(null);
     setAgendaCheckLoading(true);
     try {
@@ -577,8 +606,14 @@ export default function SeoCommandCenterPage() {
         });
       }
       setAgendaSourcesPreview(preview.length > 0 ? preview : null);
-      const sugg = data.suggestions;
-      setAgendaSuggestionsEmpty(!Array.isArray(sugg) || sugg.length === 0);
+      const rawSugg = Array.isArray(data.suggestions) ? data.suggestions : [];
+      const parsed = rawSugg.filter(isValidTrabzonAgendaSuggestion);
+      setAgendaSuggestions(parsed);
+      setAgendaGeminiWarning(
+        typeof data.error === "string" && data.error.trim()
+          ? data.error.trim()
+          : null
+      );
     } catch {
       setAgendaCheckError("Ağ hatası.");
     } finally {
@@ -798,9 +833,13 @@ export default function SeoCommandCenterPage() {
                 Trabzon gündemi, kaynaklı ve kontrollü önerilere dönüştürülecek.
                 Sistem otomatik entry yayınlamaz.
               </p>
+              <p className="admin-helper mt-1 text-xs text-slate-500">
+                Otomatik entry yayını yoktur; öneriler yalnızca editör incelemesi
+                içindir.
+              </p>
             </div>
             <span className="shrink-0 rounded-full border border-slate-700/90 bg-slate-950/50 px-2.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-400">
-              FAZ 6B: temel iskelet hazır
+              FAZ 6D: kontrollü öneriler
             </span>
           </div>
           <button
@@ -824,6 +863,14 @@ export default function SeoCommandCenterPage() {
           {agendaMessage ? (
             <p className="admin-helper mt-3 text-sm text-slate-300">
               {agendaMessage}
+            </p>
+          ) : null}
+          {agendaGeminiWarning ? (
+            <p
+              className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/95"
+              role="status"
+            >
+              {agendaGeminiWarning}
             </p>
           ) : null}
           {agendaPrinciples && agendaPrinciples.length > 0 ? (
@@ -886,7 +933,39 @@ export default function SeoCommandCenterPage() {
               </p>
             </div>
           ) : null}
-          {agendaSuggestionsEmpty === true ? (
+          {agendaSuggestions && agendaSuggestions.length > 0 ? (
+            <div className="mt-4 border-t border-slate-800/80 pt-4">
+              <p className="text-xs font-medium text-slate-500">
+                Gündem önerileri
+              </p>
+              <ul className="m-0 mt-2 list-none space-y-3 p-0">
+                {agendaSuggestions.map((s, i) => (
+                  <li
+                    key={`${s.suggestedEntryTitle}-${i}`}
+                    className="rounded-lg border border-slate-800/90 bg-slate-950/40 px-3 py-3 text-sm"
+                  >
+                    <p className="m-0 text-[0.7rem] text-slate-500">{s.title}</p>
+                    <p className="m-0 mt-1 font-medium text-slate-100">
+                      {s.suggestedEntryTitle}
+                    </p>
+                    <p className="admin-helper m-0 mt-2 text-xs leading-relaxed text-slate-400">
+                      {s.reason}
+                    </p>
+                    <p className="m-0 mt-2 text-[0.7rem] text-slate-500">
+                      güven: {s.confidence} · kategori: {s.category}
+                    </p>
+                    <p className="admin-helper m-0 mt-2 text-xs text-slate-500">
+                      {s.sourceNote}
+                    </p>
+                    <p className="m-0 mt-1 break-all font-mono text-[0.65rem] text-slate-600">
+                      Kaynak id: {s.sourceIds.length ? s.sourceIds.join(", ") : "—"}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {agendaSuggestions !== null && agendaSuggestions.length === 0 ? (
             <p className="admin-helper mt-3 text-xs text-slate-500">
               Henüz otomatik gündem önerisi üretilmiyor.
             </p>
