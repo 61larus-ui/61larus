@@ -56,40 +56,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     )
     .filter((row): row is NonNullable<typeof row> => row != null);
 
-  const approvedEnRes = await client
-    .from("entries")
-    .select("slug, created_at, title_en, content_en")
-    .eq("global_translation_status", "approved");
-
-  const approvedEnUrls: MetadataRoute.Sitemap =
-    !approvedEnRes.error && approvedEnRes.data?.length
-      ? approvedEnRes.data
-          .filter((row) => {
-            const slug =
-              typeof row.slug === "string" ? row.slug.trim() : "";
-            const titleEn =
-              typeof row.title_en === "string" ? row.title_en.trim() : "";
-            const contentEn =
-              typeof row.content_en === "string" ? row.content_en.trim() : "";
-            return (
-              slug.length > 0 && titleEn.length > 0 && contentEn.length > 0
-            );
-          })
-          .map((entry) => {
-            const slug = (entry.slug as string).trim();
-            const last =
-              entry.created_at != null &&
-              String(entry.created_at).length > 0
-                ? new Date(entry.created_at as string)
-                : new Date();
-            return {
-              url: `${BASE_URL}/en/${encodeURI(slug)}`,
-              lastModified: last,
-              changeFrequency: "weekly" as const,
-              priority: 0.7,
-            };
-          })
-      : [];
-
-  return [home, ...entryUrls, ...approvedEnUrls];
+  return [home, ...entryUrls];
 }

@@ -22,9 +22,6 @@ type EntryListRow = {
   created_at: string;
   category: string | null;
   slug: string | null;
-  global_translation_status?: string | null;
-  title_en?: string | null;
-  content_en?: string | null;
 };
 
 function logEntriesDebugPgErr(step: string, err: PostgrestError | null) {
@@ -119,7 +116,7 @@ export async function GET() {
   const withCat = await service
     .from("entries")
     .select(
-      "id, title, content, created_at, category, slug, global_translation_status, title_en, content_en"
+      "id, title, content, created_at, category, slug"
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -128,7 +125,7 @@ export async function GET() {
     const noSlug = await service
       .from("entries")
       .select(
-        "id, title, content, created_at, category, global_translation_status, title_en, content_en"
+        "id, title, content, created_at, category"
       )
       .order("created_at", { ascending: false })
       .limit(500);
@@ -146,7 +143,7 @@ export async function GET() {
     const plain = await service
       .from("entries")
       .select(
-        "id, title, content, created_at, global_translation_status, title_en, content_en"
+        "id, title, content, created_at"
       )
       .order("created_at", { ascending: false })
       .limit(500);

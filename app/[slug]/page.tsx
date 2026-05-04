@@ -174,15 +174,6 @@ export default async function EntrySlugPage({ params }: PageProps) {
     headerAuthUser.userMetadata,
   );
 
-  const hasApprovedEnglish =
-    entryRow.global_translation_status === "approved" &&
-    typeof entryRow.title_en === "string" &&
-    entryRow.title_en.trim().length > 0 &&
-    typeof entryRow.content_en === "string" &&
-    entryRow.content_en.trim().length > 0 &&
-    typeof entryRow.slug === "string" &&
-    entryRow.slug.trim().length > 0;
-
   return (
     <>
       <div style={{ display: "none" }} data-entry-detail-loaded="true">
@@ -276,22 +267,6 @@ export default async function EntrySlugPage({ params }: PageProps) {
             </div>
           </header>
           <div className="entry-detail-page-inner">
-            {hasApprovedEnglish ? (
-              <div className="entry-detail-back-row -mt-0.5 mb-0.5 flex flex-col gap-0.5 md:flex-row md:items-center">
-                <Link
-                  href={`/en/${encodeURI(
-                    typeof entryRow.slug === "string"
-                      ? entryRow.slug.trim()
-                      : "",
-                  )}`}
-                  prefetch
-                  scroll={false}
-                  className="entry-detail-back text-[0.7rem] font-normal opacity-[0.78] hover:opacity-100"
-                >
-                  English
-                </Link>
-              </div>
-            ) : null}
             <EntryDetailBodyRsc
               entry={entrySafe}
               commentAuth={{

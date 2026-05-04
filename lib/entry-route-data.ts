@@ -56,13 +56,10 @@ export type EntryRow = {
   created_at: string;
   category?: string | null;
   slug?: string | null;
-  global_translation_status?: string | null;
-  title_en?: string | null;
-  content_en?: string | null;
 };
 
 const ENTRY_ROW_SELECT =
-  "id, title, content, created_at, category, slug, global_translation_status, title_en, content_en" as const;
+  "id, title, content, created_at, category, slug" as const;
 
 async function loadEntryRowById(
   client: Exclude<
@@ -109,7 +106,7 @@ export async function getEntryByResolvedSlug(
   const { data: bySlug, error: slugErr } = await supabase
     .from("entries")
     .select(
-      "id,title,content,slug,created_at,category,global_translation_status,title_en,content_en",
+      "id,title,content,slug,created_at,category",
     )
     .eq("slug", segment)
     .maybeSingle();
@@ -124,7 +121,7 @@ export async function getEntryByResolvedSlug(
     const { data: byId, error: idErr } = await supabase
       .from("entries")
       .select(
-        "id,title,content,slug,created_at,category,global_translation_status,title_en,content_en",
+        "id,title,content,slug,created_at,category",
       )
       .eq("id", segment)
       .maybeSingle();
