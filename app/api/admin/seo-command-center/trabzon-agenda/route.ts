@@ -152,51 +152,56 @@ Kurallar:
             name: "entry_suggestions",
             strict: true,
             schema: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  suggestedEntryTitle: { type: "string" },
-                  suggestedEntryDescription: { type: "string" },
-                  reason: { type: "string" },
-                  sources: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  sourceNote: { type: "string" },
-                  confidence: {
-                    type: "string",
-                    enum: ["low", "medium", "high"],
-                  },
-                  categorySuggestion: {
-                    type: "string",
-                    enum: [
-                      "tarih",
-                      "kultur",
-                      "sehir",
-                      "akademik",
-                      "siyaset",
-                      "ekonomi",
-                      "toplum",
+              type: "object",
+              properties: {
+                suggestions: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      suggestedEntryTitle: { type: "string" },
+                      suggestedEntryDescription: { type: "string" },
+                      reason: { type: "string" },
+                      sources: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      sourceNote: { type: "string" },
+                      confidence: {
+                        type: "string",
+                        enum: ["low", "medium", "high"],
+                      },
+                      categorySuggestion: {
+                        type: "string",
+                        enum: [
+                          "tarih",
+                          "kultur",
+                          "sehir",
+                          "akademik",
+                          "siyaset",
+                          "ekonomi",
+                          "toplum",
+                        ],
+                      },
+                      duplicateRisk: {
+                        type: "string",
+                        enum: ["low", "medium", "high"],
+                      },
+                    },
+                    required: [
+                      "suggestedEntryTitle",
+                      "suggestedEntryDescription",
+                      "reason",
+                      "sources",
+                      "sourceNote",
+                      "confidence",
+                      "categorySuggestion",
+                      "duplicateRisk",
                     ],
                   },
-                  duplicateRisk: {
-                    type: "string",
-                    enum: ["low", "medium", "high"],
-                  },
                 },
-                required: [
-                  "suggestedEntryTitle",
-                  "suggestedEntryDescription",
-                  "reason",
-                  "sources",
-                  "sourceNote",
-                  "confidence",
-                  "categorySuggestion",
-                  "duplicateRisk",
-                ],
-                additionalProperties: false,
               },
+              required: ["suggestions"],
             },
           },
         },
@@ -219,14 +224,15 @@ Kurallar:
       return { httpOk: false, apiMessage: apiMsg };
     }
 
-    const text = data?.output_text || "[]";
+    const text = data?.output_text || "{}";
 
     let rawSuggestions: unknown = [];
 
     try {
-      rawSuggestions = JSON.parse(text);
+      const parsed = JSON.parse(text) as { suggestions?: unknown };
+      rawSuggestions = parsed.suggestions || [];
     } catch (error) {
-      console.error("[trabzon-agenda] OpenAI JSON parse error", error, text);
+      console.error("[trabzon-agenda] parse error", text);
       rawSuggestions = [];
     }
 
