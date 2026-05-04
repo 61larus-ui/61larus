@@ -156,10 +156,12 @@ JSON ARRAY döndür.
       }),
     });
 
-    const data = (await response.json().catch(() => null)) as {
+    const dataUnknown = await response.json().catch(() => null);
+    const data = dataUnknown as {
+      output_text?: string;
       output?: Array<{ content?: Array<{ text?: string }> }>;
       error?: { message?: string };
-    };
+    } | null;
 
     if (!response.ok) {
       const apiMsg =
@@ -171,26 +173,41 @@ JSON ARRAY döndür.
       return { httpOk: false, apiMessage: apiMsg };
     }
 
-    const text =
-      data?.output?.[0]?.content?.[0]?.text || "[]";
+    const outputChunk = data?.output?.[0]?.content?.[0]?.text;
+    let text = "";
 
-    let parsed: unknown;
+    if (data?.output_text) {
+      text = data.output_text;
+    } else if (outputChunk) {
+      text = outputChunk;
+    } else {
+      text = "[]";
+    }
+
+    let suggestions: unknown = [];
+
     try {
-      parsed = JSON.parse(text);
-    } catch {
-      parsed = [];
+      const cleaned = text
+        .trim()
+        .replace(/```json/g, "")
+        .replace(/```/g, "");
+
+      suggestions = JSON.parse(cleaned);
+    } catch (e) {
+      console.error("PARSE ERROR:", text);
+      suggestions = [];
     }
 
-    let rawList = Array.isArray(parsed) ? parsed : [];
+    const rawList = Array.isArray(suggestions) ? suggestions : [];
 
-    const suggestions: AcademicEntrySuggestionOut[] = [];
+    const normalized: AcademicEntrySuggestionOut[] = [];
     for (const item of rawList) {
-      if (suggestions.length >= TARGET_COUNT) break;
+      if (normalized.length >= TARGET_COUNT) break;
       const n = normalizeSuggestion(item);
-      if (n) suggestions.push(n);
+      if (n) normalized.push(n);
     }
 
-    return { suggestions, httpOk: true };
+    return { suggestions: normalized, httpOk: true };
   } catch (e) {
     console.error("[trabzon-agenda] OpenAI request failed:", e);
     return {
