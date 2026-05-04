@@ -28,8 +28,38 @@ export async function GET(request: NextRequest) {
 
   const tokenData = await tokenRes.json();
 
-  return NextResponse.json({
-    ok: true,
-    tokenData,
+  if (!tokenRes.ok || !tokenData.access_token) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Token exchange failed",
+        tokenData,
+      },
+      { status: 500 }
+    );
+  }
+
+  const response = NextResponse.redirect(
+    new URL("/admin/seo-command-center?gsc=connected", request.url)
+  );
+
+  response.cookies.set("gsc_access_token", tokenData.access_token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: tokenData.expires_in ?? 3600,
   });
+
+  if (tokenData.refresh_token) {
+    response.cookies.set("gsc_refresh_token", tokenData.refresh_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+  }
+
+  return response;
 }
