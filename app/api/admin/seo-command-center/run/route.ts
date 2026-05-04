@@ -114,6 +114,23 @@ function isEntrySampleUrl(href: string): boolean {
   }
 }
 
+type EntrySeoSnapshot = {
+  url: string;
+  title: string | null;
+  description: string | null;
+};
+
+function parseHtmlTitle(html: string): string {
+  const m = html.match(/<title>([\s\S]*?)<\/title>/i);
+  return (m?.[1] ?? "").replace(/\s+/g, " ").trim();
+}
+
+function parseMetaDescription(html: string): string | null {
+  const m = html.match(/<meta\s+name="description"\s+content="(.*?)"/i);
+  const v = m?.[1]?.trim();
+  return v === undefined || v === "" ? null : v;
+}
+
 function scoreFromChecksAndIssues(
   checks: AuditCheck[],
   issues: AuditIssue[]
@@ -137,6 +154,7 @@ export async function POST() {
   const checkedAt = new Date().toISOString();
   const checks: AuditCheck[] = [];
   const issues: AuditIssue[] = [];
+  const entrySeo: EntrySeoSnapshot[] = [];
   let checkedUrls = 0;
   let sitemapFetchedOk = false;
   let locs: string[] = [];
@@ -312,11 +330,15 @@ export async function POST() {
         url: `${SITE_BASE}/sitemap.xml`,
       });
     } else {
+      let entrySeoCriticalCount = 0;
+      let entrySeoWarningCount = 0;
+
       for (const u of entryCandidates) {
         checkedUrls += 1;
-        const r = await fetchWithStatus(u, false);
+        const r = await fetchWithStatus(u, true);
         if (r.error) {
           sampleFail += 1;
+          entrySeo.push({ url: u, title: null, description: null });
           issues.push({
             severity: "critical",
             title: "Entry URL’ine erişilemedi",
@@ -325,6 +347,7 @@ export async function POST() {
           });
         } else if (r.status !== 200) {
           sampleFail += 1;
+          entrySeo.push({ url: u, title: null, description: null });
           issues.push({
             severity: "critical",
             title: "Entry URL beklenmeyen durum kodu",
@@ -333,8 +356,70 @@ export async function POST() {
           });
         } else {
           samplePass += 1;
+          const html = r.body ?? "";
+          const title = parseHtmlTitle(html);
+          const description = parseMetaDescription(html);
+          entrySeo.push({ url: u, title: title || null, description });
+
+          const titleLen = title.length;
+          if (titleLen < 20) {
+            entrySeoWarningCount += 1;
+            issues.push({
+              severity: "warning",
+              title: "Title çok kısa",
+              detail: `Bulunan değer: ${title}`,
+              url: u,
+            });
+          } else if (titleLen > 70) {
+            entrySeoWarningCount += 1;
+            issues.push({
+              severity: "warning",
+              title: "Title çok uzun",
+              detail: `Bulunan değer: ${title}`,
+              url: u,
+            });
+          }
+
+          if (description === null) {
+            entrySeoCriticalCount += 1;
+            issues.push({
+              severity: "critical",
+              title: "Meta description eksik",
+              detail: "Bulunan değer: (yok)",
+              url: u,
+            });
+          } else {
+            const descLen = description.length;
+            if (descLen < 50) {
+              entrySeoWarningCount += 1;
+              issues.push({
+                severity: "warning",
+                title: "Meta description çok kısa",
+                detail: `Bulunan değer: ${description}`,
+                url: u,
+              });
+            } else if (descLen > 160) {
+              entrySeoWarningCount += 1;
+              issues.push({
+                severity: "warning",
+                title: "Meta description çok uzun",
+                detail: `Bulunan değer: ${description}`,
+                url: u,
+              });
+            }
+          }
         }
       }
+
+      let entrySeoCheckStatus: CheckStatus = "pass";
+      if (entrySeoCriticalCount > 0) entrySeoCheckStatus = "fail";
+      else if (entrySeoWarningCount > 0) entrySeoCheckStatus = "warning";
+
+      checks.push({
+        name: "Entry SEO Analizi",
+        status: entrySeoCheckStatus,
+        message: `${entryCandidates.length} entry üzerinde title ve description kontrol edildi`,
+      });
 
       if (sampleFail === 0) {
         checks.push({
@@ -375,6 +460,7 @@ export async function POST() {
       summary: summaryPayload,
       checks,
       issues,
+      entrySeo,
     };
 
     if (!service) {
