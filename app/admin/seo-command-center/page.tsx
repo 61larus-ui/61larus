@@ -48,9 +48,96 @@ type AiSeoOpportunityItem = {
   priority: string;
   title: string;
   reason: string;
+  sources: Array<{ name: string; url?: string }>;
   action?: string;
   status?: string;
 };
+
+function isValidOpportunityItem(item: unknown): item is AiSeoOpportunityItem {
+  if (typeof item !== "object" || item === null) return false;
+  const o = item as Record<string, unknown>;
+  if (typeof o.title !== "string" || typeof o.reason !== "string")
+    return false;
+  if (!Array.isArray(o.sources) || o.sources.length === 0) return false;
+  for (const s of o.sources) {
+    if (typeof s !== "object" || s === null) return false;
+    const src = s as Record<string, unknown>;
+    if (typeof src.name !== "string" || !src.name.trim()) return false;
+    if (
+      src.url !== undefined &&
+      src.url !== null &&
+      typeof src.url !== "string"
+    )
+      return false;
+  }
+  return true;
+}
+
+type AiOpportunitySourcesPayload = {
+  model: string;
+  responseMimeType: "application/json";
+  auditCheckedAt: string | null;
+  summary: {
+    score?: number;
+    checkedUrls?: number;
+    criticalIssues?: number;
+    warnings?: number;
+  } | null;
+  issuesUsedCount: number;
+  issuesUsed: Array<{
+    severity?: string;
+    title?: string;
+    detail?: string;
+    url?: string;
+  }>;
+  entrySeoUsedCount: number;
+  entrySeoUsed: Array<{
+    url?: string;
+    title?: string | null;
+    description?: string | null;
+  }>;
+};
+
+function coerceAiSources(raw: unknown): AiOpportunitySourcesPayload | null {
+  if (!raw || typeof raw !== "object") return null;
+  const s = raw as Record<string, unknown>;
+  if (typeof s.model !== "string") return null;
+  if (s.responseMimeType !== "application/json") return null;
+  const auditCheckedAt =
+    typeof s.auditCheckedAt === "string" || s.auditCheckedAt === null
+      ? (s.auditCheckedAt as string | null)
+      : null;
+  const summary =
+    s.summary === null || typeof s.summary === "object"
+      ? (s.summary as AiOpportunitySourcesPayload["summary"])
+      : null;
+  const issuesUsed = Array.isArray(s.issuesUsed) ? s.issuesUsed : [];
+  const entrySeoUsed = Array.isArray(s.entrySeoUsed) ? s.entrySeoUsed : [];
+  const issuesUsedCount =
+    typeof s.issuesUsedCount === "number"
+      ? s.issuesUsedCount
+      : issuesUsed.length;
+  const entrySeoUsedCount =
+    typeof s.entrySeoUsedCount === "number"
+      ? s.entrySeoUsedCount
+      : entrySeoUsed.length;
+  return {
+    model: s.model,
+    responseMimeType: "application/json",
+    auditCheckedAt,
+    summary,
+    issuesUsedCount,
+    issuesUsed: issuesUsed.filter(
+      (x): x is AiOpportunitySourcesPayload["issuesUsed"][number] =>
+        typeof x === "object" && x !== null
+    ),
+    entrySeoUsedCount,
+    entrySeoUsed: entrySeoUsed.filter(
+      (x): x is AiOpportunitySourcesPayload["entrySeoUsed"][number] =>
+        typeof x === "object" && x !== null
+    ),
+  };
+}
 
 const AI_SEO_OPPORTUNITY_PLACEHOLDERS: AiSeoOpportunityPlaceholder[] = [
   {
@@ -147,6 +234,9 @@ export default function SeoCommandCenterPage() {
   const [aiPrepError, setAiPrepError] = useState<string | null>(null);
   const [aiPrepMessage, setAiPrepMessage] = useState<string | null>(null);
   const [aiPrepMode, setAiPrepMode] = useState<string | null>(null);
+  const [aiSources, setAiSources] = useState<AiOpportunitySourcesPayload | null>(
+    null
+  );
   const [aiOpportunities, setAiOpportunities] = useState<AiSeoOpportunityItem[]>(
     []
   );
@@ -271,6 +361,7 @@ export default function SeoCommandCenterPage() {
     setAiPrepError(null);
     setAiPrepMessage(null);
     setAiPrepMode(null);
+    setAiSources(null);
     setAiPrepLoading(true);
     try {
       const res = await fetch("/api/admin/seo-command-center/ai-opportunities", {
@@ -283,7 +374,10 @@ export default function SeoCommandCenterPage() {
         message?: string;
         mode?: string;
         opportunities?: unknown;
+        sources?: unknown;
       };
+      const parsedSources = coerceAiSources(data.sources);
+
       if (res.status === 401) {
         setAiOpportunities([]);
         setAiPrepError(
@@ -300,6 +394,7 @@ export default function SeoCommandCenterPage() {
             ? data.error
             : "AI fırsatları isteği tamamlanamadı."
         );
+        if (parsedSources) setAiSources(parsedSources);
         return;
       }
       if (data.ok === false) {
@@ -309,17 +404,12 @@ export default function SeoCommandCenterPage() {
             ? data.error
             : "İstek reddedildi."
         );
+        if (parsedSources) setAiSources(parsedSources);
         return;
       }
       const raw = data.opportunities;
       const list: AiSeoOpportunityItem[] = Array.isArray(raw)
-        ? raw.filter(
-            (item): item is AiSeoOpportunityItem =>
-              typeof item === "object" &&
-              item !== null &&
-              typeof (item as AiSeoOpportunityItem).title === "string" &&
-              typeof (item as AiSeoOpportunityItem).reason === "string"
-          )
+        ? raw.filter(isValidOpportunityItem)
         : [];
       setAiOpportunities(list);
       setAiPrepError(null);
@@ -327,6 +417,7 @@ export default function SeoCommandCenterPage() {
       setAiPrepMessage(
         typeof data.message === "string" ? data.message : null
       );
+      if (parsedSources) setAiSources(parsedSources);
     } catch {
       setAiOpportunities([]);
       setAiPrepError("Ağ hatası.");
@@ -673,6 +764,149 @@ export default function SeoCommandCenterPage() {
               {aiPrepMessage}
             </p>
           ) : null}
+          {aiSources ? (
+            <div
+              className="mt-4 rounded-lg border border-slate-800 bg-slate-950/35 p-4"
+              aria-label="Analiz kaynakları"
+            >
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Analiz kaynakları
+              </h3>
+              <dl className="admin-helper mt-3 space-y-2 text-xs leading-relaxed text-slate-400">
+                <div className="flex flex-wrap gap-x-2">
+                  <dt className="font-medium text-slate-500">Gemini modeli</dt>
+                  <dd className="font-mono text-slate-300">{aiSources.model}</dd>
+                </div>
+                <div className="flex flex-wrap gap-x-2">
+                  <dt className="font-medium text-slate-500">Çıktı formatı</dt>
+                  <dd className="font-mono text-slate-300">
+                    {aiSources.responseMimeType}
+                  </dd>
+                </div>
+                {aiSources.auditCheckedAt ? (
+                  <div className="flex flex-wrap gap-x-2">
+                    <dt className="font-medium text-slate-500">
+                      SEO tarama zamanı
+                    </dt>
+                    <dd className="text-slate-300">
+                      {new Date(aiSources.auditCheckedAt).toLocaleString(
+                        "tr-TR",
+                        { dateStyle: "short", timeStyle: "medium" }
+                      )}
+                    </dd>
+                  </div>
+                ) : (
+                  <div className="text-slate-500">
+                    Kayıtlı tarama zamanı bulunamadı (henüz tarama yok veya
+                    geçmiş okunamadı).
+                  </div>
+                )}
+              </dl>
+              {aiSources.summary ? (
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
+                    <p className="admin-stat-label text-[0.6rem]">Puan</p>
+                    <p className="tabular-nums text-slate-200">
+                      {aiSources.summary.score ?? "—"}
+                    </p>
+                  </div>
+                  <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
+                    <p className="admin-stat-label text-[0.6rem]">URL</p>
+                    <p className="tabular-nums text-slate-200">
+                      {aiSources.summary.checkedUrls ?? "—"}
+                    </p>
+                  </div>
+                  <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
+                    <p className="admin-stat-label text-[0.6rem]">Kritik</p>
+                    <p className="tabular-nums text-slate-200">
+                      {aiSources.summary.criticalIssues ?? "—"}
+                    </p>
+                  </div>
+                  <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
+                    <p className="admin-stat-label text-[0.6rem]">Uyarı</p>
+                    <p className="tabular-nums text-slate-200">
+                      {aiSources.summary.warnings ?? "—"}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+              <div className="mt-3">
+                <p className="text-xs font-medium text-slate-500">
+                  Prompt’a dahil edilen sorunlar ({aiSources.issuesUsedCount})
+                </p>
+                {aiSources.issuesUsed.length === 0 ? (
+                  <p className="admin-helper mt-1 text-xs text-slate-600">
+                    Yok.
+                  </p>
+                ) : (
+                  <ul className="m-0 mt-1 max-h-40 list-none space-y-1 overflow-y-auto p-0">
+                    {aiSources.issuesUsed.map((issue, idx) => (
+                      <li
+                        key={`src-issue-${idx}`}
+                        className="rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1.5 text-[0.7rem] text-slate-400"
+                      >
+                        <span className="text-slate-300">
+                          {issue.title ?? "—"}
+                        </span>
+                        {issue.url ? (
+                          <span className="mt-0.5 block break-all font-mono text-[0.65rem] text-slate-600">
+                            {issue.url}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="mt-3">
+                <p className="text-xs font-medium text-slate-500">
+                  Prompt’a dahil entry SEO örnekleri (
+                  {aiSources.entrySeoUsedCount})
+                </p>
+                {aiSources.entrySeoUsed.length === 0 ? (
+                  <p className="admin-helper mt-1 text-xs text-slate-600">
+                    Yok.
+                  </p>
+                ) : (
+                  <ul className="m-0 mt-1 max-h-40 list-none space-y-1 overflow-y-auto p-0">
+                    {aiSources.entrySeoUsed.map((row, idx) => (
+                      <li
+                        key={`src-entry-${idx}`}
+                        className="rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1.5 text-[0.7rem] text-slate-400"
+                      >
+                        <span className="break-all font-mono text-[0.65rem] text-slate-500">
+                          {row.url ?? "—"}
+                        </span>
+                        {(row.title != null && row.title !== "") ||
+                        (row.description != null &&
+                          row.description !== "") ? (
+                          <span className="mt-0.5 block space-y-0.5 text-slate-400">
+                            {row.title != null && row.title !== "" ? (
+                              <span className="block">
+                                Başlık:{" "}
+                                {row.title.length > 120
+                                  ? `${row.title.slice(0, 120)}…`
+                                  : row.title}
+                              </span>
+                            ) : null}
+                            {row.description != null &&
+                            row.description !== "" ? (
+                              <span className="block text-slate-500">
+                                Meta:{" "}
+                                {row.description.length > 120
+                                  ? `${row.description.slice(0, 120)}…`
+                                  : row.description}
+                              </span>
+                            ) : null}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          ) : null}
           {aiOpportunities.length > 0 ? (
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {aiOpportunities.map((opp, idx) => (
@@ -704,6 +938,35 @@ export default function SeoCommandCenterPage() {
                     <p className="admin-helper mt-2 text-xs leading-relaxed text-slate-300">
                       Önerilen aksiyon: {opp.action}
                     </p>
+                  ) : null}
+                  {opp.sources.length > 0 ? (
+                    <div className="mt-3 border-t border-slate-800/80 pt-2">
+                      <p className="text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                        Kaynaklar
+                      </p>
+                      <ul className="m-0 mt-1 list-none space-y-1 p-0">
+                        {opp.sources.map((src, srcIdx) => (
+                          <li
+                            key={`${opp.type}-${idx}-src-${srcIdx}`}
+                            className="text-[0.7rem] leading-snug text-slate-400"
+                          >
+                            {typeof src.url === "string" &&
+                            src.url.trim().length > 0 ? (
+                              <a
+                                href={src.url.trim()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sky-400/95 underline-offset-2 hover:underline"
+                              >
+                                {src.name}
+                              </a>
+                            ) : (
+                              <span>{src.name}</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ) : null}
                   {opp.status ? (
                     <p className="admin-helper mt-3 text-[0.7rem] uppercase tracking-wide text-slate-500">
