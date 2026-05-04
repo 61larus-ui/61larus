@@ -37,6 +37,33 @@ const SEO_MODULES: SeoModuleCard[] = [
   },
 ];
 
+type AiSeoOpportunityPlaceholder = {
+  title: string;
+  description: string;
+  status: string;
+};
+
+const AI_SEO_OPPORTUNITY_PLACEHOLDERS: AiSeoOpportunityPlaceholder[] = [
+  {
+    title: "Yeni başlık fırsatları",
+    description:
+      "61Sözlük'e uygun, gündemle ilişkili yeni başlık önerileri burada görünecek.",
+    status: "Gemini bağlantısı bekliyor",
+  },
+  {
+    title: "Mevcut entry güçlendirme",
+    description:
+      "Meta description, iç link ve başlık iyileştirme önerileri burada listelenecek.",
+    status: "Veri bekliyor",
+  },
+  {
+    title: "Index fırsatları",
+    description:
+      "Sitemap'te olup Google görünürlüğü düşük URL'ler burada takip edilecek.",
+    status: "Search Console bekliyor",
+  },
+];
+
 type AuditCheckStatus = "pass" | "warning" | "fail";
 
 type SeoAuditReport = {
@@ -523,6 +550,41 @@ export default function SeoCommandCenterPage() {
               </table>
             </div>
           ) : null}
+        </section>
+
+        <section
+          className="rounded-xl border border-slate-800 bg-slate-900/35 p-6"
+          aria-label="AI SEO fırsatları"
+        >
+          <h2 className="admin-section-title text-base">AI SEO Fırsatları</h2>
+          <p className="admin-helper mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+            Gündem, Search Console ve teknik SEO verileri Gemini ile analiz
+            edildiğinde öneriler burada listelenecek.
+          </p>
+          <p className="admin-helper mt-4 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2.5 text-sm text-slate-500">
+            Henüz AI SEO fırsatı üretilmedi.
+          </p>
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {AI_SEO_OPPORTUNITY_PLACEHOLDERS.map((card) => (
+              <article
+                key={card.title}
+                aria-disabled="true"
+                className="rounded-xl border border-dashed border-slate-700/90 bg-slate-950/25 p-5 opacity-85 shadow-none"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-slate-200">
+                    {card.title}
+                  </h3>
+                  <span className="shrink-0 rounded-full border border-slate-700/90 bg-slate-950/50 px-2.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                    {card.status}
+                  </span>
+                </div>
+                <p className="admin-helper mt-3 text-sm leading-relaxed text-slate-500">
+                  {card.description}
+                </p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section aria-label="SEO modülleri">
