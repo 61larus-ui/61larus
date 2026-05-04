@@ -15,7 +15,7 @@ const SEO_MODULES: SeoModuleCard[] = [
     title: "Teknik SEO",
     description:
       "Sitemap, robots, canonical, 404 ve meta kontrolleri burada izlenecek.",
-    status: "Hazırlanıyor",
+    status: "Tarama aktif",
   },
   {
     title: "Google Search Console",
@@ -37,10 +37,63 @@ const SEO_MODULES: SeoModuleCard[] = [
   },
 ];
 
+type AuditCheckStatus = "pass" | "warning" | "fail";
+
+type SeoAuditReport = {
+  ok: true;
+  checkedAt: string;
+  summary: {
+    score: number;
+    checkedUrls: number;
+    criticalIssues: number;
+    warnings: number;
+  };
+  checks: Array<{
+    name: string;
+    status: AuditCheckStatus;
+    message: string;
+  }>;
+  issues: Array<{
+    severity: "critical" | "warning";
+    title: string;
+    detail: string;
+    url: string;
+  }>;
+};
+
+function checkStatusClass(s: AuditCheckStatus): string {
+  switch (s) {
+    case "pass":
+      return "border-emerald-500/35 bg-emerald-500/12 text-emerald-200";
+    case "warning":
+      return "border-amber-500/35 bg-amber-500/10 text-amber-100/95";
+    case "fail":
+      return "border-red-500/35 bg-red-500/12 text-red-200/95";
+    default:
+      return "border-slate-600 bg-slate-800/50 text-slate-400";
+  }
+}
+
+function checkStatusLabel(s: AuditCheckStatus): string {
+  switch (s) {
+    case "pass":
+      return "Tamam";
+    case "warning":
+      return "Uyarı";
+    case "fail":
+      return "Hata";
+    default:
+      return s;
+  }
+}
+
 export default function SeoCommandCenterPage() {
   const [sessionOk, setSessionOk] = useState<boolean | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [role, setRole] = useState<AdminRole | null>(null);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
+  const [auditReport, setAuditReport] = useState<SeoAuditReport | null>(null);
 
   const checkSession = useCallback(async () => {
     try {
@@ -75,6 +128,51 @@ export default function SeoCommandCenterPage() {
   useEffect(() => {
     void checkSession();
   }, [checkSession]);
+
+  const runTechnicalAudit = useCallback(async () => {
+    setAuditError(null);
+    setAuditLoading(true);
+    try {
+      const res = await fetch("/api/admin/seo-command-center/run", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = (await res.json().catch(() => ({}))) as
+        | SeoAuditReport
+        | { ok?: false; error?: string };
+      if (!res.ok) {
+        const err =
+          typeof data === "object" &&
+          data &&
+          "error" in data &&
+          typeof (data as { error?: string }).error === "string"
+            ? (data as { error: string }).error
+            : res.status === 401
+              ? "Oturum gerekli veya yetkisiz."
+              : "Tarama tamamlanamadı.";
+        setAuditError(err);
+        setAuditReport(null);
+        return;
+      }
+      if (
+        typeof data === "object" &&
+        data &&
+        data.ok === true &&
+        "summary" in data &&
+        "checks" in data
+      ) {
+        setAuditReport(data as SeoAuditReport);
+      } else {
+        setAuditError("Geçersiz yanıt.");
+        setAuditReport(null);
+      }
+    } catch {
+      setAuditError("Ağ hatası.");
+      setAuditReport(null);
+    } finally {
+      setAuditLoading(false);
+    }
+  }, []);
 
   if (sessionOk === null) {
     return (
@@ -150,15 +248,150 @@ export default function SeoCommandCenterPage() {
         >
           <button
             type="button"
-            disabled
-            className="rounded-lg border border-slate-600 bg-slate-800/40 px-4 py-2.5 text-sm font-medium text-slate-500 cursor-not-allowed opacity-60"
+            disabled={auditLoading}
+            onClick={() => void runTechnicalAudit()}
+            className="rounded-lg border border-emerald-600/50 bg-emerald-600/90 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-55"
           >
-            SEO GÜNCELLE
+            {auditLoading ? "Taranıyor..." : "SEO GÜNCELLE"}
           </button>
           <p className="admin-helper mt-2 max-w-xl text-xs text-slate-500">
-            Bu buton sonraki fazda teknik taramayı başlatacak.
+            Canlı site (https://61sozluk.com) için teknik SEO kontrollerini
+            çalıştırır: ana sayfa, robots.txt, sitemap ve örnek entry URL’leri.
           </p>
+          {auditError ? (
+            <p
+              className="admin-msg-error mt-3 text-sm text-[var(--accent)]"
+              role="alert"
+            >
+              {auditError}
+            </p>
+          ) : null}
         </section>
+
+        {auditReport ? (
+          <section
+            className="space-y-6 rounded-xl border border-slate-800 bg-slate-900/35 p-6"
+            aria-label="Teknik SEO raporu"
+          >
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="admin-section-title text-base">
+                  Teknik SEO raporu
+                </h2>
+                <p className="admin-helper mt-1 text-xs text-slate-500">
+                  {new Date(auditReport.checkedAt).toLocaleString("tr-TR", {
+                    dateStyle: "short",
+                    timeStyle: "medium",
+                  })}
+                </p>
+              </div>
+            </div>
+
+            {auditReport.summary.criticalIssues === 0 ? (
+              <p className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200/95">
+                Kritik teknik SEO hatası bulunmadı.
+              </p>
+            ) : null}
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+                <p className="admin-stat-label text-[0.65rem]">SEO puanı</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-slate-100">
+                  {auditReport.summary.score}
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+                <p className="admin-stat-label text-[0.65rem]">
+                  Kontrol edilen URL
+                </p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-slate-100">
+                  {auditReport.summary.checkedUrls}
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+                <p className="admin-stat-label text-[0.65rem]">Kritik</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-red-300/95">
+                  {auditReport.summary.criticalIssues}
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+                <p className="admin-stat-label text-[0.65rem]">Uyarı</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-amber-200/90">
+                  {auditReport.summary.warnings}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-slate-200">
+                Kontroller
+              </h3>
+              <ul className="m-0 list-none space-y-2 p-0">
+                {auditReport.checks.map((c) => (
+                  <li
+                    key={c.name}
+                    className="flex flex-wrap items-start gap-2 rounded-lg border border-slate-800/90 bg-slate-950/30 px-3 py-2.5"
+                  >
+                    <span
+                      className={`shrink-0 rounded border px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide ${checkStatusClass(c.status)}`}
+                    >
+                      {checkStatusLabel(c.status)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="m-0 text-sm font-medium text-slate-100">
+                        {c.name}
+                      </p>
+                      <p className="admin-helper m-0 mt-0.5 text-xs leading-relaxed text-slate-400">
+                        {c.message}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-slate-200">
+                Sorunlar
+              </h3>
+              {auditReport.issues.length === 0 ? (
+                <p className="admin-helper m-0 text-sm text-slate-500">
+                  Liste boş — raporlanan sorun yok.
+                </p>
+              ) : (
+                <ul className="m-0 list-none space-y-2 p-0">
+                  {auditReport.issues.map((issue, idx) => (
+                    <li
+                      key={`${issue.url}-${idx}`}
+                      className="rounded-lg border border-slate-800/90 bg-slate-950/30 px-3 py-2.5"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={
+                            issue.severity === "critical"
+                              ? "rounded border border-red-500/35 bg-red-500/12 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-red-200/95"
+                              : "rounded border border-amber-500/35 bg-amber-500/10 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-100/90"
+                          }
+                        >
+                          {issue.severity === "critical" ? "Kritik" : "Uyarı"}
+                        </span>
+                        <span className="text-sm font-medium text-slate-100">
+                          {issue.title}
+                        </span>
+                      </div>
+                      <p className="admin-helper m-0 mt-1 text-xs leading-relaxed text-slate-400">
+                        {issue.detail}
+                      </p>
+                      <p className="m-0 mt-1 break-all font-mono text-[0.7rem] text-slate-500">
+                        {issue.url}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+        ) : null}
 
         <section aria-label="SEO modülleri">
           <h2 className="admin-section-title mb-4 text-base">Modüller</h2>
