@@ -240,6 +240,12 @@ export default function SeoCommandCenterPage() {
   const [aiOpportunities, setAiOpportunities] = useState<AiSeoOpportunityItem[]>(
     []
   );
+  const [gscTestLoading, setGscTestLoading] = useState(false);
+  const [gscTestBanner, setGscTestBanner] = useState<
+    | { kind: "ok"; siteUrl?: string }
+    | { kind: "err"; message: string; missing: string[] }
+    | null
+  >(null);
 
   const checkSession = useCallback(async () => {
     try {
@@ -423,6 +429,60 @@ export default function SeoCommandCenterPage() {
       setAiPrepError("Ağ hatası.");
     } finally {
       setAiPrepLoading(false);
+    }
+  }, []);
+
+  const testGscConnection = useCallback(async () => {
+    setGscTestBanner(null);
+    setGscTestLoading(true);
+    try {
+      const res = await fetch(
+        "/api/admin/seo-command-center/search-console/test",
+        { method: "POST", credentials: "include" }
+      );
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        missing?: string[];
+        message?: string;
+        siteUrl?: string;
+      };
+      if (res.status === 401) {
+        setGscTestBanner({
+          kind: "err",
+          message:
+            typeof data.message === "string"
+              ? data.message
+              : "Oturum gerekli veya yetkisiz.",
+          missing: [],
+        });
+        return;
+      }
+      if (data.ok === true) {
+        setGscTestBanner({
+          kind: "ok",
+          siteUrl:
+            typeof data.siteUrl === "string" && data.siteUrl.trim()
+              ? data.siteUrl.trim()
+              : undefined,
+        });
+        return;
+      }
+      setGscTestBanner({
+        kind: "err",
+        message:
+          typeof data.message === "string"
+            ? data.message
+            : "Bağlantı testi tamamlanamadı.",
+        missing: Array.isArray(data.missing) ? data.missing : [],
+      });
+    } catch {
+      setGscTestBanner({
+        kind: "err",
+        message: "Ağ hatası.",
+        missing: [],
+      });
+    } finally {
+      setGscTestLoading(false);
     }
   }, []);
 
@@ -1024,6 +1084,55 @@ export default function SeoCommandCenterPage() {
                 <p className="admin-helper mt-3 text-sm leading-relaxed text-slate-400">
                   {m.description}
                 </p>
+                {m.title === "Google Search Console" ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={gscTestLoading}
+                      onClick={() => void testGscConnection()}
+                      className="mt-3 rounded-lg border border-slate-600 bg-slate-950/60 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
+                    >
+                      {gscTestLoading
+                        ? "Test ediliyor..."
+                        : "GSC BAĞLANTISINI TEST ET"}
+                    </button>
+                    {gscTestBanner?.kind === "ok" ? (
+                      <div
+                        className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-xs text-emerald-200/95"
+                        role="status"
+                      >
+                        <p className="m-0">
+                          Google Search Console bağlantı bilgileri hazır.
+                        </p>
+                        {gscTestBanner.siteUrl ? (
+                          <p className="admin-helper m-0 mt-1 break-all font-mono text-[0.65rem] text-emerald-300/85">
+                            {gscTestBanner.siteUrl}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {gscTestBanner?.kind === "err" ? (
+                      <div
+                        className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/95"
+                        role="alert"
+                      >
+                        <p className="m-0">{gscTestBanner.message}</p>
+                        {gscTestBanner.missing.length > 0 ? (
+                          <ul className="mb-0 mt-2 list-disc pl-4">
+                            {gscTestBanner.missing.map((key) => (
+                              <li
+                                key={key}
+                                className="font-mono text-[0.65rem] text-amber-50/90"
+                              >
+                                {key}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </>
+                ) : null}
               </article>
             ))}
           </div>
