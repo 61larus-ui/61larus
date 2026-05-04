@@ -275,6 +275,18 @@ export default function SeoCommandCenterPage() {
     | { kind: "err"; message: string; missing: string[] }
     | null
   >(null);
+  const [agendaCheckLoading, setAgendaCheckLoading] = useState(false);
+  const [agendaCheckError, setAgendaCheckError] = useState<string | null>(null);
+  const [agendaMessage, setAgendaMessage] = useState<string | null>(null);
+  const [agendaPrinciples, setAgendaPrinciples] = useState<string[] | null>(
+    null
+  );
+  const [agendaSourcePlan, setAgendaSourcePlan] = useState<
+    Array<{ type: string; label: string; status: string }> | null
+  >(null);
+  const [agendaSuggestionsEmpty, setAgendaSuggestionsEmpty] = useState<
+    boolean | null
+  >(null);
 
   const checkSession = useCallback(async () => {
     try {
@@ -487,6 +499,74 @@ export default function SeoCommandCenterPage() {
     }
   }, []);
 
+  const checkTrabzonAgenda = useCallback(async () => {
+    setAgendaCheckError(null);
+    setAgendaMessage(null);
+    setAgendaPrinciples(null);
+    setAgendaSourcePlan(null);
+    setAgendaSuggestionsEmpty(null);
+    setAgendaCheckLoading(true);
+    try {
+      const res = await fetch(
+        "/api/admin/seo-command-center/trabzon-agenda",
+        { method: "GET", credentials: "include" }
+      );
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        message?: string;
+        principles?: unknown;
+        sourcePlan?: unknown;
+        suggestions?: unknown;
+        error?: string;
+      };
+      if (res.status === 401) {
+        setAgendaCheckError(
+          typeof data.error === "string"
+            ? data.error
+            : "Oturum gerekli veya yetkisiz."
+        );
+        return;
+      }
+      if (!res.ok) {
+        setAgendaCheckError(
+          typeof data.error === "string"
+            ? data.error
+            : "İstek tamamlanamadı."
+        );
+        return;
+      }
+      if (data.ok !== true) {
+        setAgendaCheckError(
+          typeof data.error === "string" ? data.error : "Yanıt reddedildi."
+        );
+        return;
+      }
+      setAgendaMessage(typeof data.message === "string" ? data.message : null);
+      const principles = Array.isArray(data.principles)
+        ? data.principles.filter((x): x is string => typeof x === "string")
+        : [];
+      setAgendaPrinciples(principles);
+      const rawPlan = Array.isArray(data.sourcePlan) ? data.sourcePlan : [];
+      const plan: Array<{ type: string; label: string; status: string }> = [];
+      for (const row of rawPlan) {
+        if (typeof row !== "object" || row === null) continue;
+        const r = row as Record<string, unknown>;
+        plan.push({
+          type: typeof r.type === "string" ? r.type : "—",
+          label: typeof r.label === "string" ? r.label : "—",
+          status: typeof r.status === "string" ? r.status : "—",
+        });
+      }
+      setAgendaSourcePlan(plan);
+      const sugg = data.suggestions;
+      setAgendaSuggestionsEmpty(!Array.isArray(sugg) || sugg.length === 0);
+    } catch {
+      setAgendaCheckError("Ağ hatası.");
+    } finally {
+      setAgendaCheckLoading(false);
+    }
+  }, []);
+
   const testGscConnection = useCallback(async () => {
     setGscTestBanner(null);
     setGscTestLoading(true);
@@ -684,6 +764,89 @@ export default function SeoCommandCenterPage() {
               </span>
             </li>
           </ul>
+        </section>
+
+        <section
+          className="rounded-xl border border-slate-800 bg-slate-900/40 p-6"
+          aria-label="Trabzon gündem motoru"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="admin-section-title text-base">
+                Trabzon gündem motoru
+              </h2>
+              <p className="admin-helper mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+                Trabzon gündemi, kaynaklı ve kontrollü önerilere dönüştürülecek.
+                Sistem otomatik entry yayınlamaz.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full border border-slate-700/90 bg-slate-950/50 px-2.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-400">
+              FAZ 6B: temel iskelet hazır
+            </span>
+          </div>
+          <button
+            type="button"
+            disabled={agendaCheckLoading}
+            onClick={() => void checkTrabzonAgenda()}
+            className="mt-4 rounded-lg border border-slate-600 bg-slate-950/60 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            {agendaCheckLoading
+              ? "Kontrol ediliyor..."
+              : "Gündem motorunu kontrol et"}
+          </button>
+          {agendaCheckError ? (
+            <p
+              className="admin-msg-error mt-3 text-sm text-[var(--accent)]"
+              role="alert"
+            >
+              {agendaCheckError}
+            </p>
+          ) : null}
+          {agendaMessage ? (
+            <p className="admin-helper mt-3 text-sm text-slate-300">
+              {agendaMessage}
+            </p>
+          ) : null}
+          {agendaPrinciples && agendaPrinciples.length > 0 ? (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-slate-500">İlkeler</p>
+              <ul className="admin-helper m-0 mt-1 list-none space-y-1.5 p-0 text-sm text-slate-400">
+                {agendaPrinciples.map((p, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="text-slate-600" aria-hidden>
+                      ·
+                    </span>
+                    <span>{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {agendaSourcePlan && agendaSourcePlan.length > 0 ? (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-slate-500">Kaynak planı</p>
+              <ul className="admin-helper m-0 mt-1 list-none space-y-2 p-0 text-sm text-slate-400">
+                {agendaSourcePlan.map((item, i) => (
+                  <li
+                    key={i}
+                    className="rounded-lg border border-slate-800/80 bg-slate-950/30 px-3 py-2"
+                  >
+                    <span className="font-medium text-slate-300">
+                      {item.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-500">
+                      {item.type} · {item.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {agendaSuggestionsEmpty === true ? (
+            <p className="admin-helper mt-3 text-xs text-slate-500">
+              Henüz otomatik gündem önerisi üretilmiyor.
+            </p>
+          ) : null}
         </section>
 
         {auditReport ? (
