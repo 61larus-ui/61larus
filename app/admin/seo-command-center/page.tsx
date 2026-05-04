@@ -14,8 +14,8 @@ const SEO_MODULES: SeoModuleCard[] = [
   {
     title: "Teknik SEO",
     description:
-      "Canlı sitede ana sayfa, robots.txt, sitemap ve örnek entry URL kontrolleri çalışır.",
-    status: "Tarama aktif",
+      "Canlı sitede ana sayfa, robots.txt, sitemap ve örnek entry URL kontrolleri çalışır. Google index garantisi değil; güncel sitemap bildirimi yapılır.",
+    status: "Sitemap bildirimi aktif",
   },
   {
     title: "Google Search Console bağlantısı",
@@ -633,6 +633,57 @@ export default function SeoCommandCenterPage() {
               {auditError}
             </p>
           ) : null}
+        </section>
+
+        <section
+          className="rounded-xl border border-slate-800 bg-slate-900/40 p-6"
+          aria-label="Google index iletişimi"
+        >
+          <h2 className="admin-section-title text-base">
+            Google index iletişimi
+          </h2>
+          <ul className="admin-helper m-0 mt-3 list-none space-y-2.5 p-0 text-sm leading-relaxed text-slate-400">
+            <li className="flex gap-2">
+              <span className="text-slate-600" aria-hidden>
+                ·
+              </span>
+              <span>
+                Sitemap aktif:{" "}
+                <a
+                  href="https://61sozluk.com/sitemap.xml"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="break-all font-mono text-[0.8rem] text-sky-400/95 underline decoration-sky-400/40 underline-offset-2 hover:text-sky-300"
+                >
+                  https://61sozluk.com/sitemap.xml
+                </a>
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-slate-600" aria-hidden>
+                ·
+              </span>
+              <span>
+                Yeni yayınlanan entry sonrası Google’a sitemap bildirimi
+                gönderiliyor.
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-slate-600" aria-hidden>
+                ·
+              </span>
+              <span>Pending içerikler Google’a bildirilmez.</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-slate-600" aria-hidden>
+                ·
+              </span>
+              <span>
+                Bu sistem index garantisi vermez; Google’a güncel sitemap’i haber
+                verir.
+              </span>
+            </li>
+          </ul>
         </section>
 
         {auditReport ? (
