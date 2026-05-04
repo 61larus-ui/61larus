@@ -134,32 +134,78 @@ async function fetchOpenAISuggestions(apiKey: string): Promise<
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-5-mini",
+        model: "gpt-4.1-mini",
         input: `
 Trabzon hakkında akademik ve açık kaynaklı konulara dayanarak 8 entry önerisi üret.
 
 Kurallar:
-- Uydurma makale veya kaynak üretme
-- Her öneri yeni entry fırsatı olsun
-- Her öneride:
-  - suggestedEntryTitle
-  - suggestedEntryDescription (1 paragraf)
-  - reason
-  - sources (varsa)
-  - sourceNote
-  - confidence
-  - categorySuggestion
-  - duplicateRisk
-
-JSON ARRAY döndür.
+- Sadece JSON döndür.
+- Uydurma makale, uydurma kaynak, uydurma olay üretme.
+- Her öneri yeni entry fırsatı gibi düşünülmeli.
+- Her öneri 61Sözlük'te yayınlanabilecek başlık mantığı taşımalı.
+- Her öneride 1 kısa paragraf açıklama olmalı.
+- Kaynak yoksa sources boş dizi olsun, confidence low olsun, sourceNote "Kaynak doğrulaması gerekli." olsun.
 `,
+        text: {
+          format: {
+            type: "json_schema",
+            name: "entry_suggestions",
+            strict: true,
+            schema: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  suggestedEntryTitle: { type: "string" },
+                  suggestedEntryDescription: { type: "string" },
+                  reason: { type: "string" },
+                  sources: {
+                    type: "array",
+                    items: { type: "string" },
+                  },
+                  sourceNote: { type: "string" },
+                  confidence: {
+                    type: "string",
+                    enum: ["low", "medium", "high"],
+                  },
+                  categorySuggestion: {
+                    type: "string",
+                    enum: [
+                      "tarih",
+                      "kultur",
+                      "sehir",
+                      "akademik",
+                      "siyaset",
+                      "ekonomi",
+                      "toplum",
+                    ],
+                  },
+                  duplicateRisk: {
+                    type: "string",
+                    enum: ["low", "medium", "high"],
+                  },
+                },
+                required: [
+                  "suggestedEntryTitle",
+                  "suggestedEntryDescription",
+                  "reason",
+                  "sources",
+                  "sourceNote",
+                  "confidence",
+                  "categorySuggestion",
+                  "duplicateRisk",
+                ],
+                additionalProperties: false,
+              },
+            },
+          },
+        },
       }),
     });
 
     const dataUnknown = await response.json().catch(() => null);
     const data = dataUnknown as {
       output_text?: string;
-      output?: Array<{ content?: Array<{ text?: string }> }>;
       error?: { message?: string };
     } | null;
 
@@ -173,32 +219,18 @@ JSON ARRAY döndür.
       return { httpOk: false, apiMessage: apiMsg };
     }
 
-    const outputChunk = data?.output?.[0]?.content?.[0]?.text;
-    let text = "";
+    const text = data?.output_text || "[]";
 
-    if (data?.output_text) {
-      text = data.output_text;
-    } else if (outputChunk) {
-      text = outputChunk;
-    } else {
-      text = "[]";
-    }
-
-    let suggestions: unknown = [];
+    let rawSuggestions: unknown = [];
 
     try {
-      const cleaned = text
-        .trim()
-        .replace(/```json/g, "")
-        .replace(/```/g, "");
-
-      suggestions = JSON.parse(cleaned);
-    } catch (e) {
-      console.error("PARSE ERROR:", text);
-      suggestions = [];
+      rawSuggestions = JSON.parse(text);
+    } catch (error) {
+      console.error("[trabzon-agenda] OpenAI JSON parse error", error, text);
+      rawSuggestions = [];
     }
 
-    const rawList = Array.isArray(suggestions) ? suggestions : [];
+    const rawList = Array.isArray(rawSuggestions) ? rawSuggestions : [];
 
     const normalized: AcademicEntrySuggestionOut[] = [];
     for (const item of rawList) {
