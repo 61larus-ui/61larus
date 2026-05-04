@@ -43,6 +43,14 @@ type AiSeoOpportunityPlaceholder = {
   status: string;
 };
 
+type AiSeoOpportunityItem = {
+  type: string;
+  priority: string;
+  title: string;
+  reason: string;
+  status: string;
+};
+
 const AI_SEO_OPPORTUNITY_PLACEHOLDERS: AiSeoOpportunityPlaceholder[] = [
   {
     title: "Yeni başlık fırsatları",
@@ -134,6 +142,12 @@ export default function SeoCommandCenterPage() {
   const [auditHistory, setAuditHistory] = useState<SeoAuditHistoryRow[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [aiPrepLoading, setAiPrepLoading] = useState(false);
+  const [aiPrepError, setAiPrepError] = useState<string | null>(null);
+  const [aiPrepMessage, setAiPrepMessage] = useState<string | null>(null);
+  const [aiOpportunities, setAiOpportunities] = useState<AiSeoOpportunityItem[]>(
+    []
+  );
 
   const checkSession = useCallback(async () => {
     try {
@@ -250,6 +264,71 @@ export default function SeoCommandCenterPage() {
       setAuditLoading(false);
     }
   }, [loadAuditHistory]);
+
+  const prepareAiOpportunities = useCallback(async () => {
+    setAiPrepError(null);
+    setAiPrepMessage(null);
+    setAiPrepLoading(true);
+    try {
+      const res = await fetch("/api/admin/seo-command-center/ai-opportunities", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        message?: string;
+        opportunities?: unknown;
+      };
+      if (res.status === 401) {
+        setAiOpportunities([]);
+        setAiPrepError(
+          typeof data.error === "string"
+            ? data.error
+            : "Oturum gerekli veya yetkisiz."
+        );
+        return;
+      }
+      if (!res.ok) {
+        setAiOpportunities([]);
+        setAiPrepError(
+          typeof data.error === "string"
+            ? data.error
+            : "AI fırsatları isteği tamamlanamadı."
+        );
+        return;
+      }
+      if (data.ok === false) {
+        setAiOpportunities([]);
+        setAiPrepError(
+          typeof data.error === "string"
+            ? data.error
+            : "İstek reddedildi."
+        );
+        return;
+      }
+      const raw = data.opportunities;
+      const list: AiSeoOpportunityItem[] = Array.isArray(raw)
+        ? raw.filter(
+            (item): item is AiSeoOpportunityItem =>
+              typeof item === "object" &&
+              item !== null &&
+              typeof (item as AiSeoOpportunityItem).title === "string" &&
+              typeof (item as AiSeoOpportunityItem).reason === "string"
+          )
+        : [];
+      setAiOpportunities(list);
+      setAiPrepError(null);
+      setAiPrepMessage(
+        typeof data.message === "string" ? data.message : null
+      );
+    } catch {
+      setAiOpportunities([]);
+      setAiPrepError("Ağ hatası.");
+    } finally {
+      setAiPrepLoading(false);
+    }
+  }, []);
 
   if (sessionOk === null) {
     return (
@@ -561,9 +640,70 @@ export default function SeoCommandCenterPage() {
             Gündem, Search Console ve teknik SEO verileri Gemini ile analiz
             edildiğinde öneriler burada listelenecek.
           </p>
-          <p className="admin-helper mt-4 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2.5 text-sm text-slate-500">
-            Henüz AI SEO fırsatı üretilmedi.
+          <p className="admin-helper mt-3 max-w-3xl text-xs leading-relaxed text-slate-500">
+            Bu fazda gerçek Gemini analizi yapılmaz; bağlantı zemini test
+            edilir.
           </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={aiPrepLoading}
+              onClick={() => void prepareAiOpportunities()}
+              className="rounded-lg border border-sky-600/45 bg-sky-600/85 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              {aiPrepLoading ? "Hazırlanıyor..." : "AI FIRSATLARI HAZIRLA"}
+            </button>
+          </div>
+          {aiPrepError ? (
+            <p
+              className="admin-msg-error mt-3 text-sm text-[var(--accent)]"
+              role="alert"
+            >
+              {aiPrepError}
+            </p>
+          ) : null}
+          {aiPrepMessage ? (
+            <p className="admin-helper mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-sm text-emerald-200/90">
+              {aiPrepMessage}
+            </p>
+          ) : null}
+          {aiOpportunities.length > 0 ? (
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {aiOpportunities.map((opp, idx) => (
+                <article
+                  key={`${opp.type}-${idx}`}
+                  className="rounded-xl border border-slate-700/90 bg-slate-950/40 p-4 shadow-none"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <h3 className="text-sm font-semibold text-slate-100">
+                      {opp.title}
+                    </h3>
+                    <span className="shrink-0 rounded-full border border-slate-600/90 bg-slate-900/60 px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-300">
+                      {opp.priority === "high"
+                        ? "Öncelik: yüksek"
+                        : opp.priority === "medium"
+                          ? "Öncelik: orta"
+                          : opp.priority}
+                    </span>
+                  </div>
+                  <p className="admin-helper mt-2 text-xs text-slate-500">
+                    {opp.type}
+                  </p>
+                  <p className="admin-helper mt-2 text-sm leading-relaxed text-slate-400">
+                    {opp.reason}
+                  </p>
+                  <p className="admin-helper mt-3 text-[0.7rem] uppercase tracking-wide text-slate-500">
+                    Durum: {opp.status}
+                  </p>
+                </article>
+              ))}
+            </div>
+          ) : null}
+          {!aiPrepLoading && aiOpportunities.length === 0 && !aiPrepError ? (
+            <p className="admin-helper mt-4 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2.5 text-sm text-slate-500">
+              Henüz AI SEO fırsatı üretilmedi.
+            </p>
+          ) : null}
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
             {AI_SEO_OPPORTUNITY_PLACEHOLDERS.map((card) => (
               <article
