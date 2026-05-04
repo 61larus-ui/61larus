@@ -1,71 +1,76 @@
 import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/admin-api-auth";
-import { TRABZON_AGENDA_SOURCES } from "@/lib/trabzon-agenda-sources";
 
 export const runtime = "nodejs";
 
 const DEFAULT_GEMINI_MODEL = "gemini-3-flash-preview";
 const GEMINI_TIMEOUT_MS = 60_000;
+const TARGET_COUNT = 8;
 
 const MESSAGE_READY =
-  "Trabzon gündem motoru kaynaklı ve kontrollü çalışacak şekilde hazırlanıyor.";
+  "Akademik entry önerileri üretildi. Yayın sürecinde admin onayı gereklidir.";
 const MESSAGE_NO_GEMINI =
-  "Gemini anahtarı olmadığı için gündem önerisi üretilmedi; kaynak altyapısı hazır.";
-const ERROR_GEMINI_FAILED = "Gündem önerileri şu anda üretilemedi.";
+  "Gemini anahtarı tanımlı değil; öneri üretilmedi.";
+const ERROR_GEMINI_FAILED = "Akademik entry önerileri şu anda üretilemedi.";
 
-const FALLBACK_ENTRY_DESCRIPTION =
-  "Bu öneri yayınlanmadan önce kaynakla doğrulanmış kısa açıklama hazırlanmalıdır.";
+const FALLBACK_DESCRIPTION =
+  "Konu özeti oluşturulamadı; makaleleri ve başlığı kontrol ederek editör yazımı gerekebilir.";
 const SOURCE_VERIFY_PHRASE = "Kaynak doğrulaması gerekli.";
 
-const PRINCIPLES = [
-  "Her gündem önerisi açık kaynakla desteklenmelidir.",
-  "Akademik veya güvenilir kaynak yoksa öneri düşük güvenle işaretlenmelidir.",
-  "Sistem otomatik entry yayınlamaz; yalnızca admin için öneri üretir.",
-] as const;
+const CATEGORY_SET = new Set([
+  "tarih",
+  "kultur",
+  "sehir",
+  "akademik",
+  "siyaset",
+  "ekonomi",
+  "toplum",
+]);
 
-const SOURCE_PLAN = [
-  {
-    type: "official",
-    label: "Resmî kurum ve belediye duyuruları",
-    status: "planned",
-  },
-  {
-    type: "local_news",
-    label: "Yerel haber kaynakları",
-    status: "planned",
-  },
-  {
-    type: "academic",
-    label: "Akademik ve açık kaynaklar",
-    status: "required_for_historical_claims",
-  },
-] as const;
+const CONFIDENCE_SET = new Set(["low", "medium", "high"]);
+const DUPLICATE_RISK_SET = new Set(["low", "medium", "high"]);
 
-const AGENDA_SUGGESTIONS_JSON_SCHEMA = {
+export type AcademicEntrySuggestionOut = {
+  suggestedEntryTitle: string;
+  suggestedEntryDescription: string;
+  reason: string;
+  sources: string[];
+  sourceNote: string;
+  confidence: "low" | "medium" | "high";
+  categorySuggestion:
+    | "tarih"
+    | "kultur"
+    | "sehir"
+    | "akademik"
+    | "siyaset"
+    | "ekonomi"
+    | "toplum";
+  duplicateRisk: "low" | "medium" | "high";
+};
+
+const ACADEMIC_SUGGESTIONS_JSON_SCHEMA = {
   type: "ARRAY",
   items: {
     type: "OBJECT",
     properties: {
-      title: { type: "STRING" },
-      reason: { type: "STRING" },
       suggestedEntryTitle: { type: "STRING" },
       suggestedEntryDescription: { type: "STRING" },
-      sourceIds: { type: "ARRAY", items: { type: "STRING" } },
+      reason: { type: "STRING" },
+      sources: { type: "ARRAY", items: { type: "STRING" } },
       sourceNote: { type: "STRING" },
       confidence: { type: "STRING" },
-      category: { type: "STRING" },
-      siteDuplicateRisk: { type: "STRING" },
+      categorySuggestion: { type: "STRING" },
+      duplicateRisk: { type: "STRING" },
     },
     required: [
-      "title",
-      "reason",
       "suggestedEntryTitle",
       "suggestedEntryDescription",
-      "sourceIds",
+      "reason",
+      "sources",
       "sourceNote",
       "confidence",
-      "category",
-      "siteDuplicateRisk",
+      "categorySuggestion",
+      "duplicateRisk",
     ],
   },
 } as const;
@@ -103,8 +108,8 @@ function parseSuggestionsJson(text: string): unknown[] | null {
     const end = blob.lastIndexOf("]");
     if (start >= 0 && end > start) {
       try {
-        const parsed: unknown = JSON.parse(blob.slice(start, end + 1));
-        if (Array.isArray(parsed)) return parsed;
+        const sliced: unknown = JSON.parse(blob.slice(start, end + 1));
+        if (Array.isArray(sliced)) return sliced;
       } catch {
         return null;
       }
@@ -114,49 +119,15 @@ function parseSuggestionsJson(text: string): unknown[] | null {
   return null;
 }
 
-const SOURCE_ID_SET = new Set(
-  TRABZON_AGENDA_SOURCES.map((s) => s.id)
-);
-
-const CONFIDENCE_SET = new Set(["low", "medium", "high"]);
-const CATEGORY_SET = new Set([
-  "gundem",
-  "tarih",
-  "kultur",
-  "sehir",
-  "akademik",
-]);
-
-const DUPLICATE_RISK_SET = new Set(["low", "medium", "high"]);
-
-type AgendaSuggestionOut = {
-  title: string;
-  reason: string;
-  suggestedEntryTitle: string;
-  suggestedEntryDescription: string;
-  sourceIds: string[];
-  sourceNote: string;
-  confidence: "low" | "medium" | "high";
-  category: "gundem" | "tarih" | "kultur" | "sehir" | "akademik";
-  siteDuplicateRisk: "low" | "medium" | "high";
-};
-
-function mergeSourceNoteWithVerificationRequired(note: string): string {
-  const t = note.trim();
-  if (t.toLowerCase().includes("kaynak doğrulaması gerekli")) return t;
-  return t ? `${t} ${SOURCE_VERIFY_PHRASE}` : SOURCE_VERIFY_PHRASE;
-}
-
-function normalizeSuggestion(raw: unknown): AgendaSuggestionOut | null {
+function normalizeSuggestion(raw: unknown): AcademicEntrySuggestionOut | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
-  const title = typeof o.title === "string" ? o.title.trim() : "";
-  const reason = typeof o.reason === "string" ? o.reason.trim() : "";
+
   const suggestedEntryTitle =
     typeof o.suggestedEntryTitle === "string"
       ? o.suggestedEntryTitle.trim()
       : "";
-  if (!title || !reason || !suggestedEntryTitle) return null;
+  const reason = typeof o.reason === "string" ? o.reason.trim() : "";
 
   let suggestedEntryDescription =
     typeof o.suggestedEntryDescription === "string"
@@ -164,105 +135,99 @@ function normalizeSuggestion(raw: unknown): AgendaSuggestionOut | null {
       : "";
   const descriptionMissing = !suggestedEntryDescription;
   if (descriptionMissing) {
-    suggestedEntryDescription = FALLBACK_ENTRY_DESCRIPTION;
+    suggestedEntryDescription = FALLBACK_DESCRIPTION;
   }
 
-  const rawIds = Array.isArray(o.sourceIds)
-    ? o.sourceIds
+  if (!suggestedEntryTitle || !reason) return null;
+
+  const sourcesRaw = Array.isArray(o.sources)
+    ? o.sources
         .filter((x): x is string => typeof x === "string")
         .map((s) => s.trim())
-        .filter(Boolean)
+        .filter((s) => s.length > 0)
     : [];
-  const sourceIds = rawIds.filter((id) => SOURCE_ID_SET.has(id));
-
-  let sourceNote =
-    typeof o.sourceNote === "string" ? o.sourceNote.trim() : "";
 
   let confidenceRaw =
     typeof o.confidence === "string" ? o.confidence.toLowerCase().trim() : "";
   if (!CONFIDENCE_SET.has(confidenceRaw)) confidenceRaw = "low";
+
   let categoryRaw =
-    typeof o.category === "string" ? o.category.toLowerCase().trim() : "";
-  if (!CATEGORY_SET.has(categoryRaw)) categoryRaw = "gundem";
+    typeof o.categorySuggestion === "string"
+      ? o.categorySuggestion.toLowerCase().trim()
+      : "";
+  if (!CATEGORY_SET.has(categoryRaw)) categoryRaw = "akademik";
 
   let riskRaw =
-    typeof o.siteDuplicateRisk === "string"
-      ? o.siteDuplicateRisk.toLowerCase().trim()
+    typeof o.duplicateRisk === "string"
+      ? o.duplicateRisk.toLowerCase().trim()
       : "";
-  if (!DUPLICATE_RISK_SET.has(riskRaw)) riskRaw = "medium";
-
-  let confidence = confidenceRaw as AgendaSuggestionOut["confidence"];
-  if (sourceIds.length === 0) {
-    confidence = "low";
-    sourceNote = mergeSourceNoteWithVerificationRequired(sourceNote);
+  /* Eski anahtar adı gelirse yakala */
+  if (!DUPLICATE_RISK_SET.has(riskRaw)) {
+    const alt =
+      typeof o.siteDuplicateRisk === "string"
+        ? o.siteDuplicateRisk.toLowerCase().trim()
+        : "";
+    riskRaw = DUPLICATE_RISK_SET.has(alt) ? alt : "medium";
   }
-  if (descriptionMissing) {
+
+  let sourceNote =
+    typeof o.sourceNote === "string" ? o.sourceNote.trim() : "";
+
+  let confidence = confidenceRaw as AcademicEntrySuggestionOut["confidence"];
+
+  let sources = sourcesRaw;
+  if (sources.length === 0) {
+    sources = [];
+    confidence = "low";
+    sourceNote = SOURCE_VERIFY_PHRASE;
+  } else if (descriptionMissing) {
     confidence = "low";
   }
 
   return {
-    title,
-    reason,
     suggestedEntryTitle,
     suggestedEntryDescription,
-    sourceIds,
+    reason,
+    sources,
     sourceNote,
     confidence,
-    category: categoryRaw as AgendaSuggestionOut["category"],
-    siteDuplicateRisk: riskRaw as AgendaSuggestionOut["siteDuplicateRisk"],
+    categorySuggestion:
+      categoryRaw as AcademicEntrySuggestionOut["categorySuggestion"],
+    duplicateRisk: riskRaw as AcademicEntrySuggestionOut["duplicateRisk"],
   };
 }
 
-function buildAgendaPrompt(sourcesJson: string): string {
-  return `Sen 61Sözlük için Trabzon odaklı, kontrollü YENİ ENTRY fırsatı önerileri üreten bir yardımcısın.
+function buildAcademicPrompt(): string {
+  return `61Sözlük yöneticisi için Gemini görevin: Trabzon ili, tarihi, kültürü, coğrafyası ve toplumu hakkında yayımlanmış veya güvenilir erişimi olan akademik makaleleri, kitap bölümleri, kamu araştırma raporları ve açık erişimli çalışmalar düşünerek YENİ entry fırsatları önermek.
+
+GÖREV: Tam olarak ${TARGET_COUNT} adet öneri üret. Her biri gerçekten var olabilecek veya doğrulanabilir kaynaklara dayalı konular seç; uydurma makale başlığı, uydurma DOI veya hayali olay yazma.
 
 KURALLAR:
-- Her öneri mutlaka 61Sözlük'te henüz işlenmemiş, yeni bir entry fırsatı gibi düşünülmelidir.
-- Daha önce sitede yoğun işlenmiş veya tekrar riski yüksek konuları önerme; siteDuplicateRisk alanını buna göre doldur ("low" | "medium" | "high").
-- Her öneri için suggestedEntryTitle ve suggestedEntryDescription ZORUNLUDUR.
-- suggestedEntryDescription tek kısa paragraf olmalı; giriş metninin özeti gibi, spekülasyondan kaçın.
-- Her öneri kaynak mantığı taşımalı; kaynak id'leri yalnızca aşağıdaki listeden seçilmeli. Kaynak yoksa veya zayıfsa confidence "low" olmalı.
-- Trabzon ve çevresiyle ilişkili öneriler üret.
-- Uydurma güncel olay, uydurma akademik yayın veya sahte kaynak ÜRETME.
-- Canlı haber veya bugüne özel spesifik olay iddiasında bulunma.
-- Aşağıdaki kaynak listesinde OLMAYAN sitelere veya spesifik haber URL'lerine atıf yapma.
-- Tarihî, kültürel veya akademik iddia içeren önerilerde akademik veya açık kaynak ihtiyacını sourceNote içinde AÇIKÇA belirt.
-- Sistem otomatik yayın YAPMAZ; yalnızca admin için öneri üretir.
-- Tam olarak 3 öneri üret. JSON dizi olarak döndür (başka metin yok).
+- Önerilen metinleri 61Sözlük'e uygun düşün: Türkçe sözlük girişi tarzı.
+- Kaynak olarak yalnızca doğrulanabilir referanslar kullan (yayın adı, yazar birliği, kurum, hakemli dergi, açık arşiv, resmî araştırma raporu özeti vb.). Kesin görmediğin spesifik URL uydurma; genel akademik tema ve doğrulanabilir çerçeve yeterliyse bile sources'da elle uydurulmuş http adresi yazma.
+- Kaynak çıkmıyorsa sources boş dizi yap; model confidence için "low" ve sourceNote tam olarak şu olmalı: "${SOURCE_VERIFY_PHRASE}"
+- suggestedEntryDescription: tek kısa paragraf, yayına yakın ciddilikte yaz; metinde "admin onayı", "otomatik yayınlanmaz" gibi uyarıları YAZMA — bu uyarıları yönetici arayüzü gösterir.
+- Tekrar riski için duplicateRisk kullan ("low"|"medium"|"high"): sitede popüler/yoğun işlenmiş klasik başlıklar için "high".
+- Çıktı YALNIZCA JSON dizisi olmalı (başka metin veya Markdown yok).
 
-KAYNAK LİSTESİ (id, label, type, trustLevel, baseUrl, note?):
-${sourcesJson}
-
-Her öğe şeması:
-- title: kısa iç başlık / tema etiketi
-- reason: neden bu yeni entry fırsatı önerildi (genel, doğrulanabilir çerçeve)
-- suggestedEntryTitle: sözlük giriş başlığı önerisi (kısa, sözlük formatına uygun)
-- suggestedEntryDescription: giriş için tek kısa paragraf açıklama özeti
-- sourceIds: yukarıdaki id'lerden bir veya daha fazla (yalnızca listedekiler)
-- sourceNote: kaynak türü, doğrulama ve akademik ihtiyaç notları
-- confidence: "low" | "medium" | "high" — kaynak yoksa veya zayıfsa mutlaka "low"
-- category: "gundem" | "tarih" | "kultur" | "sehir" | "akademik"
-- siteDuplicateRisk: "low" | "medium" | "high" — sitede benzer içerik olma ihtimali tahmini`;
-}
-
-function sourcesForPrompt() {
-  return TRABZON_AGENDA_SOURCES.map((s) => ({
-    id: s.id,
-    label: s.label,
-    type: s.type,
-    trustLevel: s.trustLevel,
-    baseUrl: s.baseUrl,
-    ...(s.note ? { note: s.note } : {}),
-  }));
+Her öğe alanları (İngilizce anahtar adları kullan — şema zorunlu):
+- suggestedEntryTitle: önerilen sözlük başlığı
+- suggestedEntryDescription: yayına yakın kalitede tek kısa giriş metni özeti (uyarı içermesin)
+- reason: akademik/anlatı olarak neden yeni bir entry için anlamlı
+- sources: sıfır veya daha fazla string — URL veya başlık + kurum + yıl vb.
+- sourceNote: kaynak tipi veya doğrulama ihtiyacı (${
+    SOURCE_VERIFY_PHRASE
+  } durumunda birebir)
+- confidence: "low" | "medium" | "high"
+- categorySuggestion: "tarih" | "kultur" | "sehir" | "akademik" | "siyaset" | "ekonomi" | "toplum"
+- duplicateRisk: "low" | "medium" | "high"`;
 }
 
 async function fetchGeminiSuggestions(
   apiKey: string
-): Promise<{ suggestions: AgendaSuggestionOut[]; ok: boolean }> {
+): Promise<{ suggestions: AcademicEntrySuggestionOut[]; ok: boolean }> {
   const modelId = resolveGeminiModel();
-  const prompt = buildAgendaPrompt(
-    JSON.stringify(sourcesForPrompt(), null, 0)
-  );
+  const prompt = buildAcademicPrompt();
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     modelId
   )}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -279,7 +244,7 @@ async function fetchGeminiSuggestions(
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           responseMimeType: "application/json",
-          responseSchema: AGENDA_SUGGESTIONS_JSON_SCHEMA,
+          responseSchema: ACADEMIC_SUGGESTIONS_JSON_SCHEMA,
         },
       }),
     });
@@ -300,9 +265,9 @@ async function fetchGeminiSuggestions(
       return { suggestions: [], ok: false };
     }
 
-    const out: AgendaSuggestionOut[] = [];
+    const out: AcademicEntrySuggestionOut[] = [];
     for (const item of arr) {
-      if (out.length >= 3) break;
+      if (out.length >= TARGET_COUNT) break;
       const n = normalizeSuggestion(item);
       if (n) out.push(n);
     }
@@ -319,35 +284,27 @@ export async function GET() {
   const gate = await requireAdminSession();
   if (!gate.ok) return gate.response;
 
-  const base = {
-    ok: true as const,
-    mode: "manual_sources_first" as const,
-    principles: [...PRINCIPLES],
-    sourcePlan: [...SOURCE_PLAN],
-    sources: TRABZON_AGENDA_SOURCES,
-  };
-
   const key = process.env.GEMINI_API_KEY?.trim();
   if (!key) {
     return NextResponse.json({
-      ...base,
+      ok: true,
       message: MESSAGE_NO_GEMINI,
-      suggestions: [] as AgendaSuggestionOut[],
+      suggestions: [] satisfies AcademicEntrySuggestionOut[],
     });
   }
 
   const { suggestions, ok } = await fetchGeminiSuggestions(key);
   if (!ok) {
     return NextResponse.json({
-      ...base,
+      ok: true,
       message: MESSAGE_READY,
-      suggestions: [] as AgendaSuggestionOut[],
+      suggestions: [] satisfies AcademicEntrySuggestionOut[],
       error: ERROR_GEMINI_FAILED,
     });
   }
 
   return NextResponse.json({
-    ...base,
+    ok: true,
     message: MESSAGE_READY,
     suggestions,
   });

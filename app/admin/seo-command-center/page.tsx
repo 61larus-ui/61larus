@@ -4,190 +4,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { AdminRole } from "@/lib/admin-role";
 
-type SeoModuleCard = {
-  title: string;
-  description: string;
-  status: string;
-};
-
-const SEO_MODULES: SeoModuleCard[] = [
-  {
-    title: "Teknik SEO",
-    description:
-      "Canlı sitede ana sayfa, robots.txt, sitemap ve örnek entry URL kontrolleri çalışır. Google index garantisi değil; güncel sitemap bildirimi yapılır.",
-    status: "Sitemap bildirimi aktif",
-  },
-  {
-    title: "Google Search Console bağlantısı",
-    description:
-      "OAuth bağlantısı aktifse öneri motoru GSC verisini kullanır. İsteğe bağlı sunucu kontrolü kartın altındadır.",
-    status: "OAuth ile kullanım",
-  },
-  {
-    title: "Gündem motoru",
-    description:
-      "Trend ve gündemden başlık önerileri için planlı geliştirme.",
-    status: "Planlı",
-  },
-  {
-    title: "Gemini analizi",
-    description:
-      "Öneriler Gemini ile üretilir; teknik tarama ve isteğe bağlı GSC örnekleriyle beslenir.",
-    status: "Aktif",
-  },
-];
-
-const GSC_MODULE_TITLE = "Google Search Console bağlantısı";
-
-type SeoRecommendationItem = {
-  title: string;
-  reason: string;
-  suggestedEntryTitle: string;
-  priority: string;
-  sourceType: string;
-  sources: string[];
-  sourceNote: string;
-  confidence: string;
-};
-
-function isValidSeoRecommendation(item: unknown): item is SeoRecommendationItem {
-  if (typeof item !== "object" || item === null) return false;
-  const o = item as Record<string, unknown>;
-  if (typeof o.title !== "string" || typeof o.reason !== "string") return false;
-  if (typeof o.suggestedEntryTitle !== "string") return false;
-  if (!Array.isArray(o.sources)) return false;
-  if (!o.sources.every((s) => typeof s === "string")) return false;
-  if (typeof o.sourceNote !== "string") return false;
-  if (typeof o.priority !== "string") return false;
-  if (typeof o.sourceType !== "string") return false;
-  if (typeof o.confidence !== "string") return false;
-  return true;
-}
-
-type AiOpportunitySourcesPayload = {
-  model: string;
-  responseMimeType: "application/json";
-  auditCheckedAt: string | null;
-  summary: {
-    score?: number;
-    checkedUrls?: number;
-    criticalIssues?: number;
-    warnings?: number;
-  } | null;
-  issuesUsedCount: number;
-  issuesUsed: Array<{
-    severity?: string;
-    title?: string;
-    detail?: string;
-    url?: string;
-  }>;
-  entrySeoUsedCount: number;
-  entrySeoUsed: Array<{
-    url?: string;
-    title?: string | null;
-    description?: string | null;
-  }>;
-  gscConnected: boolean;
-  gscDataAvailable: boolean;
-  gscQueriesSample: string[];
-};
-
-function coerceAiSources(raw: unknown): AiOpportunitySourcesPayload | null {
-  if (!raw || typeof raw !== "object") return null;
-  const s = raw as Record<string, unknown>;
-  if (typeof s.model !== "string") return null;
-  if (s.responseMimeType !== "application/json") return null;
-  const auditCheckedAt =
-    typeof s.auditCheckedAt === "string" || s.auditCheckedAt === null
-      ? (s.auditCheckedAt as string | null)
-      : null;
-  const summary =
-    s.summary === null || typeof s.summary === "object"
-      ? (s.summary as AiOpportunitySourcesPayload["summary"])
-      : null;
-  const issuesUsed = Array.isArray(s.issuesUsed) ? s.issuesUsed : [];
-  const entrySeoUsed = Array.isArray(s.entrySeoUsed) ? s.entrySeoUsed : [];
-  const issuesUsedCount =
-    typeof s.issuesUsedCount === "number"
-      ? s.issuesUsedCount
-      : issuesUsed.length;
-  const entrySeoUsedCount =
-    typeof s.entrySeoUsedCount === "number"
-      ? s.entrySeoUsedCount
-      : entrySeoUsed.length;
-  const gscQueriesSample = Array.isArray(s.gscQueriesSample)
-    ? s.gscQueriesSample.filter((x): x is string => typeof x === "string")
-    : [];
-  const gscConnected =
-    typeof s.gscConnected === "boolean" ? s.gscConnected : false;
-  const gscDataAvailable =
-    typeof s.gscDataAvailable === "boolean" ? s.gscDataAvailable : false;
-  return {
-    model: s.model,
-    responseMimeType: "application/json",
-    auditCheckedAt,
-    summary,
-    issuesUsedCount,
-    issuesUsed: issuesUsed.filter(
-      (x): x is AiOpportunitySourcesPayload["issuesUsed"][number] =>
-        typeof x === "object" && x !== null
-    ),
-    entrySeoUsedCount,
-    entrySeoUsed: entrySeoUsed.filter(
-      (x): x is AiOpportunitySourcesPayload["entrySeoUsed"][number] =>
-        typeof x === "object" && x !== null
-    ),
-    gscConnected,
-    gscDataAvailable,
-    gscQueriesSample,
-  };
-}
-
-function sourceTypeLabel(t: string): string {
-  switch (t) {
-    case "gsc":
-      return "Search Console";
-    case "technical_audit":
-      return "Teknik audit";
-    case "content_gap":
-      return "İçerik fırsatı";
-    case "academic_source_required":
-      return "Kaynak doğrulaması gerekli";
-    default:
-      return t;
-  }
-}
-
-function priorityLabel(p: string): string {
-  switch (p) {
-    case "high":
-      return "yüksek";
-    case "medium":
-      return "orta";
-    case "low":
-      return "düşük";
-    default:
-      return p;
-  }
-}
-
-function confidenceLabel(c: string): string {
-  switch (c) {
-    case "high":
-      return "yüksek";
-    case "medium":
-      return "orta";
-    case "low":
-      return "düşük";
-    default:
-      return c;
-  }
-}
-
-function looksLikeUrl(s: string): boolean {
-  return /^https?:\/\//i.test(s.trim());
-}
-
 type AuditCheckStatus = "pass" | "warning" | "fail";
 
 type SeoAuditReport = {
@@ -222,31 +38,30 @@ type SeoAuditHistoryRow = {
   warnings: number;
 };
 
-type TrabzonAgendaSuggestion = {
-  title: string;
-  reason: string;
+type AcademicEntrySuggestion = {
   suggestedEntryTitle: string;
   suggestedEntryDescription: string;
-  sourceIds: string[];
+  reason: string;
+  sources: string[];
   sourceNote: string;
   confidence: string;
-  category: string;
-  siteDuplicateRisk: string;
+  categorySuggestion: string;
+  duplicateRisk: string;
 };
 
-function isValidTrabzonAgendaSuggestion(
+function isValidAcademicEntrySuggestion(
   item: unknown
-): item is TrabzonAgendaSuggestion {
+): item is AcademicEntrySuggestion {
   if (typeof item !== "object" || item === null) return false;
   const o = item as Record<string, unknown>;
-  if (typeof o.title !== "string" || typeof o.reason !== "string") return false;
   if (typeof o.suggestedEntryTitle !== "string") return false;
   if (typeof o.suggestedEntryDescription !== "string") return false;
+  if (typeof o.reason !== "string") return false;
   if (typeof o.sourceNote !== "string") return false;
-  if (typeof o.confidence !== "string" || typeof o.category !== "string")
-    return false;
-  if (typeof o.siteDuplicateRisk !== "string") return false;
-  if (!Array.isArray(o.sourceIds) || !o.sourceIds.every((x) => typeof x === "string"))
+  if (typeof o.confidence !== "string") return false;
+  if (typeof o.categorySuggestion !== "string") return false;
+  if (typeof o.duplicateRisk !== "string") return false;
+  if (!Array.isArray(o.sources) || !o.sources.every((x) => typeof x === "string"))
     return false;
   return true;
 }
@@ -277,6 +92,57 @@ function checkStatusLabel(s: AuditCheckStatus): string {
   }
 }
 
+function looksLikeUrl(s: string): boolean {
+  return /^https?:\/\//i.test(s.trim());
+}
+
+function confidenceLabel(c: string): string {
+  switch (c) {
+    case "high":
+      return "yüksek";
+    case "medium":
+      return "orta";
+    case "low":
+      return "düşük";
+    default:
+      return c;
+  }
+}
+
+function duplicateRiskLabel(r: string): string {
+  switch (r) {
+    case "high":
+      return "yüksek";
+    case "medium":
+      return "orta";
+    case "low":
+      return "düşük";
+    default:
+      return r;
+  }
+}
+
+function categorySuggestionLabel(c: string): string {
+  switch (c) {
+    case "tarih":
+      return "tarih";
+    case "kultur":
+      return "kültür";
+    case "sehir":
+      return "şehir";
+    case "akademik":
+      return "akademik";
+    case "siyaset":
+      return "siyaset";
+    case "ekonomi":
+      return "ekonomi";
+    case "toplum":
+      return "toplum";
+    default:
+      return c;
+  }
+}
+
 export default function SeoCommandCenterPage() {
   const [sessionOk, setSessionOk] = useState<boolean | null>(null);
   const [username, setUsername] = useState<string | null>(null);
@@ -287,40 +153,22 @@ export default function SeoCommandCenterPage() {
   const [auditHistory, setAuditHistory] = useState<SeoAuditHistoryRow[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
-  const [aiPrepLoading, setAiPrepLoading] = useState(false);
-  const [aiPrepError, setAiPrepError] = useState<string | null>(null);
-  const [aiPrepMessage, setAiPrepMessage] = useState<string | null>(null);
-  const [aiPrepMode, setAiPrepMode] = useState<string | null>(null);
-  const [aiSources, setAiSources] = useState<AiOpportunitySourcesPayload | null>(
-    null
-  );
-  const [aiOpportunities, setAiOpportunities] = useState<SeoRecommendationItem[]>(
-    []
-  );
-  const [gscTrustLines, setGscTrustLines] = useState<string[] | null>(null);
+
+  const [academicLoading, setAcademicLoading] = useState(false);
+  const [academicError, setAcademicError] = useState<string | null>(null);
+  const [academicMessage, setAcademicMessage] = useState<string | null>(null);
+  const [academicGeminiBanner, setAcademicGeminiBanner] = useState<
+    string | null
+  >(null);
+  const [academicSuggestions, setAcademicSuggestions] = useState<
+    AcademicEntrySuggestion[] | null
+  >(null);
+
   const [gscTestLoading, setGscTestLoading] = useState(false);
   const [gscTestBanner, setGscTestBanner] = useState<
     | { kind: "ok"; siteUrl?: string }
     | { kind: "err"; message: string; missing: string[] }
     | null
-  >(null);
-  const [agendaCheckLoading, setAgendaCheckLoading] = useState(false);
-  const [agendaCheckError, setAgendaCheckError] = useState<string | null>(null);
-  const [agendaMessage, setAgendaMessage] = useState<string | null>(null);
-  const [agendaPrinciples, setAgendaPrinciples] = useState<string[] | null>(
-    null
-  );
-  const [agendaSourcePlan, setAgendaSourcePlan] = useState<
-    Array<{ type: string; label: string; status: string }> | null
-  >(null);
-  const [agendaSuggestions, setAgendaSuggestions] = useState<
-    TrabzonAgendaSuggestion[] | null
-  >(null);
-  const [agendaGeminiWarning, setAgendaGeminiWarning] = useState<string | null>(
-    null
-  );
-  const [agendaSourcesPreview, setAgendaSourcesPreview] = useState<
-    Array<{ label: string; type: string; trustLevel: string }> | null
   >(null);
 
   const checkSession = useCallback(async () => {
@@ -439,110 +287,12 @@ export default function SeoCommandCenterPage() {
     }
   }, [loadAuditHistory]);
 
-  const prepareAiOpportunities = useCallback(async () => {
-    setAiPrepError(null);
-    setAiPrepMessage(null);
-    setAiPrepMode(null);
-    setAiSources(null);
-    setGscTrustLines(null);
-    setAiPrepLoading(true);
-    try {
-      const res = await fetch("/api/admin/seo-command-center/ai-opportunities", {
-        method: "POST",
-        credentials: "include",
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        error?: string;
-        message?: string;
-        mode?: string;
-        opportunities?: unknown;
-        sources?: unknown;
-        gscTrust?: {
-          connected?: boolean;
-          dataAvailable?: boolean;
-          lines?: unknown;
-          message?: string;
-        };
-      };
-      const parsedSources = coerceAiSources(data.sources);
-
-      const trustLinesFromApi = (): string[] | null => {
-        const gt = data.gscTrust;
-        if (
-          gt &&
-          Array.isArray(gt.lines) &&
-          gt.lines.every((x) => typeof x === "string")
-        ) {
-          return gt.lines as string[];
-        }
-        if (gt && typeof gt.message === "string" && gt.message.trim()) {
-          return [gt.message.trim()];
-        }
-        return null;
-      };
-
-      if (res.status === 401) {
-        setAiOpportunities([]);
-        setGscTrustLines(trustLinesFromApi());
-        setAiPrepError(
-          typeof data.error === "string"
-            ? data.error
-            : "Oturum gerekli veya yetkisiz."
-        );
-        return;
-      }
-      if (!res.ok) {
-        setAiOpportunities([]);
-        setGscTrustLines(trustLinesFromApi());
-        setAiPrepError(
-          typeof data.error === "string"
-            ? data.error
-            : "AI fırsatları isteği tamamlanamadı."
-        );
-        if (parsedSources) setAiSources(parsedSources);
-        return;
-      }
-      if (data.ok === false) {
-        setAiOpportunities([]);
-        setGscTrustLines(trustLinesFromApi());
-        setAiPrepError(
-          typeof data.error === "string"
-            ? data.error
-            : "İstek reddedildi."
-        );
-        if (parsedSources) setAiSources(parsedSources);
-        return;
-      }
-      const raw = data.opportunities;
-      const list: SeoRecommendationItem[] = Array.isArray(raw)
-        ? raw.filter(isValidSeoRecommendation)
-        : [];
-      setAiOpportunities(list);
-      setGscTrustLines(trustLinesFromApi());
-      setAiPrepError(null);
-      setAiPrepMode(typeof data.mode === "string" ? data.mode : null);
-      setAiPrepMessage(
-        typeof data.message === "string" ? data.message : null
-      );
-      if (parsedSources) setAiSources(parsedSources);
-    } catch {
-      setAiOpportunities([]);
-      setAiPrepError("Ağ hatası.");
-    } finally {
-      setAiPrepLoading(false);
-    }
-  }, []);
-
-  const checkTrabzonAgenda = useCallback(async () => {
-    setAgendaCheckError(null);
-    setAgendaMessage(null);
-    setAgendaPrinciples(null);
-    setAgendaSourcePlan(null);
-    setAgendaSuggestions(null);
-    setAgendaGeminiWarning(null);
-    setAgendaSourcesPreview(null);
-    setAgendaCheckLoading(true);
+  const fetchAcademicSuggestions = useCallback(async () => {
+    setAcademicError(null);
+    setAcademicMessage(null);
+    setAcademicGeminiBanner(null);
+    setAcademicSuggestions(null);
+    setAcademicLoading(true);
     try {
       const res = await fetch(
         "/api/admin/seo-command-center/trabzon-agenda",
@@ -551,14 +301,11 @@ export default function SeoCommandCenterPage() {
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         message?: string;
-        principles?: unknown;
-        sourcePlan?: unknown;
-        sources?: unknown;
         suggestions?: unknown;
         error?: string;
       };
       if (res.status === 401) {
-        setAgendaCheckError(
+        setAcademicError(
           typeof data.error === "string"
             ? data.error
             : "Oturum gerekli veya yetkisiz."
@@ -566,7 +313,7 @@ export default function SeoCommandCenterPage() {
         return;
       }
       if (!res.ok) {
-        setAgendaCheckError(
+        setAcademicError(
           typeof data.error === "string"
             ? data.error
             : "İstek tamamlanamadı."
@@ -574,54 +321,23 @@ export default function SeoCommandCenterPage() {
         return;
       }
       if (data.ok !== true) {
-        setAgendaCheckError(
+        setAcademicError(
           typeof data.error === "string" ? data.error : "Yanıt reddedildi."
         );
         return;
       }
-      setAgendaMessage(typeof data.message === "string" ? data.message : null);
-      const principles = Array.isArray(data.principles)
-        ? data.principles.filter((x): x is string => typeof x === "string")
-        : [];
-      setAgendaPrinciples(principles);
-      const rawPlan = Array.isArray(data.sourcePlan) ? data.sourcePlan : [];
-      const plan: Array<{ type: string; label: string; status: string }> = [];
-      for (const row of rawPlan) {
-        if (typeof row !== "object" || row === null) continue;
-        const r = row as Record<string, unknown>;
-        plan.push({
-          type: typeof r.type === "string" ? r.type : "—",
-          label: typeof r.label === "string" ? r.label : "—",
-          status: typeof r.status === "string" ? r.status : "—",
-        });
-      }
-      setAgendaSourcePlan(plan);
-      const rawSources = Array.isArray(data.sources) ? data.sources : [];
-      const preview: Array<{ label: string; type: string; trustLevel: string }> =
-        [];
-      for (const row of rawSources.slice(0, 3)) {
-        if (typeof row !== "object" || row === null) continue;
-        const r = row as Record<string, unknown>;
-        preview.push({
-          label: typeof r.label === "string" ? r.label : "—",
-          type: typeof r.type === "string" ? r.type : "—",
-          trustLevel:
-            typeof r.trustLevel === "string" ? r.trustLevel : "—",
-        });
-      }
-      setAgendaSourcesPreview(preview.length > 0 ? preview : null);
-      const rawSugg = Array.isArray(data.suggestions) ? data.suggestions : [];
-      const parsed = rawSugg.filter(isValidTrabzonAgendaSuggestion);
-      setAgendaSuggestions(parsed);
-      setAgendaGeminiWarning(
+      setAcademicMessage(typeof data.message === "string" ? data.message : null);
+      const raw = Array.isArray(data.suggestions) ? data.suggestions : [];
+      setAcademicSuggestions(raw.filter(isValidAcademicEntrySuggestion));
+      const warn =
         typeof data.error === "string" && data.error.trim()
           ? data.error.trim()
-          : null
-      );
+          : null;
+      setAcademicGeminiBanner(warn);
     } catch {
-      setAgendaCheckError("Ağ hatası.");
+      setAcademicError("Ağ hatası.");
     } finally {
-      setAgendaCheckLoading(false);
+      setAcademicLoading(false);
     }
   }, []);
 
@@ -740,277 +456,140 @@ export default function SeoCommandCenterPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
+      <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
         <p className="admin-helper max-w-3xl text-base leading-relaxed text-slate-300">
-          {
-            "61Sözlük'ün teknik SEO sağlığını, index fırsatlarını ve gündem uyumlu başlık önerilerini tek merkezden yönetmek için hazırlanıyor."
-          }
+          Bu ekrandan canlı site için teknik SEO denetimi çalıştırılır; ayrıca
+          akademik içerik fırsatları için Gemini önerileri alınır. Öneriler
+          otomatik yayınlanmaz.
         </p>
 
         <section
-          className="rounded-xl border border-slate-800 bg-slate-900/40 p-6"
-          aria-label="SEO güncelle"
+          className="space-y-8 rounded-xl border border-slate-800 bg-slate-900/40 p-6"
+          aria-label="SEO denetimi"
         >
-          <button
-            type="button"
-            disabled={auditLoading}
-            onClick={() => void runTechnicalAudit()}
-            className="rounded-lg border border-emerald-600/50 bg-emerald-600/90 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-55"
-          >
-            {auditLoading ? "Taranıyor..." : "SEO GÜNCELLE"}
-          </button>
-          <p className="admin-helper mt-2 max-w-xl text-xs text-slate-500">
-            Canlı site (https://61sozluk.com) için teknik SEO kontrollerini
-            çalıştırır: ana sayfa, robots.txt, sitemap ve örnek entry URL’leri.
-          </p>
-          {auditError ? (
-            <p
-              className="admin-msg-error mt-3 text-sm text-[var(--accent)]"
-              role="alert"
+          <h2 className="admin-section-title m-0 text-lg">SEO denetimi</h2>
+
+          <div aria-label="Teknik SEO taraması">
+            <button
+              type="button"
+              disabled={auditLoading}
+              onClick={() => void runTechnicalAudit()}
+              className="rounded-lg border border-emerald-600/50 bg-emerald-600/90 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-55"
             >
-              {auditError}
+              {auditLoading ? "Taranıyor..." : "SEO GÜNCELLE"}
+            </button>
+            <p className="admin-helper mt-2 max-w-xl text-xs text-slate-500">
+              Canlı site (https://61sozluk.com) için ana sayfa, robots.txt,
+              sitemap ve örnek entry URL kontrollerini çalıştırır.
             </p>
-          ) : null}
-        </section>
-
-        <section
-          className="rounded-xl border border-slate-800 bg-slate-900/40 p-6"
-          aria-label="Google index iletişimi"
-        >
-          <h2 className="admin-section-title text-base">
-            Google index iletişimi
-          </h2>
-          <ul className="admin-helper m-0 mt-3 list-none space-y-2.5 p-0 text-sm leading-relaxed text-slate-400">
-            <li className="flex gap-2">
-              <span className="text-slate-600" aria-hidden>
-                ·
-              </span>
-              <span>
-                Sitemap aktif:{" "}
-                <a
-                  href="https://61sozluk.com/sitemap.xml"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="break-all font-mono text-[0.8rem] text-sky-400/95 underline decoration-sky-400/40 underline-offset-2 hover:text-sky-300"
-                >
-                  https://61sozluk.com/sitemap.xml
-                </a>
-              </span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-slate-600" aria-hidden>
-                ·
-              </span>
-              <span>
-                Yeni yayınlanan entry sonrası Google’a sitemap bildirimi
-                gönderiliyor.
-              </span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-slate-600" aria-hidden>
-                ·
-              </span>
-              <span>Pending içerikler Google’a bildirilmez.</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-slate-600" aria-hidden>
-                ·
-              </span>
-              <span>
-                Bu sistem index garantisi vermez; Google’a güncel sitemap’i haber
-                verir.
-              </span>
-            </li>
-          </ul>
-        </section>
-
-        <section
-          className="rounded-xl border border-slate-800 bg-slate-900/40 p-6"
-          aria-label="Trabzon gündem motoru"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <h2 className="admin-section-title text-base">
-                Trabzon gündem motoru
-              </h2>
-              <p className="admin-helper mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-                Trabzon gündemi, kaynaklı ve kontrollü önerilere dönüştürülecek.
-                Sistem otomatik entry yayınlamaz.
+            {auditError ? (
+              <p
+                className="admin-msg-error mt-3 text-sm text-[var(--accent)]"
+                role="alert"
+              >
+                {auditError}
               </p>
-              <p className="admin-helper mt-1 text-xs text-slate-500">
-                Otomatik entry yayını yoktur; öneriler yalnızca editör incelemesi
-                içindir.
-              </p>
-            </div>
-            <span className="shrink-0 rounded-full border border-slate-700/90 bg-slate-950/50 px-2.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-400">
-              FAZ 6D: kontrollü öneriler
-            </span>
+            ) : null}
           </div>
-          <button
-            type="button"
-            disabled={agendaCheckLoading}
-            onClick={() => void checkTrabzonAgenda()}
-            className="mt-4 rounded-lg border border-slate-600 bg-slate-950/60 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
-          >
-            {agendaCheckLoading
-              ? "Kontrol ediliyor..."
-              : "Gündem motorunu kontrol et"}
-          </button>
-          {agendaCheckError ? (
-            <p
-              className="admin-msg-error mt-3 text-sm text-[var(--accent)]"
-              role="alert"
-            >
-              {agendaCheckError}
-            </p>
-          ) : null}
-          {agendaMessage ? (
-            <p className="admin-helper mt-3 text-sm text-slate-300">
-              {agendaMessage}
-            </p>
-          ) : null}
-          {agendaGeminiWarning ? (
-            <p
-              className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/95"
-              role="status"
-            >
-              {agendaGeminiWarning}
-            </p>
-          ) : null}
-          {agendaPrinciples && agendaPrinciples.length > 0 ? (
-            <div className="mt-3">
-              <p className="text-xs font-medium text-slate-500">İlkeler</p>
-              <ul className="admin-helper m-0 mt-1 list-none space-y-1.5 p-0 text-sm text-slate-400">
-                {agendaPrinciples.map((p, i) => (
-                  <li key={i} className="flex gap-2">
-                    <span className="text-slate-600" aria-hidden>
-                      ·
-                    </span>
-                    <span>{p}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-          {agendaSourcePlan && agendaSourcePlan.length > 0 ? (
-            <div className="mt-3">
-              <p className="text-xs font-medium text-slate-500">Kaynak planı</p>
-              <ul className="admin-helper m-0 mt-1 list-none space-y-2 p-0 text-sm text-slate-400">
-                {agendaSourcePlan.map((item, i) => (
-                  <li
-                    key={i}
-                    className="rounded-lg border border-slate-800/80 bg-slate-950/30 px-3 py-2"
-                  >
-                    <span className="font-medium text-slate-300">
-                      {item.label}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-slate-500">
-                      {item.type} · {item.status}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-          {agendaSourcesPreview && agendaSourcesPreview.length > 0 ? (
-            <div className="mt-4 border-t border-slate-800/80 pt-4">
-              <p className="text-xs font-medium text-slate-500">
-                Kullanılan kaynaklar
-              </p>
-              <ul className="admin-helper m-0 mt-2 list-none space-y-2 p-0 text-sm text-slate-400">
-                {agendaSourcesPreview.map((s, i) => (
-                  <li
-                    key={`${s.label}-${i}`}
-                    className="rounded-lg border border-slate-800/80 bg-slate-950/30 px-3 py-2"
-                  >
-                    <span className="font-medium text-slate-300">
-                      {s.label}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-slate-500">
-                      {s.type} · {s.trustLevel}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <p className="admin-helper m-0 mt-2 text-xs leading-relaxed text-slate-500">
-                Tüm öneriler bu ve benzeri güvenilir kaynaklara dayanacaktır.
-              </p>
-            </div>
-          ) : null}
-          {agendaSuggestions && agendaSuggestions.length > 0 ? (
-            <div className="mt-4 border-t border-slate-800/80 pt-4">
-              <p className="text-xs font-medium text-slate-500">
-                Gündem önerileri
-              </p>
-              <ul className="m-0 mt-2 list-none space-y-3 p-0">
-                {agendaSuggestions.map((s, i) => (
-                  <li
-                    key={`${s.suggestedEntryTitle}-${i}`}
-                    className="rounded-lg border border-slate-800/90 bg-slate-950/40 px-3 py-3 text-sm"
-                  >
-                    <p className="m-0 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
-                      Önerilen entry başlığı
-                    </p>
-                    <p className="m-0 mt-0.5 font-medium text-slate-100">
-                      {s.suggestedEntryTitle}
-                    </p>
-                    <p className="m-0 mt-3 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
-                      Açıklama
-                    </p>
-                    <p className="admin-helper m-0 mt-0.5 text-xs leading-relaxed text-slate-300">
-                      {s.suggestedEntryDescription}
-                    </p>
-                    <p className="m-0 mt-3 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
-                      Neden önerildi?
-                    </p>
-                    <p className="admin-helper m-0 mt-0.5 text-xs leading-relaxed text-slate-400">
-                      {s.reason}
-                    </p>
-                    <p className="m-0 mt-1 text-[0.65rem] text-slate-600">
-                      Tema: {s.title}
-                    </p>
-                    <p className="m-0 mt-2 text-[0.7rem] text-slate-500">
-                      Güven seviyesi: {s.confidence} · Kategori: {s.category}{" "}
-                      · Site tekrar riski: {s.siteDuplicateRisk}
-                    </p>
-                    <p className="m-0 mt-2 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
-                      Kaynak notu
-                    </p>
-                    <p className="admin-helper m-0 mt-0.5 text-xs text-slate-500">
-                      {s.sourceNote}
-                    </p>
-                    <p className="m-0 mt-2 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
-                      Kaynak id&apos;leri
-                    </p>
-                    <p className="m-0 mt-0.5 break-all font-mono text-[0.65rem] text-slate-600">
-                      {s.sourceIds.length ? s.sourceIds.join(", ") : "—"}
-                    </p>
-                    <p className="admin-helper m-0 mt-3 rounded-md border border-slate-700/60 bg-slate-900/50 px-2 py-1.5 text-[0.7rem] text-slate-400">
-                      Bu öneri otomatik yayınlanmaz; admin kaynak kontrolünden
-                      sonra entry&apos;ye dönüştürür.
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-          {agendaSuggestions !== null && agendaSuggestions.length === 0 ? (
-            <p className="admin-helper mt-3 text-xs text-slate-500">
-              Henüz otomatik gündem önerisi üretilmiyor.
-            </p>
-          ) : null}
-        </section>
 
-        {auditReport ? (
-          <section
-            className="space-y-6 rounded-xl border border-slate-800 bg-slate-900/35 p-6"
-            aria-label="Teknik SEO raporu"
-          >
-            <div className="flex flex-wrap items-end justify-between gap-4">
+          <div aria-label="Google index iletişimi">
+            <h3 className="admin-section-title text-base">
+              Google index iletişimi
+            </h3>
+            <ul className="admin-helper m-0 mt-3 list-none space-y-2.5 p-0 text-sm leading-relaxed text-slate-400">
+              <li className="flex gap-2">
+                <span className="text-slate-600" aria-hidden>
+                  ·
+                </span>
+                <span>
+                  Sitemap:{" "}
+                  <a
+                    href="https://61sozluk.com/sitemap.xml"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="break-all font-mono text-[0.8rem] text-sky-400/95 underline decoration-sky-400/40 underline-offset-2 hover:text-sky-300"
+                  >
+                    https://61sozluk.com/sitemap.xml
+                  </a>
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-slate-600" aria-hidden>
+                  ·
+                </span>
+                <span>Yeni entry sonrası sitemap bildirimi gönderilir.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-slate-600" aria-hidden>
+                  ·
+                </span>
+                <span>Pending içerik bildirilmez; index garantisi yoktur.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div aria-label="Google Search Console">
+            <h3 className="admin-section-title text-base">
+              Google Search Console
+            </h3>
+            <p className="admin-helper mt-2 max-w-2xl text-sm text-slate-400">
+              OAuth bağlantısı ve sunucu değişkenleri diğer yönetim akışlarında
+              kullanılır; burada yalnızca sunucu tarafı yapılandırma kontrolü
+              vardır.
+            </p>
+            <button
+              type="button"
+              disabled={gscTestLoading}
+              onClick={() => void testGscConnection()}
+              className="mt-3 rounded-lg border border-slate-600 bg-slate-950/60 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              {gscTestLoading
+                ? "Kontrol ediliyor..."
+                : "Sunucu yapılandırmasını kontrol et"}
+            </button>
+            {gscTestBanner?.kind === "ok" ? (
+              <div
+                className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-xs text-emerald-200/95"
+                role="status"
+              >
+                <p className="m-0">
+                  GSC ile ilgili ek yapılandırma tanımlı görünüyor.
+                </p>
+                {gscTestBanner.siteUrl ? (
+                  <p className="admin-helper m-0 mt-1 break-all font-mono text-[0.65rem] text-emerald-300/85">
+                    {gscTestBanner.siteUrl}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+            {gscTestBanner?.kind === "err" ? (
+              <div
+                className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/95"
+                role="alert"
+              >
+                <p className="m-0 break-words">{gscTestBanner.message}</p>
+                {gscTestBanner.missing.length > 0 ? (
+                  <ul className="mb-0 mt-2 list-disc pl-4">
+                    {gscTestBanner.missing.map((key) => (
+                      <li
+                        key={key}
+                        className="break-all font-mono text-[0.65rem] text-amber-50/90"
+                      >
+                        {key}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          {auditReport ? (
+            <div className="space-y-6 border-t border-slate-800/80 pt-8">
               <div>
-                <h2 className="admin-section-title text-base">
+                <h3 className="admin-section-title m-0 text-base">
                   Teknik SEO raporu
-                </h2>
+                </h3>
                 <p className="admin-helper mt-1 text-xs text-slate-500">
                   {new Date(auditReport.checkedAt).toLocaleString("tr-TR", {
                     dateStyle: "short",
@@ -1026,588 +605,336 @@ export default function SeoCommandCenterPage() {
                   ) : null}
                 </p>
               </div>
-            </div>
 
-            {auditReport.summary.criticalIssues === 0 ? (
-              <p className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200/95">
-                Kritik teknik SEO hatası bulunmadı.
-              </p>
-            ) : null}
+              {auditReport.summary.criticalIssues === 0 ? (
+                <p className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200/95">
+                  Kritik teknik SEO hatası bulunmadı.
+                </p>
+              ) : null}
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
-                <p className="admin-stat-label text-[0.65rem]">SEO puanı</p>
-                <p className="mt-1 text-xl font-semibold tabular-nums text-slate-100">
-                  {auditReport.summary.score}
-                </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+                  <p className="admin-stat-label text-[0.65rem]">SEO puanı</p>
+                  <p className="mt-1 text-xl font-semibold tabular-nums text-slate-100">
+                    {auditReport.summary.score}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+                  <p className="admin-stat-label text-[0.65rem]">
+                    Kontrol URL
+                  </p>
+                  <p className="mt-1 text-xl font-semibold tabular-nums text-slate-100">
+                    {auditReport.summary.checkedUrls}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+                  <p className="admin-stat-label text-[0.65rem]">Kritik</p>
+                  <p className="mt-1 text-xl font-semibold tabular-nums text-red-300/95">
+                    {auditReport.summary.criticalIssues}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+                  <p className="admin-stat-label text-[0.65rem]">Uyarı</p>
+                  <p className="mt-1 text-xl font-semibold tabular-nums text-amber-200/90">
+                    {auditReport.summary.warnings}
+                  </p>
+                </div>
               </div>
-              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
-                <p className="admin-stat-label text-[0.65rem]">
-                  Kontrol edilen URL
-                </p>
-                <p className="mt-1 text-xl font-semibold tabular-nums text-slate-100">
-                  {auditReport.summary.checkedUrls}
-                </p>
-              </div>
-              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
-                <p className="admin-stat-label text-[0.65rem]">Kritik</p>
-                <p className="mt-1 text-xl font-semibold tabular-nums text-red-300/95">
-                  {auditReport.summary.criticalIssues}
-                </p>
-              </div>
-              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
-                <p className="admin-stat-label text-[0.65rem]">Uyarı</p>
-                <p className="mt-1 text-xl font-semibold tabular-nums text-amber-200/90">
-                  {auditReport.summary.warnings}
-                </p>
-              </div>
-            </div>
 
-            <div>
-              <h3 className="mb-2 text-sm font-semibold text-slate-200">
-                Kontroller
-              </h3>
-              <ul className="m-0 list-none space-y-2 p-0">
-                {auditReport.checks.map((c, idx) => (
-                  <li
-                    key={`${c.name}-${idx}`}
-                    className="flex flex-wrap items-start gap-2 rounded-lg border border-slate-800/90 bg-slate-950/30 px-3 py-2.5"
-                  >
-                    <span
-                      className={`shrink-0 rounded border px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide ${checkStatusClass(c.status)}`}
-                    >
-                      {checkStatusLabel(c.status)}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="m-0 text-sm font-medium text-slate-100">
-                        {c.name}
-                      </p>
-                      <p className="admin-helper m-0 mt-0.5 text-xs leading-relaxed text-slate-400">
-                        {c.message}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="mb-2 text-sm font-semibold text-slate-200">
-                Sorunlar
-              </h3>
-              {auditReport.issues.length === 0 ? (
-                <p className="admin-helper m-0 text-sm text-slate-500">
-                  Liste boş — raporlanan sorun yok.
-                </p>
-              ) : (
+              <div>
+                <h4 className="mb-2 text-sm font-semibold text-slate-200">
+                  Kontroller
+                </h4>
                 <ul className="m-0 list-none space-y-2 p-0">
-                  {auditReport.issues.map((issue, idx) => (
+                  {auditReport.checks.map((c, idx) => (
                     <li
-                      key={`${issue.url}-${idx}`}
-                      className="rounded-lg border border-slate-800/90 bg-slate-950/30 px-3 py-2.5"
+                      key={`${c.name}-${idx}`}
+                      className="flex flex-wrap items-start gap-2 rounded-lg border border-slate-800/90 bg-slate-950/30 px-3 py-2.5"
                     >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={
-                            issue.severity === "critical"
-                              ? "rounded border border-red-500/35 bg-red-500/12 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-red-200/95"
-                              : "rounded border border-amber-500/35 bg-amber-500/10 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-100/90"
-                          }
-                        >
-                          {issue.severity === "critical" ? "Kritik" : "Uyarı"}
-                        </span>
-                        <span className="text-sm font-medium text-slate-100">
-                          {issue.title}
-                        </span>
+                      <span
+                        className={`shrink-0 rounded border px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide ${checkStatusClass(c.status)}`}
+                      >
+                        {checkStatusLabel(c.status)}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="m-0 text-sm font-medium text-slate-100">
+                          {c.name}
+                        </p>
+                        <p className="admin-helper m-0 mt-0.5 text-xs leading-relaxed text-slate-400">
+                          {c.message}
+                        </p>
                       </div>
-                      <p className="admin-helper m-0 mt-1 text-xs leading-relaxed text-slate-400">
-                        {issue.detail}
-                      </p>
-                      <p className="m-0 mt-1 break-all font-mono text-[0.7rem] text-slate-500">
-                        {issue.url}
-                      </p>
                     </li>
                   ))}
                 </ul>
-              )}
-            </div>
-          </section>
-        ) : null}
+              </div>
 
-        <section
-          className="rounded-xl border border-slate-800 bg-slate-900/35 p-6"
-          aria-label="Son SEO taramaları"
-        >
-          <h2 className="admin-section-title text-base">Son SEO Taramaları</h2>
-          {historyError ? (
-            <p className="admin-msg-error mt-2 text-sm text-[var(--accent)]">
-              {historyError}
-            </p>
-          ) : null}
-          {historyLoading && auditHistory.length === 0 && !historyError ? (
-            <p className="admin-helper mt-3 text-sm text-slate-500">
-              Geçmiş yükleniyor…
-            </p>
-          ) : null}
-          {!historyLoading && auditHistory.length === 0 && !historyError ? (
-            <p className="admin-helper mt-3 text-sm text-slate-500">
-              Henüz kayıtlı SEO taraması yok.
-            </p>
-          ) : null}
-          {auditHistory.length > 0 ? (
-            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-800/90">
-              <table className="w-full min-w-[560px] border-collapse text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-800 bg-slate-950/50">
-                    <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
-                      Tarih
-                    </th>
-                    <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
-                      SEO puanı
-                    </th>
-                    <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
-                      URL
-                    </th>
-                    <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
-                      Kritik
-                    </th>
-                    <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
-                      Uyarı
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {auditHistory.map((row) => (
-                    <tr
-                      key={row.id}
-                      className="border-b border-slate-800/70 last:border-0 hover:bg-slate-900/40"
-                    >
-                      <td className="admin-td whitespace-nowrap px-3 py-2 text-slate-300">
-                        {new Date(row.created_at).toLocaleString("tr-TR", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })}
-                      </td>
-                      <td className="admin-td px-3 py-2 tabular-nums text-slate-100">
-                        {row.score}
-                      </td>
-                      <td className="admin-td px-3 py-2 tabular-nums text-slate-300">
-                        {row.checked_urls}
-                      </td>
-                      <td className="admin-td px-3 py-2 tabular-nums text-red-300/90">
-                        {row.critical_issues}
-                      </td>
-                      <td className="admin-td px-3 py-2 tabular-nums text-amber-200/85">
-                        {row.warnings}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div>
+                <h4 className="mb-2 text-sm font-semibold text-slate-200">
+                  Sorunlar
+                </h4>
+                {auditReport.issues.length === 0 ? (
+                  <p className="admin-helper m-0 text-sm text-slate-500">
+                    Liste boş.
+                  </p>
+                ) : (
+                  <ul className="m-0 list-none space-y-2 p-0">
+                    {auditReport.issues.map((issue, idx) => (
+                      <li
+                        key={`${issue.url}-${idx}`}
+                        className="rounded-lg border border-slate-800/90 bg-slate-950/30 px-3 py-2.5"
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={
+                              issue.severity === "critical"
+                                ? "rounded border border-red-500/35 bg-red-500/12 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-red-200/95"
+                                : "rounded border border-amber-500/35 bg-amber-500/10 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-100/90"
+                            }
+                          >
+                            {issue.severity === "critical" ? "Kritik" : "Uyarı"}
+                          </span>
+                          <span className="text-sm font-medium text-slate-100">
+                            {issue.title}
+                          </span>
+                        </div>
+                        <p className="admin-helper m-0 mt-1 text-xs leading-relaxed text-slate-400">
+                          {issue.detail}
+                        </p>
+                        <p className="m-0 mt-1 break-all font-mono text-[0.7rem] text-slate-500">
+                          {issue.url}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           ) : null}
+
+          <div className="border-t border-slate-800/80 pt-8">
+            <h3 className="admin-section-title m-0 text-base">
+              Son SEO taramaları
+            </h3>
+            {historyError ? (
+              <p className="admin-msg-error mt-2 text-sm text-[var(--accent)]">
+                {historyError}
+              </p>
+            ) : null}
+            {historyLoading && auditHistory.length === 0 && !historyError ? (
+              <p className="admin-helper mt-3 text-sm text-slate-500">
+                Geçmiş yükleniyor…
+              </p>
+            ) : null}
+            {!historyLoading &&
+            auditHistory.length === 0 &&
+            !historyError ? (
+              <p className="admin-helper mt-3 text-sm text-slate-500">
+                Henüz kayıtlı SEO taraması yok.
+              </p>
+            ) : null}
+            {auditHistory.length > 0 ? (
+              <div className="mt-4 overflow-x-auto rounded-lg border border-slate-800/90">
+                <table className="w-full min-w-[560px] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-800 bg-slate-950/50">
+                      <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
+                        Tarih
+                      </th>
+                      <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
+                        SEO puanı
+                      </th>
+                      <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
+                        URL
+                      </th>
+                      <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
+                        Kritik
+                      </th>
+                      <th className="admin-th px-3 py-2.5 font-medium text-slate-400">
+                        Uyarı
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditHistory.map((row) => (
+                      <tr
+                        key={row.id}
+                        className="border-b border-slate-800/70 last:border-0 hover:bg-slate-900/40"
+                      >
+                        <td className="admin-td whitespace-nowrap px-3 py-2 text-slate-300">
+                          {new Date(row.created_at).toLocaleString("tr-TR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </td>
+                        <td className="admin-td px-3 py-2 tabular-nums text-slate-100">
+                          {row.score}
+                        </td>
+                        <td className="admin-td px-3 py-2 tabular-nums text-slate-300">
+                          {row.checked_urls}
+                        </td>
+                        <td className="admin-td px-3 py-2 tabular-nums text-red-300/90">
+                          {row.critical_issues}
+                        </td>
+                        <td className="admin-td px-3 py-2 tabular-nums text-amber-200/85">
+                          {row.warnings}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+          </div>
         </section>
 
         <section
-          className="rounded-xl border border-slate-800 bg-slate-900/35 p-6"
-          aria-label="SEO önerileri"
+          className="rounded-xl border border-slate-800 bg-slate-900/40 p-6"
+          aria-label="Günlük 8 akademik entry önerisi"
         >
-          <h2 className="admin-section-title text-base">SEO Önerileri</h2>
-          {aiPrepMode === "live" ? (
-            <p className="admin-helper mt-2 text-xs font-medium text-sky-300/90">
-              Gemini tarafından analiz edildi
-            </p>
-          ) : null}
-          <p className="admin-helper mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-            Teknik SEO taraması, Search Console örnekleri (OAuth ile bağlıysanız)
-            ve Gemini ile kısa, kaynak odaklı öneriler üretilir.
+          <h2 className="admin-section-title m-0 text-lg">
+            Günlük 8 akademik entry önerisi
+          </h2>
+          <p className="admin-helper mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
+            Gemini, Trabzon hakkında akademik ve açık kaynaklı konuları tarama
+            mantığıyla entry başlığı, açıklama ve kaynak önerir. Öneriler
+            otomatik yayınlanmaz.
           </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              disabled={aiPrepLoading}
-              onClick={() => void prepareAiOpportunities()}
-              className="rounded-lg border border-sky-600/45 bg-sky-600/85 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-55"
-            >
-              {aiPrepLoading ? "Üretiliyor..." : "SEO ÖNERİLERİNİ ÜRET"}
-            </button>
-          </div>
-          {gscTrustLines && gscTrustLines.length > 0 ? (
-            <div
-              className="mt-4 rounded-lg border border-slate-700/80 bg-slate-950/45 px-3 py-2.5 text-sm text-slate-300"
-              role="status"
-            >
-              {gscTrustLines.map((line, i) => (
-                <p key={`gsc-trust-${i}`} className="m-0 break-words leading-relaxed">
-                  {line}
-                </p>
-              ))}
-            </div>
-          ) : null}
-          {aiPrepError ? (
+          <button
+            type="button"
+            disabled={academicLoading}
+            onClick={() => void fetchAcademicSuggestions()}
+            className="mt-4 rounded-lg border border-sky-600/45 bg-sky-600/85 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            {academicLoading ? "Üretiliyor..." : "8 entry önerisi üret"}
+          </button>
+
+          {academicError ? (
             <p
               className="admin-msg-error mt-3 text-sm text-[var(--accent)]"
               role="alert"
             >
-              {aiPrepError}
+              {academicError}
             </p>
           ) : null}
-          {aiPrepMessage ? (
-            <p className="admin-helper mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-sm text-emerald-200/90">
-              {aiPrepMessage}
+          {academicGeminiBanner ? (
+            <p
+              className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/95"
+              role="status"
+            >
+              {academicGeminiBanner}
             </p>
           ) : null}
-          {aiOpportunities.length > 0 ? (
-            <div className="mt-4 grid grid-cols-1 gap-3">
-              {aiOpportunities.map((opp, idx) => {
-                const needsSourceVerify =
-                  opp.sources.filter((s) => s.trim().length > 0).length === 0;
-                return (
-                  <article
-                    key={`seo-rec-${idx}-${opp.title.slice(0, 24)}`}
-                    className="rounded-xl border border-slate-700/90 bg-slate-950/40 p-4 shadow-none"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <h3 className="min-w-0 flex-1 break-words text-sm font-semibold text-slate-100">
-                        {opp.title}
-                      </h3>
-                      <span className="shrink-0 rounded-full border border-slate-600/90 bg-slate-900/60 px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-300">
-                        Öncelik: {priorityLabel(opp.priority)}
-                      </span>
-                    </div>
-                    <p className="admin-helper mt-2 text-xs font-medium text-slate-500">
-                      Kaynak tipi: {sourceTypeLabel(opp.sourceType)}
-                    </p>
-                    <p className="admin-helper mt-2 break-words text-sm leading-relaxed text-slate-400">
-                      <span className="font-medium text-slate-300">
-                        Neden:{" "}
-                      </span>
-                      {opp.reason}
-                    </p>
-                    {opp.suggestedEntryTitle.trim() ? (
-                      <p className="admin-helper mt-2 break-words text-sm text-slate-300">
-                        <span className="font-medium text-slate-400">
-                          Önerilen entry başlığı:{" "}
-                        </span>
-                        {opp.suggestedEntryTitle}
-                      </p>
-                    ) : (
-                      <p className="admin-helper mt-2 text-xs text-slate-600">
-                        Önerilen entry başlığı: (boş)
-                      </p>
-                    )}
-                    <p className="admin-helper mt-2 text-xs text-slate-500">
-                      Güven: {confidenceLabel(opp.confidence)}
-                    </p>
-                    {needsSourceVerify ? (
-                      <p
-                        className="admin-helper mt-3 rounded border border-amber-500/35 bg-amber-500/10 px-2 py-1.5 text-xs font-medium text-amber-100/95"
-                        role="alert"
-                      >
-                        Kaynak doğrulaması gerekli
-                      </p>
-                    ) : null}
-                    <div className="mt-3 border-t border-slate-800/80 pt-2">
-                      <p className="text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
-                        Kaynaklar
-                      </p>
-                      {opp.sources.filter((s) => s.trim().length > 0).length >
-                      0 ? (
-                        <ul className="m-0 mt-1 list-none space-y-1 p-0">
-                          {opp.sources
-                            .filter((s) => s.trim().length > 0)
-                            .map((src, srcIdx) => (
-                              <li
-                                key={`${idx}-src-${srcIdx}`}
-                                className="break-words text-[0.7rem] leading-snug text-slate-400"
-                              >
-                                {looksLikeUrl(src) ? (
-                                  <a
-                                    href={src.trim()}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="break-all text-sky-400/95 underline-offset-2 hover:underline"
-                                  >
-                                    {src.trim()}
-                                  </a>
-                                ) : (
-                                  <span className="break-words">{src}</span>
-                                )}
-                              </li>
-                            ))}
-                        </ul>
-                      ) : (
-                        <p className="admin-helper m-0 mt-1 text-xs text-slate-600">
-                          Listelenmiş kaynak yok.
-                        </p>
-                      )}
-                    </div>
-                    {opp.sourceNote.trim() ? (
-                      <p className="admin-helper mt-2 break-words text-xs leading-relaxed text-slate-500">
-                        <span className="font-medium text-slate-400">
-                          Kaynak notu:{" "}
-                        </span>
-                        {opp.sourceNote}
-                      </p>
-                    ) : null}
-                  </article>
-                );
-              })}
-            </div>
-          ) : null}
-          {!aiPrepLoading && aiOpportunities.length === 0 && !aiPrepError ? (
-            <p className="admin-helper mt-4 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2.5 text-sm text-slate-500">
-              Henüz SEO önerisi üretilmedi. Yukarıdaki düğmeyi kullanın.
+          {academicMessage ? (
+            <p className="admin-helper mt-3 text-sm text-slate-300">
+              {academicMessage}
             </p>
           ) : null}
-          {aiSources ? (
-            <details className="mt-4 rounded-lg border border-slate-800 bg-slate-950/35">
-              <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-300 marker:text-slate-500 hover:bg-slate-900/40">
-                Teknik analiz kaynaklarını göster
-              </summary>
-              <div
-                className="border-t border-slate-800 p-4"
-                aria-label="Analiz kaynakları"
-              >
-                <dl className="admin-helper mt-0 space-y-2 text-xs leading-relaxed text-slate-400">
-                  <div className="flex flex-wrap gap-x-2">
-                    <dt className="font-medium text-slate-500">Gemini modeli</dt>
-                    <dd className="break-all font-mono text-slate-300">
-                      {aiSources.model}
-                    </dd>
-                  </div>
-                  <div className="flex flex-wrap gap-x-2">
-                    <dt className="font-medium text-slate-500">Çıktı formatı</dt>
-                    <dd className="break-all font-mono text-slate-300">
-                      {aiSources.responseMimeType}
-                    </dd>
-                  </div>
-                  <div className="flex flex-wrap gap-x-2">
-                    <dt className="font-medium text-slate-500">GSC OAuth</dt>
-                    <dd className="break-words text-slate-300">
-                      {aiSources.gscConnected
-                        ? aiSources.gscDataAvailable
-                          ? "Bağlı · örnek sorgular prompt’a eklendi"
-                          : "Bağlı · örnek sorgu yok veya API yanıt vermedi"
-                        : "Bağlı değil"}
-                    </dd>
-                  </div>
-                  {aiSources.auditCheckedAt ? (
-                    <div className="flex flex-wrap gap-x-2">
-                      <dt className="font-medium text-slate-500">
-                        SEO tarama zamanı
-                      </dt>
-                      <dd className="text-slate-300">
-                        {new Date(aiSources.auditCheckedAt).toLocaleString(
-                          "tr-TR",
-                          { dateStyle: "short", timeStyle: "medium" }
-                        )}
-                      </dd>
-                    </div>
-                  ) : (
-                    <div className="break-words text-slate-500">
-                      Kayıtlı tarama zamanı bulunamadı (henüz tarama yok veya
-                      geçmiş okunamadı).
-                    </div>
-                  )}
-                </dl>
-                {aiSources.gscQueriesSample.length > 0 ? (
-                  <div className="mt-3">
-                    <p className="text-xs font-medium text-slate-500">
-                      Prompt’a dahil GSC sorgu örnekleri
-                    </p>
-                    <ul className="m-0 mt-1 list-none space-y-1 p-0">
-                      {aiSources.gscQueriesSample.map((q, qi) => (
-                        <li
-                          key={`gsc-q-${qi}`}
-                          className="break-words rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1 text-[0.7rem] text-slate-400"
-                        >
-                          {q}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-                {aiSources.summary ? (
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
-                      <p className="admin-stat-label text-[0.6rem]">Puan</p>
-                      <p className="tabular-nums text-slate-200">
-                        {aiSources.summary.score ?? "—"}
-                      </p>
-                    </div>
-                    <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
-                      <p className="admin-stat-label text-[0.6rem]">URL</p>
-                      <p className="tabular-nums text-slate-200">
-                        {aiSources.summary.checkedUrls ?? "—"}
-                      </p>
-                    </div>
-                    <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
-                      <p className="admin-stat-label text-[0.6rem]">Kritik</p>
-                      <p className="tabular-nums text-slate-200">
-                        {aiSources.summary.criticalIssues ?? "—"}
-                      </p>
-                    </div>
-                    <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
-                      <p className="admin-stat-label text-[0.6rem]">Uyarı</p>
-                      <p className="tabular-nums text-slate-200">
-                        {aiSources.summary.warnings ?? "—"}
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
-                <div className="mt-3">
-                  <p className="text-xs font-medium text-slate-500">
-                    Prompt’a dahil edilen sorunlar ({aiSources.issuesUsedCount})
-                  </p>
-                  {aiSources.issuesUsed.length === 0 ? (
-                    <p className="admin-helper mt-1 text-xs text-slate-600">
-                      Yok.
-                    </p>
-                  ) : (
-                    <ul className="m-0 mt-1 max-h-40 list-none space-y-1 overflow-y-auto p-0">
-                      {aiSources.issuesUsed.map((issue, idx) => (
-                        <li
-                          key={`src-issue-${idx}`}
-                          className="rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1.5 text-[0.7rem] text-slate-400"
-                        >
-                          <span className="break-words text-slate-300">
-                            {issue.title ?? "—"}
-                          </span>
-                          {issue.url ? (
-                            <span className="mt-0.5 block break-all font-mono text-[0.65rem] text-slate-600">
-                              {issue.url}
-                            </span>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div className="mt-3">
-                  <p className="text-xs font-medium text-slate-500">
-                    Prompt’a dahil entry SEO örnekleri (
-                    {aiSources.entrySeoUsedCount})
-                  </p>
-                  {aiSources.entrySeoUsed.length === 0 ? (
-                    <p className="admin-helper mt-1 text-xs text-slate-600">
-                      Yok.
-                    </p>
-                  ) : (
-                    <ul className="m-0 mt-1 max-h-40 list-none space-y-1 overflow-y-auto p-0">
-                      {aiSources.entrySeoUsed.map((row, idx) => (
-                        <li
-                          key={`src-entry-${idx}`}
-                          className="rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1.5 text-[0.7rem] text-slate-400"
-                        >
-                          <span className="break-all font-mono text-[0.65rem] text-slate-500">
-                            {row.url ?? "—"}
-                          </span>
-                          {(row.title != null && row.title !== "") ||
-                          (row.description != null &&
-                            row.description !== "") ? (
-                            <span className="mt-0.5 block space-y-0.5 break-words text-slate-400">
-                              {row.title != null && row.title !== "" ? (
-                                <span className="block">
-                                  Başlık:{" "}
-                                  {row.title.length > 120
-                                    ? `${row.title.slice(0, 120)}…`
-                                    : row.title}
-                                </span>
-                              ) : null}
-                              {row.description != null &&
-                              row.description !== "" ? (
-                                <span className="block text-slate-500">
-                                  Meta:{" "}
-                                  {row.description.length > 120
-                                    ? `${row.description.slice(0, 120)}…`
-                                    : row.description}
-                                </span>
-                              ) : null}
-                            </span>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            </details>
-          ) : null}
-        </section>
 
-        <section aria-label="SEO modülleri">
-          <h2 className="admin-section-title mb-4 text-base">Modüller</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {SEO_MODULES.map((m) => (
-              <article
-                key={m.title}
-                className="rounded-xl border border-slate-800 bg-slate-900/35 p-5 shadow-none"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-slate-100">
-                    {m.title}
-                  </h3>
-                  <span className="shrink-0 rounded-full border border-slate-700/90 bg-slate-950/50 px-2.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-400">
-                    {m.status}
-                  </span>
-                </div>
-                <p className="admin-helper mt-3 text-sm leading-relaxed text-slate-400">
-                  {m.description}
-                </p>
-                {m.title === GSC_MODULE_TITLE ? (
-                  <>
-                    <button
-                      type="button"
-                      disabled={gscTestLoading}
-                      onClick={() => void testGscConnection()}
-                      className="mt-3 rounded-lg border border-slate-600 bg-slate-950/60 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
-                    >
-                      {gscTestLoading
-                        ? "Kontrol ediliyor..."
-                        : "Sunucu yapılandırmasını kontrol et"}
-                    </button>
-                    {gscTestBanner?.kind === "ok" ? (
-                      <div
-                        className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-xs text-emerald-200/95"
-                        role="status"
-                      >
-                        <p className="m-0">
-                          Sunucu ortamında GSC ile ilgili ek yapılandırma tanımlı
-                          görünüyor.
-                        </p>
-                        {gscTestBanner.siteUrl ? (
-                          <p className="admin-helper m-0 mt-1 break-all font-mono text-[0.65rem] text-emerald-300/85">
-                            {gscTestBanner.siteUrl}
-                          </p>
-                        ) : null}
-                      </div>
-                    ) : null}
-                    {gscTestBanner?.kind === "err" ? (
-                      <div
-                        className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/95"
-                        role="alert"
-                      >
-                        <p className="m-0 break-words">{gscTestBanner.message}</p>
-                        {gscTestBanner.missing.length > 0 ? (
-                          <ul className="mb-0 mt-2 list-disc pl-4">
-                            {gscTestBanner.missing.map((key) => (
-                              <li
-                                key={key}
-                                className="break-all font-mono text-[0.65rem] text-amber-50/90"
-                              >
-                                {key}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </>
-                ) : null}
-              </article>
-            ))}
-          </div>
+          {academicSuggestions && academicSuggestions.length > 0 ? (
+            <ul className="m-0 mt-6 list-none space-y-4 p-0">
+              {academicSuggestions.map((s, i) => (
+                <li
+                  key={`${s.suggestedEntryTitle}-${i}`}
+                  className="rounded-xl border border-slate-700/85 bg-slate-950/45 p-4 text-sm shadow-none"
+                >
+                  <p className="m-0 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                    Entry başlığı
+                  </p>
+                  <p className="m-0 mt-0.5 font-semibold text-slate-100">
+                    {s.suggestedEntryTitle}
+                  </p>
+
+                  <p className="m-0 mt-4 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                    Admin açıklaması
+                  </p>
+                  <p className="admin-helper m-0 mt-0.5 text-xs leading-relaxed text-slate-300">
+                    {s.suggestedEntryDescription}
+                  </p>
+
+                  <p className="m-0 mt-4 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                    Neden önerildi?
+                  </p>
+                  <p className="admin-helper m-0 mt-0.5 text-xs leading-relaxed text-slate-400">
+                    {s.reason}
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[0.7rem] text-slate-400">
+                    <span>
+                      Kategori önerisi:{" "}
+                      <span className="text-slate-200">
+                        {categorySuggestionLabel(s.categorySuggestion)}
+                      </span>
+                    </span>
+                    <span>
+                      Güven seviyesi:{" "}
+                      <span className="text-slate-200">
+                        {confidenceLabel(s.confidence)}
+                      </span>
+                    </span>
+                    <span>
+                      Tekrar riski:{" "}
+                      <span className="text-slate-200">
+                        {duplicateRiskLabel(s.duplicateRisk)}
+                      </span>
+                    </span>
+                  </div>
+
+                  <p className="m-0 mt-4 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                    Kaynaklar
+                  </p>
+                  {s.sources.length === 0 ? (
+                    <p className="admin-helper m-0 mt-1 text-xs text-slate-500">
+                      (Boş — doğrulama gerekli)
+                    </p>
+                  ) : (
+                    <ul className="admin-helper m-0 mt-1 list-none space-y-1 p-0 text-xs leading-relaxed text-slate-400">
+                      {s.sources.map((src, idx) => (
+                        <li key={`${idx}-${src.slice(0, 48)}`}>
+                          {looksLikeUrl(src) ? (
+                            <a
+                              href={src.trim()}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="break-all text-sky-400/95 underline underline-offset-2 hover:text-sky-300"
+                            >
+                              {src.trim()}
+                            </a>
+                          ) : (
+                            <span className="break-words">{src}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <p className="m-0 mt-4 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
+                    Kaynak notu
+                  </p>
+                  <p className="admin-helper m-0 mt-0.5 text-xs text-slate-500">
+                    {s.sourceNote}
+                  </p>
+
+                  <p className="admin-helper m-0 mt-4 rounded-md border border-slate-700/60 bg-slate-900/55 px-2.5 py-2 text-[0.7rem] leading-snug text-slate-400">
+                    Bu açıklama sadece admin panelinde görünür. Yayın için
+                    kategori seçimi ve admin onayı gerekir.
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {academicSuggestions !== null && academicSuggestions.length === 0 ? (
+            <p className="admin-helper mt-4 text-sm text-slate-500">
+              Bu çağrıda öneri dönmedi. Gemini anahtarını ve kota/limitleri
+              kontrol edin.
+            </p>
+          ) : null}
+
+          <p className="admin-helper mt-6 text-[0.7rem] leading-relaxed text-slate-600">
+            Sonraki faz: Admin kategori seçimi ve tek tıkla canlı yayına alma —
+            henüz uygulanmadı.
+          </p>
         </section>
       </div>
     </main>
