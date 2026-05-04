@@ -1146,6 +1146,12 @@ export default function AdminPage() {
               {canManageEntriesFully ? "Tam içerik yetkisi" : "Yalnızca yeni entry"}
             </span>
             <Link
+              href="/admin/seo-command-center"
+              className="admin-btn-text rounded-lg border border-slate-700 px-3 py-2 text-slate-300 hover:bg-slate-800"
+            >
+              SEO Komuta Merkezi
+            </Link>
+            <Link
               href="/"
               className="admin-btn-text rounded-lg border border-slate-700 px-3 py-2 text-slate-300 hover:bg-slate-800"
             >
