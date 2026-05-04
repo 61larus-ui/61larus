@@ -37,39 +37,28 @@ const SEO_MODULES: SeoModuleCard[] = [
   },
 ];
 
-type AiSeoOpportunityPlaceholder = {
-  title: string;
-  description: string;
-  status: string;
-};
-
-type AiSeoOpportunityItem = {
-  type: string;
-  priority: string;
+type SeoRecommendationItem = {
   title: string;
   reason: string;
-  sources: Array<{ name: string; url?: string }>;
-  action?: string;
-  status?: string;
+  suggestedEntryTitle: string;
+  priority: string;
+  sourceType: string;
+  sources: string[];
+  sourceNote: string;
+  confidence: string;
 };
 
-function isValidOpportunityItem(item: unknown): item is AiSeoOpportunityItem {
+function isValidSeoRecommendation(item: unknown): item is SeoRecommendationItem {
   if (typeof item !== "object" || item === null) return false;
   const o = item as Record<string, unknown>;
-  if (typeof o.title !== "string" || typeof o.reason !== "string")
-    return false;
-  if (!Array.isArray(o.sources) || o.sources.length === 0) return false;
-  for (const s of o.sources) {
-    if (typeof s !== "object" || s === null) return false;
-    const src = s as Record<string, unknown>;
-    if (typeof src.name !== "string" || !src.name.trim()) return false;
-    if (
-      src.url !== undefined &&
-      src.url !== null &&
-      typeof src.url !== "string"
-    )
-      return false;
-  }
+  if (typeof o.title !== "string" || typeof o.reason !== "string") return false;
+  if (typeof o.suggestedEntryTitle !== "string") return false;
+  if (!Array.isArray(o.sources)) return false;
+  if (!o.sources.every((s) => typeof s === "string")) return false;
+  if (typeof o.sourceNote !== "string") return false;
+  if (typeof o.priority !== "string") return false;
+  if (typeof o.sourceType !== "string") return false;
+  if (typeof o.confidence !== "string") return false;
   return true;
 }
 
@@ -96,6 +85,9 @@ type AiOpportunitySourcesPayload = {
     title?: string | null;
     description?: string | null;
   }>;
+  gscConnected: boolean;
+  gscDataAvailable: boolean;
+  gscQueriesSample: string[];
 };
 
 function coerceAiSources(raw: unknown): AiOpportunitySourcesPayload | null {
@@ -121,6 +113,13 @@ function coerceAiSources(raw: unknown): AiOpportunitySourcesPayload | null {
     typeof s.entrySeoUsedCount === "number"
       ? s.entrySeoUsedCount
       : entrySeoUsed.length;
+  const gscQueriesSample = Array.isArray(s.gscQueriesSample)
+    ? s.gscQueriesSample.filter((x): x is string => typeof x === "string")
+    : [];
+  const gscConnected =
+    typeof s.gscConnected === "boolean" ? s.gscConnected : false;
+  const gscDataAvailable =
+    typeof s.gscDataAvailable === "boolean" ? s.gscDataAvailable : false;
   return {
     model: s.model,
     responseMimeType: "application/json",
@@ -136,29 +135,56 @@ function coerceAiSources(raw: unknown): AiOpportunitySourcesPayload | null {
       (x): x is AiOpportunitySourcesPayload["entrySeoUsed"][number] =>
         typeof x === "object" && x !== null
     ),
+    gscConnected,
+    gscDataAvailable,
+    gscQueriesSample,
   };
 }
 
-const AI_SEO_OPPORTUNITY_PLACEHOLDERS: AiSeoOpportunityPlaceholder[] = [
-  {
-    title: "Yeni başlık fırsatları",
-    description:
-      "61Sözlük'e uygun, gündemle ilişkili yeni başlık önerileri burada görünecek.",
-    status: "Gemini bağlantısı bekliyor",
-  },
-  {
-    title: "Mevcut entry güçlendirme",
-    description:
-      "Meta description, iç link ve başlık iyileştirme önerileri burada listelenecek.",
-    status: "Veri bekliyor",
-  },
-  {
-    title: "Index fırsatları",
-    description:
-      "Sitemap'te olup Google görünürlüğü düşük URL'ler burada takip edilecek.",
-    status: "Search Console bekliyor",
-  },
-];
+function sourceTypeLabel(t: string): string {
+  switch (t) {
+    case "gsc":
+      return "Search Console";
+    case "technical_audit":
+      return "Teknik audit";
+    case "content_gap":
+      return "İçerik fırsatı";
+    case "academic_source_required":
+      return "Kaynak doğrulaması gerekli";
+    default:
+      return t;
+  }
+}
+
+function priorityLabel(p: string): string {
+  switch (p) {
+    case "high":
+      return "yüksek";
+    case "medium":
+      return "orta";
+    case "low":
+      return "düşük";
+    default:
+      return p;
+  }
+}
+
+function confidenceLabel(c: string): string {
+  switch (c) {
+    case "high":
+      return "yüksek";
+    case "medium":
+      return "orta";
+    case "low":
+      return "düşük";
+    default:
+      return c;
+  }
+}
+
+function looksLikeUrl(s: string): boolean {
+  return /^https?:\/\//i.test(s.trim());
+}
 
 type AuditCheckStatus = "pass" | "warning" | "fail";
 
@@ -237,9 +263,10 @@ export default function SeoCommandCenterPage() {
   const [aiSources, setAiSources] = useState<AiOpportunitySourcesPayload | null>(
     null
   );
-  const [aiOpportunities, setAiOpportunities] = useState<AiSeoOpportunityItem[]>(
+  const [aiOpportunities, setAiOpportunities] = useState<SeoRecommendationItem[]>(
     []
   );
+  const [gscTrustLines, setGscTrustLines] = useState<string[] | null>(null);
   const [gscTestLoading, setGscTestLoading] = useState(false);
   const [gscTestBanner, setGscTestBanner] = useState<
     | { kind: "ok"; siteUrl?: string }
@@ -368,6 +395,7 @@ export default function SeoCommandCenterPage() {
     setAiPrepMessage(null);
     setAiPrepMode(null);
     setAiSources(null);
+    setGscTrustLines(null);
     setAiPrepLoading(true);
     try {
       const res = await fetch("/api/admin/seo-command-center/ai-opportunities", {
@@ -381,11 +409,33 @@ export default function SeoCommandCenterPage() {
         mode?: string;
         opportunities?: unknown;
         sources?: unknown;
+        gscTrust?: {
+          connected?: boolean;
+          dataAvailable?: boolean;
+          lines?: unknown;
+          message?: string;
+        };
       };
       const parsedSources = coerceAiSources(data.sources);
 
+      const trustLinesFromApi = (): string[] | null => {
+        const gt = data.gscTrust;
+        if (
+          gt &&
+          Array.isArray(gt.lines) &&
+          gt.lines.every((x) => typeof x === "string")
+        ) {
+          return gt.lines as string[];
+        }
+        if (gt && typeof gt.message === "string" && gt.message.trim()) {
+          return [gt.message.trim()];
+        }
+        return null;
+      };
+
       if (res.status === 401) {
         setAiOpportunities([]);
+        setGscTrustLines(trustLinesFromApi());
         setAiPrepError(
           typeof data.error === "string"
             ? data.error
@@ -395,6 +445,7 @@ export default function SeoCommandCenterPage() {
       }
       if (!res.ok) {
         setAiOpportunities([]);
+        setGscTrustLines(trustLinesFromApi());
         setAiPrepError(
           typeof data.error === "string"
             ? data.error
@@ -405,6 +456,7 @@ export default function SeoCommandCenterPage() {
       }
       if (data.ok === false) {
         setAiOpportunities([]);
+        setGscTrustLines(trustLinesFromApi());
         setAiPrepError(
           typeof data.error === "string"
             ? data.error
@@ -414,10 +466,11 @@ export default function SeoCommandCenterPage() {
         return;
       }
       const raw = data.opportunities;
-      const list: AiSeoOpportunityItem[] = Array.isArray(raw)
-        ? raw.filter(isValidOpportunityItem)
+      const list: SeoRecommendationItem[] = Array.isArray(raw)
+        ? raw.filter(isValidSeoRecommendation)
         : [];
       setAiOpportunities(list);
+      setGscTrustLines(trustLinesFromApi());
       setAiPrepError(null);
       setAiPrepMode(typeof data.mode === "string" ? data.mode : null);
       setAiPrepMessage(
@@ -789,17 +842,17 @@ export default function SeoCommandCenterPage() {
 
         <section
           className="rounded-xl border border-slate-800 bg-slate-900/35 p-6"
-          aria-label="AI SEO fırsatları"
+          aria-label="SEO önerileri"
         >
-          <h2 className="admin-section-title text-base">AI SEO Fırsatları</h2>
+          <h2 className="admin-section-title text-base">SEO Önerileri</h2>
           {aiPrepMode === "live" ? (
             <p className="admin-helper mt-2 text-xs font-medium text-sky-300/90">
               Gemini tarafından analiz edildi
             </p>
           ) : null}
           <p className="admin-helper mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-            Gündem, Search Console ve teknik SEO verileri Gemini ile analiz
-            edildiğinde öneriler burada listelenecek.
+            Teknik SEO taraması, Search Console örnekleri (OAuth ile bağlıysanız)
+            ve Gemini ile kısa, kaynak odaklı öneriler üretilir.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
@@ -808,9 +861,21 @@ export default function SeoCommandCenterPage() {
               onClick={() => void prepareAiOpportunities()}
               className="rounded-lg border border-sky-600/45 bg-sky-600/85 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-55"
             >
-              {aiPrepLoading ? "Hazırlanıyor..." : "AI FIRSATLARI HAZIRLA"}
+              {aiPrepLoading ? "Üretiliyor..." : "SEO ÖNERİLERİNİ ÜRET"}
             </button>
           </div>
+          {gscTrustLines && gscTrustLines.length > 0 ? (
+            <div
+              className="mt-4 rounded-lg border border-slate-700/80 bg-slate-950/45 px-3 py-2.5 text-sm text-slate-300"
+              role="status"
+            >
+              {gscTrustLines.map((line, i) => (
+                <p key={`gsc-trust-${i}`} className="m-0 leading-relaxed">
+                  {line}
+                </p>
+              ))}
+            </div>
+          ) : null}
           {aiPrepError ? (
             <p
               className="admin-msg-error mt-3 text-sm text-[var(--accent)]"
@@ -843,6 +908,16 @@ export default function SeoCommandCenterPage() {
                     {aiSources.responseMimeType}
                   </dd>
                 </div>
+                <div className="flex flex-wrap gap-x-2">
+                  <dt className="font-medium text-slate-500">GSC OAuth</dt>
+                  <dd className="text-slate-300">
+                    {aiSources.gscConnected
+                      ? aiSources.gscDataAvailable
+                        ? "Bağlı · örnek sorgular prompt’a eklendi"
+                        : "Bağlı · örnek sorgu yok veya API yanıt vermedi"
+                      : "Bağlı değil"}
+                  </dd>
+                </div>
                 {aiSources.auditCheckedAt ? (
                   <div className="flex flex-wrap gap-x-2">
                     <dt className="font-medium text-slate-500">
@@ -862,6 +937,23 @@ export default function SeoCommandCenterPage() {
                   </div>
                 )}
               </dl>
+              {aiSources.gscQueriesSample.length > 0 ? (
+                <div className="mt-3">
+                  <p className="text-xs font-medium text-slate-500">
+                    Prompt’a dahil GSC sorgu örnekleri
+                  </p>
+                  <ul className="m-0 mt-1 list-none space-y-1 p-0">
+                    {aiSources.gscQueriesSample.map((q, qi) => (
+                      <li
+                        key={`gsc-q-${qi}`}
+                        className="rounded border border-slate-800/80 bg-slate-900/30 px-2 py-1 text-[0.7rem] text-slate-400"
+                      >
+                        {q}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               {aiSources.summary ? (
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <div className="rounded border border-slate-800/90 bg-slate-900/40 px-2 py-1.5">
@@ -968,101 +1060,108 @@ export default function SeoCommandCenterPage() {
             </div>
           ) : null}
           {aiOpportunities.length > 0 ? (
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {aiOpportunities.map((opp, idx) => (
-                <article
-                  key={`${opp.type}-${idx}`}
-                  className="rounded-xl border border-slate-700/90 bg-slate-950/40 p-4 shadow-none"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h3 className="text-sm font-semibold text-slate-100">
-                      {opp.title}
-                    </h3>
-                    <span className="shrink-0 rounded-full border border-slate-600/90 bg-slate-900/60 px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-300">
-                      {opp.priority === "high"
-                        ? "Öncelik: yüksek"
-                        : opp.priority === "medium"
-                          ? "Öncelik: orta"
-                          : opp.priority === "low"
-                            ? "Öncelik: düşük"
-                            : opp.priority}
-                    </span>
-                  </div>
-                  <p className="admin-helper mt-2 text-xs text-slate-500">
-                    {opp.type}
-                  </p>
-                  <p className="admin-helper mt-2 text-sm leading-relaxed text-slate-400">
-                    {opp.reason}
-                  </p>
-                  {opp.action ? (
-                    <p className="admin-helper mt-2 text-xs leading-relaxed text-slate-300">
-                      Önerilen aksiyon: {opp.action}
+            <div className="mt-4 grid grid-cols-1 gap-3">
+              {aiOpportunities.map((opp, idx) => {
+                const needsSourceVerify =
+                  opp.sources.filter((s) => s.trim().length > 0).length === 0;
+                return (
+                  <article
+                    key={`seo-rec-${idx}-${opp.title.slice(0, 24)}`}
+                    className="rounded-xl border border-slate-700/90 bg-slate-950/40 p-4 shadow-none"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-slate-100">
+                        {opp.title}
+                      </h3>
+                      <span className="shrink-0 rounded-full border border-slate-600/90 bg-slate-900/60 px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-300">
+                        Öncelik: {priorityLabel(opp.priority)}
+                      </span>
+                    </div>
+                    <p className="admin-helper mt-2 text-xs font-medium text-slate-500">
+                      Kaynak tipi: {sourceTypeLabel(opp.sourceType)}
                     </p>
-                  ) : null}
-                  {opp.sources.length > 0 ? (
+                    <p className="admin-helper mt-2 text-sm leading-relaxed text-slate-400">
+                      <span className="font-medium text-slate-300">
+                        Neden:{" "}
+                      </span>
+                      {opp.reason}
+                    </p>
+                    {opp.suggestedEntryTitle.trim() ? (
+                      <p className="admin-helper mt-2 text-sm text-slate-300">
+                        <span className="font-medium text-slate-400">
+                          Önerilen entry başlığı:{" "}
+                        </span>
+                        {opp.suggestedEntryTitle}
+                      </p>
+                    ) : (
+                      <p className="admin-helper mt-2 text-xs text-slate-600">
+                        Önerilen entry başlığı: (boş)
+                      </p>
+                    )}
+                    <p className="admin-helper mt-2 text-xs text-slate-500">
+                      Güven: {confidenceLabel(opp.confidence)}
+                    </p>
+                    {needsSourceVerify ? (
+                      <p
+                        className="admin-helper mt-3 rounded border border-amber-500/35 bg-amber-500/10 px-2 py-1.5 text-xs font-medium text-amber-100/95"
+                        role="alert"
+                      >
+                        Kaynak doğrulaması gerekli
+                      </p>
+                    ) : null}
                     <div className="mt-3 border-t border-slate-800/80 pt-2">
                       <p className="text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
                         Kaynaklar
                       </p>
-                      <ul className="m-0 mt-1 list-none space-y-1 p-0">
-                        {opp.sources.map((src, srcIdx) => (
-                          <li
-                            key={`${opp.type}-${idx}-src-${srcIdx}`}
-                            className="text-[0.7rem] leading-snug text-slate-400"
-                          >
-                            {typeof src.url === "string" &&
-                            src.url.trim().length > 0 ? (
-                              <a
-                                href={src.url.trim()}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sky-400/95 underline-offset-2 hover:underline"
+                      {opp.sources.filter((s) => s.trim().length > 0).length >
+                      0 ? (
+                        <ul className="m-0 mt-1 list-none space-y-1 p-0">
+                          {opp.sources
+                            .filter((s) => s.trim().length > 0)
+                            .map((src, srcIdx) => (
+                              <li
+                                key={`${idx}-src-${srcIdx}`}
+                                className="text-[0.7rem] leading-snug text-slate-400"
                               >
-                                {src.name}
-                              </a>
-                            ) : (
-                              <span>{src.name}</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
+                                {looksLikeUrl(src) ? (
+                                  <a
+                                    href={src.trim()}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sky-400/95 underline-offset-2 hover:underline"
+                                  >
+                                    {src.trim()}
+                                  </a>
+                                ) : (
+                                  <span>{src}</span>
+                                )}
+                              </li>
+                            ))}
+                        </ul>
+                      ) : (
+                        <p className="admin-helper m-0 mt-1 text-xs text-slate-600">
+                          Listelenmiş kaynak yok.
+                        </p>
+                      )}
                     </div>
-                  ) : null}
-                  {opp.status ? (
-                    <p className="admin-helper mt-3 text-[0.7rem] uppercase tracking-wide text-slate-500">
-                      Durum: {opp.status}
-                    </p>
-                  ) : null}
-                </article>
-              ))}
+                    {opp.sourceNote.trim() ? (
+                      <p className="admin-helper mt-2 text-xs leading-relaxed text-slate-500">
+                        <span className="font-medium text-slate-400">
+                          Kaynak notu:{" "}
+                        </span>
+                        {opp.sourceNote}
+                      </p>
+                    ) : null}
+                  </article>
+                );
+              })}
             </div>
           ) : null}
           {!aiPrepLoading && aiOpportunities.length === 0 && !aiPrepError ? (
             <p className="admin-helper mt-4 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2.5 text-sm text-slate-500">
-              Henüz AI SEO fırsatı üretilmedi.
+              Henüz SEO önerisi üretilmedi. Yukarıdaki düğmeyi kullanın.
             </p>
           ) : null}
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {AI_SEO_OPPORTUNITY_PLACEHOLDERS.map((card) => (
-              <article
-                key={card.title}
-                aria-disabled="true"
-                className="rounded-xl border border-dashed border-slate-700/90 bg-slate-950/25 p-5 opacity-85 shadow-none"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-slate-200">
-                    {card.title}
-                  </h3>
-                  <span className="shrink-0 rounded-full border border-slate-700/90 bg-slate-950/50 px-2.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500">
-                    {card.status}
-                  </span>
-                </div>
-                <p className="admin-helper mt-3 text-sm leading-relaxed text-slate-500">
-                  {card.description}
-                </p>
-              </article>
-            ))}
-          </div>
         </section>
 
         <section aria-label="SEO modülleri">
